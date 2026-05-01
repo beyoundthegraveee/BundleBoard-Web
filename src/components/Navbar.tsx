@@ -1,3 +1,10 @@
+"use client"
+
+import { ShoppingBagIcon, User, Search, Heart } from "lucide-react"
+import { Button } from "./ui/button"
+import * as React from "react"
+import Link from "next/link"
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -5,137 +12,140 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import  Link from "next/link"
-import * as React from "react"
-import { Button } from "./ui/button"
-import { Search, User, ShoppingBag } from "lucide-react"
 
-const components : {title: string, href: string; description: string}[] = [
-    {
-        title: "Textures",
-        href: "/bundles/textures",
-        description: "A collection of high-quality textures for your projects."
-    },
-    {
-        title: "Mockups",
-        href: "/bundles/mockups",
-        description: "A collection of high-quality mockups for your projects."
-    },
-    {
-        title: "Icons",
-        href: "/bundles/icons",
-        description: "A collection of high-quality icons for your projects."
-    },
-    {
-        title: "Fonts",
-        href: "/bundles/fonts",
-        description: "A collection of high-quality fonts for your projects."
-    },
-    {
-        title: "Brushes",
-        href: "/bundles/brushes",
-        description: "A collection of high-quality brushes for your projects."
-    },
-    {
-        title: "Effects",
-        href: "/bundles/effects",
-        description: "A collection of high-quality effects for your projects."
-    }
+const components: { title: string; href: string; description: string }[] = [
+  {
+    title: "Brushes",
+    href: "/bundles/brushes",
+    description:
+      "A set of brushes for drawing and painting in digital art applications.",
+  },
+  {
+    title: "Mockups",
+    href: "/bundles/mockups",
+    description:
+      "Pre-designed templates for various design elements.",
+  },
+  {
+    title: "Textures",
+    href: "/bundles/textures",
+    description:
+      "A collection of surface details for adding texture to digital art.",
+  },
+  {
+    title: "Fonts",
+    href: "/bundles/fonts",
+    description: "A selection of typefaces for various design projects.",
+  },
+  {
+    title: "Illustrations",
+    href: "/bundles/illustrations",
+    description:
+      "A library of pre-made illustrations for use in design projects.",
+  },
+  {
+    title: "Graphics",
+    href: "/bundles/graphics",
+    description:
+      "A collection of graphic elements for use in design projects.",
+  },
 ]
 
-export const Navbar = () => {
-    return (
-        <header className="sticky top-0 z-50 w-full bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
-            <div className="container mx-auto flex h-24 items-center justify-between px-6">
-                <div className="mr-12 flex items-center">
-                    <Link href="/" className="flex items-center gap-3">
-                    <img src="/logo.png"
-                    alt="BundleBoard Logo"
-                    className="h-24 w-24 object-contain"
-                    />
-                    </Link>
-                </div>
-                    <div className="flex-1">
-                                <NavigationMenu>
-                                    <NavigationMenuList>
-                                        <NavigationMenuItem>
-                                            <NavigationMenuLink>Home</NavigationMenuLink>
-                                        </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>Bundles</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className = "grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                                        {components.map((component) => (
-                                            <ListItem
-                                                key={component.title}
-                                                title={component.title}
-                                                href={component.href}
-                                            >
-                                                {component.description}
-                                            </ListItem>
-                                        ))}
-                                        </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>Tutorials</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className = "w-96 ">
-                                        <ListItem href="/watch" title="Videos">
-                                            A collection if video tutorials for your projects.
-                                        </ListItem>
-                                        <ListItem href="/read" title="Articles">
-                                            A collection of written tutorials for your projects.
-                                        </ListItem>
-                                        </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink href="/about">About</NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                 <NavigationMenuLink href="/contact">Contact</NavigationMenuLink>
-                            </NavigationMenuItem>
-                        </NavigationMenuList>
-                    </NavigationMenu>
-                </div>
-                <div className="flex items-center justify-end space-x-4">
-                    <Link href="/login" className="text-sm font-medium transition-colors hover:text-primary">
-                        Login
-                    </Link>
+export function Navbar() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-20 items-center justify-between">
+        
+        <div className="flex items-center  gap-2 ml-4">
+          <Link href="/" className="font-bold text-xl tracking-tighter">
+            BUNDLEBOARD
+          </Link>
+        </div>
+        <div className="hidden md:block">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-5">
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Learn</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-2">
+                    <ListItem href="/tutorials" title="Tutorials">
+                        Step-by-step guides to help you get started with BundleBoard.
+                    </ListItem>
+                    <ListItem href="/tutorials/video" title="Video Player">
+                        A video player for watching tutorials and other video content related to BundleBoard.
+                    </ListItem>
+                    <ListItem href="/tutorials/read" title="Read Articles">
+                        A collection of articles and documentation to help you learn more about BundleBoard and its features.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Bundles</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-2 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    {components.map((component) => (
+                      <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                      >
+                        {component.description}
+                      </ListItem>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Search className="h-5 w-5" />
-                    </Button>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/about">About</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Search className="h-7 w-7" />
+          </Button>
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground" asChild>
+            <Link href="/cart">
+              <ShoppingBagIcon className="h-5 w-5" />
 
-                    <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-                        <ShoppingBag className="h-5 w-5"/>
-                        <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-black text-[10px] text-white flex items-center justify-center">
-                            0
-                        </span>
-                    </Button>
-                </div>
-            </div>
-        </header>
-    )
+            </Link>
+          </Button>
+
+          <Button variant="default" size="sm" className="hidden sm:flex ml-2">
+            <User className="h-4 w-4 mr-2" />
+            Sign In
+          </Button>
+        </div>
+
+      </div>
+    </header>
+  )
 }
 
 function ListItem({
-    title,
-    children,
-    href,
-    ...props
-}: React.ComponentPropsWithoutRef<"li"> & {href: string}) {
-    return (
-        <li {...props}>
-            <NavigationMenuLink asChild>
-                <Link href={href}>
-                    <div className="flex flex-col gap-1 test-sm">
-                        <div className="leading-none font-medium">{title}</div>
-                        <div className="line-clamp-2 test-muted-foreground">{children}</div>
-                    </div>
-                </Link>
-            </NavigationMenuLink>
-        </li>
-)}
+  title,
+  children,
+  href,
+  ...props
+}: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
+  return (
+    <li {...props}>
+      <NavigationMenuLink asChild>
+        <Link href={href}>
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="leading-none font-medium">{title}</div>
+            <div className="line-clamp-2 text-muted-foreground">{children}</div>
+          </div>
+        </Link>
+      </NavigationMenuLink>
+    </li>
+  )
+}
