@@ -18,6 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signIn } from "next-auth/react"
 
 const LOGIN_MUTATION = `
   mutation Login($input: AuthRequest!) {
@@ -30,6 +32,9 @@ const LOGIN_MUTATION = `
 `;
 
 export function LoginForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callBackUrl = searchParams.get("callbackUrl") || "/"
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -44,20 +49,19 @@ export function LoginForm() {
     setIsLoading(true)
     setServerError(null)
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: LOGIN_MUTATION,
-          variables: {
-            input: {
-              username: data.username,
-              password: data.password,
-            },
-          },
-        }),
+      const result = await signIn("credentials", {
+        username: data.username,
+        password: data.password,
+        redirect: false,
+        callbackUrl: callBackUrl,
       })
-      
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }else{
+        router.push(callBackUrl)
+        router.refresh()
+      }
     } catch (error: any) {
       setServerError(error.message)
     } finally {
@@ -65,8 +69,8 @@ export function LoginForm() {
     }
   }
 
-  const handleSocialLogin = (provode: string) => {
-        console.log(`Logging in with ${provode}...`)
+  const handleSocialLogin = (provider: string) => {
+        signIn(provider, { callbackUrl: callBackUrl })
     }
 
   return (
