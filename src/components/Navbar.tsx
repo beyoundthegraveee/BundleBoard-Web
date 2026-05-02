@@ -115,13 +115,13 @@ export function Navbar() {
           <Button variant="ghost" size="icon" className="relative text-muted-foreground" asChild>
             <Link href="/cart">
               <ShoppingBagIcon className="h-5 w-5" />
-
             </Link>
           </Button>
 
-          <Button variant="default" size="sm" className="hidden sm:flex ml-2">
-            <User className="h-4 w-4 mr-2" />
-            Sign In
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground" asChild>
+            <Link href="/login">
+              <User className="h-5 w-5" />
+            </Link>
           </Button>
         </div>
 
