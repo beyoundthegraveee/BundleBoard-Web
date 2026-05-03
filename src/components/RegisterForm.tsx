@@ -43,7 +43,7 @@ export function RegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "CUSTOMER" // Значение по умолчанию для UserRole
+      role: "client"
     }
   })
 
@@ -63,11 +63,16 @@ export function RegisterForm() {
               username: data.username,
               email: data.email,
               password: data.password,
-              role: data.role, // Отправляем выбранную роль
+              role: data.role,
             },
           },
         }),
       })
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Server error: ${response.status}`);
+      }
 
       const result = await response.json()
       
@@ -80,7 +85,6 @@ export function RegisterForm() {
       if (regData?.error) {
         setServerError(regData.error)
       } else {
-        // После регистрации сразу логиним
         const loginResult = await signIn("credentials", {
           username: data.username,
           password: data.password,
@@ -112,8 +116,6 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          
-          {/* Выбор роли внутри формы */}
           <div className="grid gap-2">
             <Label>I want to...</Label>
             <Controller
@@ -122,10 +124,10 @@ export function RegisterForm() {
               render={({ field }) => (
                 <Tabs onValueChange={field.onChange} defaultValue={field.value} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="CUSTOMER" className="flex gap-2">
+                    <TabsTrigger value="client" className="flex gap-2">
                       <User className="h-4 w-4" /> Buy
                     </TabsTrigger>
-                    <TabsTrigger value="AUTHOR" className="flex gap-2">
+                    <TabsTrigger value="author" className="flex gap-2">
                       <PenTool className="h-4 w-4" /> Sell
                     </TabsTrigger>
                   </TabsList>
@@ -140,8 +142,6 @@ export function RegisterForm() {
               <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
-          
-          {/* Остальные поля без изменений */}
           <div className="grid gap-2">
             <Label htmlFor="username">Username</Label>
             <Input
