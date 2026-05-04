@@ -6,18 +6,56 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from "next/link"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useSearchParams } from "next/navigation"
+
+
+const RESEND_VERIFICATION_MUTATION = `
+  mutation ResendVerification($email: String!) {
+    resendVerificationEmail(email: $email) {
+       success
+       message
+    }
+  }
+`;
 
 export default function VerifyRequestPage() {
   const [isResending, setIsResending] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email")
 
   const handleResendEmail = async () => {
+    if (!email) {
+      setMessage({ type: 'error', text: "Email address is missing. Please try to register again." })
+      return
+    }
+
     setIsResending(true)
     setMessage(null)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setMessage({ type: 'success', text: "Verification link has been resent to your email." })
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: RESEND_VERIFICATION_MUTATION,
+          variables: { email: email }
+        }),
+      });
+
+      const result = await response.json()
+
+      if (result.errors){
+        throw new Error(result.errors[0].message)
+      }
+
+      const data = result.data?.resendVerificationEmail
+
+      if (data?.success) {
+        setMessage({ type: 'success', text: data.message || "Verification email resent successfully. Please check your inbox." })
+      } else {
+        setMessage({ type: 'error', text: data?.message || "Failed to resend email. Please try again later." })
+      }
     } catch (e) {
       setMessage({ type: 'error', text: "Failed to resend email. Please try again later." })
     } finally {
