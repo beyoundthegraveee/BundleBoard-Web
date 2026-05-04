@@ -32,8 +32,7 @@ const REGISTER_MUTATION = `
 
 export function RegisterForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const callBackUrl = searchParams.get("callbackUrl") || "/dashboard"
+  const verifyRequest = "/verify-email"
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -69,11 +68,6 @@ export function RegisterForm() {
         }),
       })
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Server error: ${response.status}`);
-      }
-
       const result = await response.json()
       
       if (result.errors) {
@@ -85,19 +79,7 @@ export function RegisterForm() {
       if (regData?.error) {
         setServerError(regData.error)
       } else {
-        const loginResult = await signIn("credentials", {
-          username: data.username,
-          password: data.password,
-          redirect: false,
-          callbackUrl: callBackUrl,
-        })
-
-        if (loginResult?.error) {
-          router.push("/login")
-        } else {
-          router.push(callBackUrl)
-          router.refresh()
-        }
+         router.push(verifyRequest)
       }
     } catch (error: any) {
       setServerError(error.message)
@@ -111,30 +93,11 @@ export function RegisterForm() {
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
         <CardDescription>
-          Enter your details and choose your role
+          Enter your details to get started with BundleBoard
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>I want to...</Label>
-            <Controller
-              name="role"
-              control={control}
-              render={({ field }) => (
-                <Tabs onValueChange={field.onChange} defaultValue={field.value} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="client" className="flex gap-2">
-                      <User className="h-4 w-4" /> Buy
-                    </TabsTrigger>
-                    <TabsTrigger value="author" className="flex gap-2">
-                      <PenTool className="h-4 w-4" /> Sell
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
-            />
-          </div>
 
           {serverError && (
             <Alert variant="destructive">

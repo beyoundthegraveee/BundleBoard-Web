@@ -13,9 +13,7 @@ export default function LoginPage() {
             Enter your credentials to access your account
           </p>
         </div>
-
         <LoginForm />
-
         <p className="px-8 text-center text-sm text-muted-foreground">
           New to BundleBoard?{" "}
           <Link 

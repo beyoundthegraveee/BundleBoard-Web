@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/graphql";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -20,6 +20,7 @@ export const authOptions: NextAuthOptions = {
                 login(input: $input) {
                   accessToken
                   refreshToken
+                  error
                   user { id username email }
                 }
               }
