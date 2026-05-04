@@ -32,7 +32,7 @@ const REGISTER_MUTATION = `
 
 export function RegisterForm() {
   const router = useRouter()
-  const verifyRequest = "/verify-email"
+  const verifyRequest = "/mail/verify-email"
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
