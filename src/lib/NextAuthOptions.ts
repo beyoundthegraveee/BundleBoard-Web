@@ -4,8 +4,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 
 const SOCIAL_LOGIN_MUTATION = `
-  mutation SocialLogin($email: String!, $username: String!, $provider: String!) {
-    socialLogin(email: $email, username: $username, provider: $provider) {
+  mutation SocialLogin($input: SocialAuthRequest!) {
+    socialLogin(input: $input) {
       accessToken
       refreshToken
       user { id username email }
@@ -89,23 +89,31 @@ export const authOptions: NextAuthOptions = {
             body: JSON.stringify({
               query: SOCIAL_LOGIN_MUTATION,
               variables: {
-                email: user.email,
-                username: user.name || user.email?.split("@")[0],
-                provider: account.provider
+                input: {
+                    email: user.email,
+                    username: user.name || user.email?.split("@")[0],
+                    provider: account.provider
+                }
               }
             })
           });
 
           const result = await res.json()
-          const socialData = result.data?.socialLogin
+
+          if (result.errors) {
+            console.error("GraphQL Errors:", result.errors);
+            return false;
+          }
+
+          const socialData = result.data?.socialLogin;
 
           if(socialData?.accessToken) {
-            (user as any).accessToken = socialData.accessToken
-            (user as any).refreshToken = socialData.refreshToken
+            const u = user as any
+            u.accessToken = socialData.accessToken
+            u.refreshToken = socialData.refreshToken
             return true
           }
           return false
-          
         } catch (error) {
           console.error("Error during social login:", error)
           return false
