@@ -1,9 +1,20 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, Heart } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Settings, LayoutDashboard } from "lucide-react"
 import { Button } from "./ui/button"
 import * as React from "react"
 import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   NavigationMenu,
@@ -54,6 +65,7 @@ const components: { title: string; href: string; description: string }[] = [
 ]
 
 export function Navbar() {
+  const { data: session, status } = useSession();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 items-center justify-between">
@@ -117,14 +129,50 @@ export function Navbar() {
               <ShoppingBagIcon className="h-5 w-5" />
             </Link>
           </Button>
-
-          <Button variant="ghost" size="icon" className="relative text-muted-foreground" asChild>
-            <Link href="/login">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
+          {status === "authenticated" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground border">
+                    <User className="h-5 w-5" />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{session.user?.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                    <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer">
+                    <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer"  onClick={() => signOut({ callbackUrl: "/" })}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+             <Button variant="ghost" size="icon" className="relative text-muted-foreground" asChild>
+              <Link href="/login">
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
         </div>
-
       </div>
     </header>
   )
