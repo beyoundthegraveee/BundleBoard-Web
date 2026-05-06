@@ -17,5 +17,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/((?!register|login|api|mail/verify-email|mail/verify).*)'],
+  matcher: ['/((?!register|login|api|mail/verify-email|mail/verify|select-role).*)'],
 };
