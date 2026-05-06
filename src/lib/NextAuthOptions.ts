@@ -8,6 +8,7 @@ const SOCIAL_LOGIN_MUTATION = `
     socialLogin(input: $input) {
       accessToken
       refreshToken
+      isNew
       user { id username email }
     }
   }
@@ -20,6 +21,7 @@ const LOGIN_MUTATION = `
       refreshToken
       error
       user { id username email }
+      isNew
     }
   }
 `;
@@ -74,6 +76,8 @@ export const authOptions: NextAuthOptions = {
           email: authData.user?.email,
           accessToken: authData.accessToken,
           refreshToken: authData.refreshToken,
+          isNewUser: authData.isNew,
+          roles: authData.user?.roles || []
         }
       }
     })
@@ -109,8 +113,10 @@ export const authOptions: NextAuthOptions = {
 
           if(socialData?.accessToken) {
             const u = user as any
-            u.accessToken = socialData.accessToken
-            u.refreshToken = socialData.refreshToken
+            u.accessToken = socialData.accessToken;
+            u.refreshToken = socialData.refreshToken;
+            u.isNewUser = socialData.isNew;
+            u.roles = socialData.user?.roles || [];
             return true
           }
           return false
@@ -121,19 +127,33 @@ export const authOptions: NextAuthOptions = {
       }
     return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, session, trigger }) {
+
       if (user) {
-        return {
-            ...token,
-            accessToken: (user as any).accessToken,
-            refreshToken: (user as any).refreshToken,
+        token.accessToken = (user as any).accessToken
+        token.refreshToken = (user as any).refreshToken
+        token.isNewUser = (user as any).isNewUser
+        token.roles = (user as any).roles || []
+      }
+
+      if  (trigger === "update" && session) {
+        if (session.isNewUser !== undefined) {
+          token.isNewUser = session.isNewUser
         }
-    }
+        if (session.roles) {
+          token.roles = [session.role]
+        }
+      }
 
       return token
     },
     async session({ session, token }) {
-      (session as any).accessToken = token.accessToken
+      const s = session as any;
+      s.accessToken = token.accessToken
+      s.isNewUser = token.isNewUser
+      if(s.user) {
+        s.user.roles = token.roles || []
+      }
       return session
     }
   },

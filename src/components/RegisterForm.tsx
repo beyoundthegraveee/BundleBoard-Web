@@ -94,7 +94,7 @@ export function RegisterForm() {
   }
 
   const handleSocialLogin = (provider: string) => {
-    signIn(provider, { callbackUrl: "/" })
+    signIn(provider, { callbackUrl: "/select-role" })
   }
 
   return (
