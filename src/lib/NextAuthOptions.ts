@@ -1,7 +1,6 @@
-import NextAuth, {type NextAuthOptions} from 'next-auth';
+import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import FacebookProvider from 'next-auth/providers/facebook';
 
 const SOCIAL_LOGIN_MUTATION = `
   mutation SocialLogin($input: SocialAuthRequest!) {
@@ -31,10 +30,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
     }),
     CredentialProvider({
       name: "Sign In",
@@ -84,7 +79,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google" || account?.provider === "facebook") {
+      if (account?.provider === "google") {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
         try {
           const res = await fetch(apiUrl, {
@@ -128,7 +123,6 @@ export const authOptions: NextAuthOptions = {
     return true
     },
     async jwt({ token, user, session, trigger }) {
-
       if (user) {
         token.accessToken = (user as any).accessToken
         token.refreshToken = (user as any).refreshToken
@@ -136,7 +130,7 @@ export const authOptions: NextAuthOptions = {
         token.roles = (user as any).roles || []
       }
 
-      if  (trigger === "update" && session) {
+      if (trigger === "update" && session) {
         if (session.isNewUser !== undefined) {
           token.isNewUser = session.isNewUser
         }

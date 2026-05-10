@@ -4,7 +4,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { useState } from "react"
 import { Loader2, AlertCircle} from "lucide-react"
-import { FaFacebook, FaGoogle } from "react-icons/fa"
+import { FaGoogle } from "react-icons/fa"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,23 +13,12 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
-
-const LOGIN_MUTATION = `
-  mutation Login($input: AuthRequest!) {
-    login(input: $input) {
-      accessToken
-      refreshToken
-      error
-    }
-  }
-`;
 
 export function LoginForm() {
   const router = useRouter()
@@ -58,7 +47,7 @@ export function LoginForm() {
 
       if (result?.error) {
         throw new Error(result.error)
-      }else{
+      } else {
         router.push(callBackUrl)
         router.refresh()
       }
@@ -70,8 +59,8 @@ export function LoginForm() {
   }
 
   const handleSocialLogin = (provider: string) => {
-        signIn(provider, { callbackUrl: callBackUrl })
-    }
+    signIn(provider, { callbackUrl: callBackUrl })
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -83,14 +72,10 @@ export function LoginForm() {
       </CardHeader>
       <CardContent className="grid gap-4">
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading}>
             <FaGoogle className="mr-2 h-4 w-4 text-[#DB4437]" />
-              Google
-          </Button>
-          <Button variant="outline" onClick={() => handleSocialLogin('facebook')} disabled={isLoading}>
-            <FaFacebook className="mr-2 h-4 w-4 text-[#1877F2]" />
-            Facebook
+              Continue with Google
           </Button>
         </div>
 
