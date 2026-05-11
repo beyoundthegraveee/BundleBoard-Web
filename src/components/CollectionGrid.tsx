@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Loader2, ArrowUpRight, AlertCircle } from "lucide-react"
+import { Loader2, ArrowUpRight } from "lucide-react"
+import Link from "next/link" // Используем Next.js Link для роутинга
 
-// ТВОЙ АКТУАЛЬНЫЙ ПУТЬ
-const SUPABASE_PREVIEWS_BASE = "https://lemevepzkbfxkunmrgor.supabase.co/storage/v1/object/public/previews";
+const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 
 interface Collection {
   id: string;
@@ -72,7 +72,7 @@ export function CollectionGrid() {
   )
 
   if (error) return (
-    <div className="p-10 border-2 border-red-600 text-red-600 font-mono text-xs uppercase tracking-tighter mx-4">
+    <div className="p-10 border-2 border-red-600 text-red-600 font-mono text-xs uppercase tracking-tighter mx-4 bg-red-50">
       [CRITICAL_ERROR]: {error}
     </div>
   )
@@ -80,17 +80,19 @@ export function CollectionGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-black border-y-2 border-black">
       {collections.map((item) => {
-        // Формируем безопасный URL. 
-        // Если filePath — это просто имя файла "Image Name.jpg", 
-        // encodeURIComponent превратит его в "Image%20Name.jpg"
         const fileName = item.previewImage?.filePath || "";
+        // Если путь в БД полный, используем его, если только имя — клеим базу Supabase
         const imageUrl = fileName.startsWith('http') 
           ? fileName 
           : `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}`;
 
         return (
-          <div key={item.id} className="group bg-white relative flex flex-col border-r border-black last:border-r-0">
-            {/* IMAGE AREA */}
+          <Link 
+            href={`/collection/${item.id}`} 
+            key={item.id} 
+            className="group bg-white relative flex flex-col border-r border-black last:border-r-0 cursor-pointer overflow-hidden"
+          >
+            {/* Image Section */}
             <div className="aspect-[16/10] relative overflow-hidden border-b border-black bg-[#eee]">
               <img 
                 src={imageUrl} 
@@ -102,7 +104,7 @@ export function CollectionGrid() {
               </div>
             </div>
 
-            {/* INFO AREA */}
+            {/* Content Section */}
             <div className="p-8 flex-grow flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex justify-between items-start gap-4">
@@ -116,6 +118,7 @@ export function CollectionGrid() {
                 </p>
               </div>
 
+              {/* Footer Section */}
               <div className="mt-10">
                 <div className="flex justify-between items-end border-t border-black/10 py-4 mb-4">
                   <div className="flex flex-col">
@@ -132,7 +135,7 @@ export function CollectionGrid() {
                 </button>
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>
