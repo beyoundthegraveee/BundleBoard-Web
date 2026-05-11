@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import { Loader2, ArrowUpRight, AlertCircle } from "lucide-react"
 
-// ТВОЙ АКТУАЛЬНЫЙ ПУТЬ
 const SUPABASE_PREVIEWS_BASE = "https://lemevepzkbfxkunmrgor.supabase.co/storage/v1/object/public/previews";
 
 interface Collection {
@@ -80,9 +79,6 @@ export function CollectionGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-black border-y-2 border-black">
       {collections.map((item) => {
-        // Формируем безопасный URL. 
-        // Если filePath — это просто имя файла "Image Name.jpg", 
-        // encodeURIComponent превратит его в "Image%20Name.jpg"
         const fileName = item.previewImage?.filePath || "";
         const imageUrl = fileName.startsWith('http') 
           ? fileName 
@@ -90,7 +86,6 @@ export function CollectionGrid() {
 
         return (
           <div key={item.id} className="group bg-white relative flex flex-col border-r border-black last:border-r-0">
-            {/* IMAGE AREA */}
             <div className="aspect-[16/10] relative overflow-hidden border-b border-black bg-[#eee]">
               <img 
                 src={imageUrl} 
@@ -102,7 +97,6 @@ export function CollectionGrid() {
               </div>
             </div>
 
-            {/* INFO AREA */}
             <div className="p-8 flex-grow flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex justify-between items-start gap-4">
