@@ -1,7 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Loader2, ArrowUpRight } from "lucide-react"
+import { Loader2, ArrowUpRight, AlertCircle } from "lucide-react"
+
+// ТВОЙ АКТУАЛЬНЫЙ ПУТЬ
+const SUPABASE_PREVIEWS_BASE = "https://lemevepzkbfxkunmrgor.supabase.co/storage/v1/object/public/previews";
 
 interface Collection {
   id: string;
@@ -9,37 +12,13 @@ interface Collection {
   description: string;
   price: number;
   author: {
-    id: string;
-    rating: number;
-    totalSales: number;
     username: string;
+    totalSales: number;
   };
   previewImage: {
     filePath: string;
-    fileName: string;
   };
 }
-
-export const GET_ALL_COLLECTIONS = `
-  query GetAllCollections {
-    getAllCollections {
-      id
-      name
-      description
-      price
-      author {
-        id
-        rating
-        totalSales
-        username
-      }
-      previewImage {
-        filePath
-        fileName
-      }
-    }
-  }
-`;
 
 export function CollectionGrid() {
   const [collections, setCollections] = useState<Collection[]>([])
@@ -49,19 +28,32 @@ export function CollectionGrid() {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
-        
-        const response = await fetch(apiUrl, {
+        const response = await fetch("http://localhost:8080/graphql", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            query: GET_ALL_COLLECTIONS,
+            query: `
+              query GetAllCollections {
+                getAllCollections {
+                  id
+                  name
+                  description
+                  price
+                  author {
+                    username
+                    totalSales
+                  }
+                  previewImage {
+                    filePath
+                  }
+                }
+              }
+            `,
           }),
         })
 
         const result = await response.json()
         if (result.errors) throw new Error(result.errors[0].message)
-        
         setCollections(result.data?.getAllCollections || [])
       } catch (err: any) {
         setError(err.message)
@@ -69,94 +61,80 @@ export function CollectionGrid() {
         setLoading(false)
       }
     }
-
     fetchCollections()
   }, [])
 
   if (loading) return (
     <div className="flex flex-col justify-center items-center p-40 space-y-4">
-      <Loader2 className="animate-spin h-12 w-12 text-orange-600" />
-      <span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Syncing with Grid...</span>
+      <Loader2 className="animate-spin h-10 w-10 text-red-600" />
+      <span className="text-black font-black uppercase tracking-[0.3em] text-[10px]">Syncing_Inventory...</span>
     </div>
   )
 
   if (error) return (
-    <div className="text-orange-600 text-center p-10 font-black border-2 border-orange-600/20 rounded-sm bg-orange-600/5 mx-4 uppercase italic">
-      System Error: {error}
+    <div className="p-10 border-2 border-red-600 text-red-600 font-mono text-xs uppercase tracking-tighter mx-4">
+      [CRITICAL_ERROR]: {error}
     </div>
   )
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-16 flex items-end justify-between border-b border-white/5 pb-6">
-        <div>
-          <h2 className="text-6xl font-black uppercase tracking-tighter italic leading-none">
-            Featured <br /> 
-            <span className="text-orange-600">Bundles</span>
-          </h2>
-        </div>
-        <div className="text-right hidden md:block">
-          <p className="text-zinc-500 font-bold text-sm uppercase tracking-widest">Total Assets</p>
-          <p className="text-2xl font-black italic">{collections.length}</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
-        {collections.map((item) => (
-          <div key={item.id} className="group flex flex-col cursor-pointer relative">
-            
-            <div className="aspect-square relative overflow-hidden bg-zinc-900 border border-white/5 group-hover:border-orange-600/50 transition-all duration-500 shadow-2xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-black border-y-2 border-black">
+      {collections.map((item) => {
+        // Формируем безопасный URL. 
+        // Если filePath — это просто имя файла "Image Name.jpg", 
+        // encodeURIComponent превратит его в "Image%20Name.jpg"
+        const fileName = item.previewImage?.filePath || "";
+        const imageUrl = fileName.startsWith('http') 
+          ? fileName 
+          : `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}`;
+
+        return (
+          <div key={item.id} className="group bg-white relative flex flex-col border-r border-black last:border-r-0">
+            {/* IMAGE AREA */}
+            <div className="aspect-[16/10] relative overflow-hidden border-b border-black bg-[#eee]">
               <img 
-                src={item.previewImage?.filePath || "/placeholder.png"} 
+                src={imageUrl} 
                 alt={item.name}
-                className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105 group-hover:opacity-80"
+                className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
               />
-
-              <div className="absolute top-0 left-0 flex flex-col">
-                {item.author.totalSales > 100 && (
-                  <div className="bg-orange-600 text-[10px] font-black px-3 py-1.5 uppercase text-white italic tracking-tighter">
-                    Hot Asset
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="bg-white p-2 rounded-full text-black">
-                  <ArrowUpRight size={20} />
-                </div>
+              <div className="absolute top-0 left-0 bg-red-600 text-white text-[8px] font-black px-2 py-1 uppercase italic tracking-widest">
+                Raw_Asset_v1.0
               </div>
             </div>
-            <div className="mt-6 space-y-3">
-              <div className="space-y-1">
-                <h3 className="font-black text-2xl leading-[0.9] uppercase tracking-tighter group-hover:text-orange-600 transition-colors italic">
-                  {item.name}
-                </h3>
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                  Authored by <span className="text-zinc-300">@{item.author.username || 'unknown'}</span>
+
+            {/* INFO AREA */}
+            <div className="p-8 flex-grow flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex justify-between items-start gap-4">
+                  <h3 className="font-black text-4xl leading-[0.8] uppercase tracking-tighter italic break-words">
+                    {item.name}
+                  </h3>
+                  <ArrowUpRight className="text-black group-hover:text-red-600 transition-colors shrink-0" size={32} />
+                </div>
+                <p className="text-black/40 text-[10px] font-bold uppercase leading-tight italic line-clamp-2">
+                  // {item.description}
                 </p>
               </div>
-              
-              <div className="flex items-center justify-between border-y border-white/5 py-3">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Price</span>
-                  <span className="text-lg font-black italic text-orange-600">${item.price.toFixed(2)}</span>
-                </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Stats</span>
-                  <div className="flex items-center gap-2 text-xs font-black italic">
-                    <span>{item.author.rating} ⭐</span>
-                    <span className="text-zinc-700">/</span>
-                    <span>{item.author.totalSales} SL</span>
+
+              <div className="mt-10">
+                <div className="flex justify-between items-end border-t border-black/10 py-4 mb-4">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-red-600 uppercase tracking-widest">Operator</span>
+                    <span className="font-black text-sm uppercase italic">@{item.author.username}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Value</span>
+                    <p className="font-black text-2xl leading-none">${item.price}</p>
                   </div>
                 </div>
+                <button className="w-full bg-black text-white py-4 font-black uppercase text-xs tracking-[0.3em] hover:bg-red-600 transition-all active:scale-[0.98]">
+                  Initialize_Transfer
+                </button>
               </div>
-
-              <p className="text-zinc-500 text-[11px] leading-relaxed line-clamp-2 italic opacity-60 group-hover:opacity-100 transition-opacity">
-                {item.description}
-              </p>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   )
 }
