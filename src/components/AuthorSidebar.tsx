@@ -24,7 +24,6 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
 
   return (
     <div className="border-2 border-black p-1 bg-white font-mono shadow-[8px_8px_0px_rgba(0,0,0,1)]">
-      {/* HEADER: OPERATOR_ID */}
       <div className="bg-black text-white p-3 flex justify-between items-center mb-4">
         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operator_Profile_v4</span>
         <div className="flex gap-1">
@@ -34,7 +33,6 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* AVATAR & USERNAME */}
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 bg-zinc-100 border-2 border-black relative overflow-hidden flex-shrink-0">
             {avatarUrl ? (
@@ -55,12 +53,10 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
           </div>
         </div>
 
-        {/* BIO_LOG */}
         <div className="text-[11px] font-bold uppercase leading-tight text-zinc-500 italic border-l-2 border-zinc-200 pl-4">
           // {bio}
         </div>
 
-        {/* STATS_GRID */}
         <div className="grid grid-cols-2 gap-px bg-black border border-black text-center">
           <div className="bg-white p-3">
             <div className="flex justify-center items-center gap-1 text-red-600 mb-1">
@@ -78,7 +74,6 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
           </div>
         </div>
 
-        {/* SOCIAL_LINKS_TERMINAL */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Share2 size={14} />
@@ -109,7 +104,6 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
         </div>
       </div>
 
-      {/* FOOTER_STATUS */}
       <div className="bg-zinc-100 p-2 text-[8px] font-black uppercase text-center border-t border-black opacity-50">
         System_Status: Online // Last_Activity: Stable
       </div>
