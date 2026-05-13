@@ -1,93 +1,123 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useRef } from "react"
-import { X, Search, ArrowRight } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import { Search, X, ArrowRight, TrendingUp, Star } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
 
 interface SearchOverlayProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
+
+const RECOMMENDATIONS = [
+  { id: 1, title: "Ultimate Photoshop Brushes", category: "Brushes", price: "$19" },
+  { id: 2, title: "Minimalist Device Mockups", category: "Mockups", price: "$25" },
+  { id: 3, title: "Grainy Texture Pack", category: "Textures", price: "$12" },
+]
+
+const QUICK_LINKS = ["New Arrivals", "Best Sellers", "Free Assets", "Premium Bundles"]
 
 export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("")
-  const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
       inputRef.current?.focus()
+      document.body.style.overflow = "hidden"
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = "auto"
       setQuery("")
     }
   }, [isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
-      onClose()
-    }
-  }
-
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#f4f4f4]/95 backdrop-blur-md font-mono">
-      <button 
-        onClick={onClose}
-        className="absolute top-8 right-8 p-2 hover:rotate-90 transition-transform duration-300"
-      >
-        <X size={40} className="text-black" />
-      </button>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-md"
+          />
 
-      <div className="container mx-auto px-4 h-full flex flex-col justify-center">
-        <form onSubmit={handleSubmit} className="w-full max-w-5xl mx-auto">
-          <div className="relative group">
-            <span className="text-red-600 font-black text-xs block mb-4 tracking-[0.4em] animate-pulse">
-              // SYSTEM_SEARCH_PROTOCOL_ACTIVE
-            </span>
-            
-            <div className="flex items-center border-b-4 border-black pb-4 transition-all focus-within:border-red-600">
-              <Search size={48} className="mr-6 text-black opacity-20" />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="ENTER_KEYWORDS..."
-                className="w-full bg-transparent text-5xl md:text-8xl font-black uppercase outline-none placeholder:text-black/10 italic tracking-tighter"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              <button 
-                type="submit"
-                className={`p-4 transition-all ${query ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}
-              >
-                <ArrowRight size={64} className="text-red-600" />
-              </button>
-            </div>
-            <div className="mt-10 flex flex-wrap gap-4">
-              {['Brushes', 'Mockups', 'VFX', 'Bundles', 'Textures'].map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => setQuery(tag)}
-                  className="px-4 py-2 border-2 border-black font-black uppercase text-[10px] hover:bg-black hover:text-white transition-colors"
+          <motion.div
+            initial={{ y: "-100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed top-0 left-0 right-0 z-[70] bg-background border-b shadow-xl"
+          >
+            <div className="container mx-auto px-4 py-8">
+              <div className="flex items-center gap-4 max-w-4xl mx-auto">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <input
+                    ref={inputRef}
+                    className="w-full h-14 pl-12 pr-4 bg-accent/50 rounded-full text-lg outline-none focus:ring-2 ring-primary/20 transition-all"
+                    placeholder="Search for anything..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                <button 
+                  onClick={onClose}
+                  className="p-3 hover:bg-accent rounded-full transition-colors"
                 >
-                  _{tag}
+                  <X className="h-6 w-6" />
                 </button>
-              ))}
-            </div>
-          </div>
-        </form>
+              </div>
 
-        <div className="absolute bottom-10 left-10 hidden md:block">
-            <p className="text-[10px] font-bold text-black/30 uppercase tracking-[0.2em]">
-                Press [ESC] to abort // Press [ENTER] to execute_search
-            </p>
-        </div>
-      </div>
-    </div>
+              <div className="max-w-4xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 pb-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Trending
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {QUICK_LINKS.map((link) => (
+                      <Link 
+                        key={link} 
+                        href={`/search?q=${link}`}
+                        className="px-3 py-1.5 bg-accent hover:bg-primary hover:text-primary-foreground rounded-md text-sm transition-colors"
+                        onClick={onClose}
+                      >
+                        {link}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Star className="h-4 w-4" /> Recommended Bundles
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {RECOMMENDATIONS.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/bundles/${item.id}`}
+                        onClick={onClose}
+                        className="group flex items-center justify-between p-3 border rounded-xl hover:border-primary transition-all bg-card"
+                      >
+                        <div>
+                          <div className="font-medium group-hover:text-primary transition-colors">{item.title}</div>
+                          <div className="text-xs text-muted-foreground">{item.category}</div>
+                        </div>
+                        <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
