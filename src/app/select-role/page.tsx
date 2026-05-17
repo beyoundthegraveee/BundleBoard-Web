@@ -27,7 +27,12 @@ export default function SelectRolePage() {
         body: JSON.stringify({
           query: `
             mutation UpdateUserRole($input: UpdateUserRoleInput!) {
-              updateUserRole(input: $input) { success }
+              updateUserRole(input: $input) { 
+                success 
+                message
+                accessToken
+                refreshToken
+              }
             }
           `,
           variables: {
@@ -37,12 +42,22 @@ export default function SelectRolePage() {
       })
 
       const result = await response.json()
-      if (result.data?.updateUserRole?.success) {
-        await update({ isNewUser: false, role: role })
+      const data = result.data?.updateUserRole
+
+      if (data?.success) {
+        await update({ 
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          role: role,
+          isNewUser: false 
+        })
         router.push("/")
+        router.refresh()
+      } else {
+        console.error("Update failed:", data?.message)
       }
     } catch (error) {
-      console.error(error)
+      console.error("ROLE_UPDATE_ERROR:", error)
     } finally {
       setLoading(false)
     }

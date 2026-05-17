@@ -6,14 +6,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f4f4f4] text-black selection:bg-red-600 selection:text-white font-mono overflow-x-hidden">
       
-      {/* Blueprint Grid Overlay */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none" 
            style={{ 
              backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`, 
              backgroundSize: '40px 40px' 
            }} />
 
-      {/* Ticker Bar */}
       <div className="w-full bg-black text-white py-1 overflow-hidden whitespace-nowrap border-b border-red-600 relative z-10">
         <div className="animate-marquee inline-block font-black text-[10px] uppercase tracking-[0.5em]">
           SYSTEM_STATUS: ACTIVE // DATA_STREAM: ENCRYPTED // ASSET_LOAD: 100% // NO_COMPROMISE_DIGITAL_GOODS // 
@@ -21,7 +19,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section */}
       <section className="relative border-b-2 border-black pt-20 pb-10 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 relative">
           
@@ -66,7 +63,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Main Grid */}
       <section className="relative py-20 px-4 container mx-auto z-10">
         <div className="absolute top-0 left-0 w-10 h-10 border-l-2 border-t-2 border-black" />
         <div className="absolute top-0 right-0 w-10 h-10 border-r-2 border-t-2 border-black" />
@@ -81,7 +77,6 @@ export default function Home() {
         <CollectionGrid />
       </section>
 
-      {/* Footer */}
       <footer className="bg-black text-white pt-20 pb-10 relative z-20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-20">
