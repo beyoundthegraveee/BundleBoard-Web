@@ -17,20 +17,20 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
   const roles = [
     {
       id: "client",
-      title: "Buyer",
-      description: "I want to browse and buy high-quality design assets.",
+      title: "Buyer_Node",
+      description: "LOG_IN_TO_BROWSE_AND_ACQUIRE_HIGH_QUALITY_DESIGN_ASSETS.",
       icon: User,
     },
     {
       id: "author",
-      title: "Author",
-      description: "I want to sell my digital products and grow my brand.",
+      title: "Author_Node",
+      description: "LOG_IN_TO_DEPLOY_DIGITAL_PRODUCTS_AND_EXPAND_YOUR_BRAND.",
       icon: PenTool,
     },
   ] as const;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2 font-mono">
       {roles.map((role) => {
         const isSelected = selected === role.id;
         return (
@@ -38,25 +38,27 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
             key={role.id}
             onClick={() => setSelected(role.id)}
             className={cn(
-              "relative flex flex-col p-6 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent",
-              isSelected ? "border-primary bg-primary/5" : "border-muted bg-card"
+              "relative flex flex-col p-6 rounded-none border-4 border-black cursor-pointer select-none transition-all",
+              isSelected 
+                ? "bg-zinc-100 translate-x-[4px] translate-y-[4px] shadow-none" 
+                : "bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_rgba(0,0,0,1)]"
             )}
           >
             {isSelected && (
-              <div className="absolute top-3 right-3 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                <Check className="h-4 w-4 text-white" />
+              <div className="absolute top-3 right-3 h-6 w-6 rounded-none border-2 border-black bg-black flex items-center justify-center shadow-[2px_2px_0px_rgba(239,68,68,1)]">
+                <Check className="h-4 w-4 text-white stroke-[4]" />
               </div>
             )}
             
             <div className={cn(
-              "mb-4 flex h-12 w-12 items-center justify-center rounded-full transition-colors",
-              isSelected ? "bg-primary text-white" : "bg-primary/10 text-primary"
+              "mb-4 flex h-12 w-12 items-center justify-center rounded-none border-2 border-black transition-colors",
+              isSelected ? "bg-black text-white" : "bg-zinc-50 text-black shadow-[3px_3px_0px_rgba(0,0,0,1)]"
             )}>
-              <role.icon className="h-6 w-6" />
+              <role.icon className="h-5 w-5 stroke-[2.5]" />
             </div>
 
-            <h3 className="text-xl font-bold">{role.title}</h3>
-            <p className="text-sm text-muted-foreground mt-2">
+            <h3 className="text-xl font-black uppercase tracking-tight">{role.title}</h3>
+            <p className="text-[10px] leading-relaxed font-bold text-zinc-600 uppercase mt-2">
               {role.description}
             </p>
           </div>
@@ -64,12 +66,15 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
       })}
 
       <Button 
-        className="md:col-span-2 mt-4 h-12 text-lg"
+        className="md:col-span-2 mt-4 bg-black text-white rounded-none font-black uppercase shadow-[6px_6px_0px_rgba(239,68,68,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all py-6 text-sm"
         disabled={!selected || isLoading}
         onClick={() => selected && onSelect(selected)}
       >
-        {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-        Confirm Selection
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          "Confirm_Identity_Protocol"
+        )}
       </Button>
     </div>
   );

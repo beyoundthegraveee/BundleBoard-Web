@@ -8,7 +8,6 @@ import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useSearchParams } from "next/navigation"
 
-
 const RESEND_VERIFICATION_MUTATION = `
   mutation ResendVerification($email: String!) {
     resendVerificationEmail(email: $email) {
@@ -34,7 +33,7 @@ export default function VerifyRequestPage() {
     setMessage(null)
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080", {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,46 +63,64 @@ export default function VerifyRequestPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md text-center">
-        <CardHeader>
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-primary/10 p-3">
-              <MailCheck className="h-10 w-10 text-primary" />
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 font-mono">
+      <Card className="w-full max-w-md border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] text-center bg-white">
+        
+        <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50 p-6">
+          <div className="flex justify-center mb-2">
+            <div className="border-4 border-black bg-white p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+              <MailCheck className="h-8 w-8 text-black" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Check your email</CardTitle>
-          <CardDescription>
-            We've sent a verification link to your email address. 
-            Please click the link to activate your account.
+          <CardTitle className="text-3xl font-black uppercase tracking-tighter">Check_Email</CardTitle>
+          <CardDescription className="font-bold uppercase text-[10px] opacity-70">
+            Verification_Link_Dispatched
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+
+        <CardContent className="grid gap-4 p-8 text-left">
           {message && (
-            <Alert variant={message.type === 'success' ? 'default' : 'destructive'}>
-              <AlertDescription>{message.text}</AlertDescription>
+            <Alert className={`border-2 rounded-none ${message.type === 'success' ? 'border-black bg-zinc-50' : 'border-red-600 bg-red-50'}`}>
+              <AlertDescription className={`font-bold uppercase text-[10px] ${message.type === 'success' ? 'text-black' : 'text-red-600'}`}>
+                {message.text}
+              </AlertDescription>
             </Alert>
           )}
-          <p className="text-sm text-muted-foreground">
-            Didn't receive the email? Check your spam folder or click the button below to resend.
+          
+          <p className="text-xs font-bold uppercase leading-relaxed text-zinc-700">
+            We have transmitted an activation key to your node destination. 
+            Confirm the connection via your inbox to initialize the identity.
+          </p>
+          <p className="text-[10px] italic font-black uppercase text-red-600">
+            * Check spam directory if protocol is delayed.
           </p>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2">
+
+        <CardFooter className="flex flex-col gap-3 p-8 pt-0">
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="w-full border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all py-5" 
             onClick={handleResendEmail}
             disabled={isResending}
           >
-            {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Resend Verification Email
+            {isResending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              "Resend_Verification_Email"
+            )}
           </Button>
-          <Button variant="ghost" asChild className="w-full">
-            <Link href="/login" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Sign In
+
+          <Button 
+            variant="ghost" 
+            asChild 
+            className="w-full rounded-none font-black uppercase text-xs hover:bg-zinc-100 border-2 border-transparent hover:border-black transition-all py-5"
+          >
+            <Link href="/login" className="flex items-center justify-center gap-2">
+              <ArrowLeft className="h-4 w-4 stroke-[3]" /> Return_to_Sign_In
             </Link>
           </Button>
         </CardFooter>
+
       </Card>
     </div>
   )
