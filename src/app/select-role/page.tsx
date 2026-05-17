@@ -64,17 +64,20 @@ export default function SelectRolePage() {
   }
 
   return (
-    <div className="container flex min-h-[calc(100vh-80px)] items-center justify-center py-10">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">One last thing!</CardTitle>
-          <CardDescription className="text-lg">
-            How do you plan to use BundleBoard?
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12 font-mono">
+      <Card className="w-full max-w-2xl border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] bg-white">
+        
+        <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50 p-6">
+          <CardTitle className="text-3xl font-black uppercase tracking-tighter">One_Last_Step</CardTitle>
+          <CardDescription className="font-bold uppercase text-[10px] opacity-70">
+            Configure_BundleBoard_Node_Permissions
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        
+        <CardContent className="p-8">
           <RoleSelection onSelect={handleRoleConfirm} isLoading={loading} />
         </CardContent>
+
       </Card>
     </div>
   )

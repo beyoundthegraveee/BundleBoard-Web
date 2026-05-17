@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const VERIFY_EMAIL_MUTATION = `
   mutation VerifyEmail($token: String!) {
@@ -24,13 +25,13 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (!token) {
       setStatus('error')
-      setErrorMsg("Invalid or missing token.")
+      setErrorMsg("INVALID_OR_MISSING_TOKEN")
       return
     }
 
     const verify = async () => {
       try {
-        const res = await fetch("http://localhost:8080/graphql", {
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -44,11 +45,11 @@ export default function VerifyEmailPage() {
           setStatus('success')
         } else {
           setStatus('error')
-          setErrorMsg(result.data?.verifyEmail?.message || "Verification failed.")
+          setErrorMsg(result.data?.verifyEmail?.message?.toUpperCase() || "VERIFICATION_PROTOCOL_FAILED")
         }
       } catch (e) {
         setStatus('error')
-        setErrorMsg("Connection error.")
+        setErrorMsg("CONNECTION_TERMINATED")
       }
     }
 
@@ -56,33 +57,87 @@ export default function VerifyEmailPage() {
   }, [token])
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="text-center">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 font-mono">
+      <Card className="w-full max-w-md border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] text-center bg-white">
+        
         {status === 'loading' && (
           <>
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
-            <h1 className="text-xl font-medium">Verifying your email...</h1>
+            <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50 p-6">
+              <div className="flex justify-center mb-2">
+                <Loader2 className="h-10 w-10 animate-spin text-black" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">Verifying_Node...</CardTitle>
+              <CardDescription className="font-bold uppercase text-[10px] opacity-70">
+                Executing_Cryptographic_Check
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <p className="text-xs font-bold uppercase text-zinc-700 animate-pulse">
+                Please hold. Synchronizing authorization token with core system infrastructure...
+              </p>
+            </CardContent>
           </>
         )}
-
         {status === 'success' && (
           <>
-            <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Email Verified!</h1>
-            <p className="text-muted-foreground mb-6">Your account is now active. You can proceed to sign in.</p>
-            <Button onClick={() => router.push("/login")}>Go to Sign In</Button>
+            <CardHeader className="space-y-1 text-center border-b-4 border-black bg-emerald-50 p-6">
+              <div className="flex justify-center mb-2">
+                <div className="border-4 border-black bg-white p-3 shadow-[4px_4px_0px_rgba(16,185,129,1)]">
+                  <CheckCircle2 className="h-8 w-8 text-emerald-600 stroke-[3]" />
+                </div>
+              </div>
+              <CardTitle className="text-3xl font-black uppercase tracking-tighter text-emerald-900">Verified_Ok</CardTitle>
+              <CardDescription className="font-bold uppercase text-[10px] text-emerald-700 opacity-80">
+                Identity_Activation_Complete
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 p-8">
+              <p className="text-xs font-bold uppercase text-left leading-relaxed text-zinc-700">
+                Your cryptographic signature has been validated. The node is now declared active inside the BundleBoard network.
+              </p>
+              <Button 
+                className="w-full bg-black text-white rounded-none font-black uppercase text-xs shadow-[6px_6px_0px_rgba(16,185,129,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all py-6" 
+                onClick={() => router.push("/login")}
+              >
+                Initiate_Sign_In
+              </Button>
+            </CardContent>
+          </>
+        )}
+        {status === 'error' && (
+          <>
+            <CardHeader className="space-y-1 text-center border-b-4 border-black bg-red-50 p-6">
+              <div className="flex justify-center mb-2">
+                <div className="border-4 border-red-600 bg-white p-3 shadow-[4px_4px_0px_rgba(220,38,38,1)]">
+                  <XCircle className="h-8 w-8 text-red-600 stroke-[3]" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter text-red-900">Protocol_Error</CardTitle>
+              <CardDescription className="font-bold uppercase text-[10px] text-red-700 opacity-80">
+                Verification_Failed
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 p-8">
+              <div className="border-2 border-red-600 bg-red-50/50 p-3 text-left">
+                <p className="text-[10px] font-black uppercase text-red-600 italic">
+                  Cause: {errorMsg}
+                </p>
+              </div>
+              <p className="text-xs font-bold uppercase text-left leading-relaxed text-zinc-700">
+                The token is either deformed, expired, or has already been consumed by another initialization process.
+              </p>
+              <Button 
+                variant="outline"
+                className="w-full border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(220,38,38,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all py-6" 
+                onClick={() => router.push("/register")}
+              >
+                Restart_Registration
+              </Button>
+            </CardContent>
           </>
         )}
 
-        {status === 'error' && (
-          <>
-            <XCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Verification Failed</h1>
-            <p className="text-red-500 mb-6">{errorMsg}</p>
-            <Button variant="outline" onClick={() => router.push("/register")}>Back to Registration</Button>
-          </>
-        )}
-      </div>
+      </Card>
     </div>
   )
 }

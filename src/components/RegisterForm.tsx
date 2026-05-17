@@ -96,95 +96,137 @@ export function RegisterForm() {
 
   return (
     <>
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>
-            Enter your details to get started with BundleBoard
+      <Card className="w-full max-w-md mx-auto border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] font-mono">
+        <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50">
+          <CardTitle className="text-3xl font-black uppercase tracking-tighter">Sign_Up</CardTitle>
+          <CardDescription className="font-bold uppercase text-[10px] opacity-70">
+            Create_Node_Identity_BundleBoard
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          {/* Сетка изменена на 1 колонку, так как остался только Google */}
+        
+        <CardContent className="grid gap-6 p-8">
           <div className="grid grid-cols-1 gap-4">
-            <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading}>
+            <Button 
+              variant="outline" 
+              className="border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+              onClick={() => handleSocialLogin('google')} 
+              disabled={isLoading}
+            >
               <FaGoogle className="mr-2 h-4 w-4 text-[#DB4437]" />
-              Continue with Google
+              Continue_with_Google
             </Button>
           </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t-2 border-black" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
+            <div className="relative flex justify-center text-[10px] uppercase font-black">
+              <span className="bg-white px-2 italic">Register_New_Identity</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             {serverError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{serverError}</AlertDescription>
+              <Alert className="border-2 border-red-600 rounded-none bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-600 font-bold uppercase text-[10px]">
+                  {serverError}
+                </AlertDescription>
               </Alert>
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="font-black uppercase text-xs">Username</Label>
               <Input
                 id="username"
-                placeholder="johndoe"
+                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
+                placeholder="USER_ID"
                 disabled={isLoading}
-                {...register("username", { required: "Username is required" })}
+                {...register("username", { 
+                  required: "Username is required",
+                  minLength: { value: 3, message: "Min length is 3" }
+                })}
               />
-              {errors.username && <p className="text-xs text-red-500">{errors.username.message}</p>}
+              {errors.username && (
+                <p className="text-[9px] text-red-600 font-black uppercase italic">
+                  {errors.username.message as string}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-black uppercase text-xs">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
+                placeholder="EMAIL_ADDRESS"
                 disabled={isLoading}
                 {...register("email", { required: "Email is required" })}
               />
-              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+              {errors.email && (
+                <p className="text-[9px] text-red-600 font-black uppercase italic">
+                  {errors.email.message as string}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-black uppercase text-xs">Password</Label>
               <Input
                 id="password"
                 type="password"
+                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
+                placeholder="SECURE_KEY"
                 disabled={isLoading}
-                {...register("password", { required: "Password is required" })}
+                {...register("password", { 
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Min length is 8" }
+                })}
               />
+              {errors.password && (
+                <p className="text-[9px] text-red-600 font-black uppercase italic">
+                  {errors.password.message as string}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="font-black uppercase text-xs">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
+                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
+                placeholder="CONFIRM_KEY"
                 disabled={isLoading}
                 {...register("confirmPassword", { 
                   required: "Confirm your password",
                   validate: (val) => val === password || "Passwords do not match"
                 })}
               />
-              {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && (
+                <p className="text-[9px] text-red-600 font-black uppercase italic">
+                  {errors.confirmPassword.message as string}
+                </p>
+              )}
             </div>
 
-            <Button className="w-full mt-2" type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Complete Registration
+            <Button 
+              className="w-full mt-2 bg-black text-white rounded-none font-black uppercase shadow-[6px_6px_0px_rgba(239,68,68,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all py-6" 
+              type="submit" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Complete_Registration"
+              )}
             </Button>
           </form>
         </CardContent>
       </Card>
+
       <RoleModal 
         isOpen={isRoleModalOpen} 
         onOpenChange={setIsRoleModalOpen} 

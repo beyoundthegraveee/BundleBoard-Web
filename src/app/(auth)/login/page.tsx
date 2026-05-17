@@ -3,24 +3,18 @@ import Link from "next/link"
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-[calc(100vh-6rem)] flex-col items-center justify-center bg-slate-50/50 px-4 py-12">
-      <div className="w-full max-w-[400px] space-y-6">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Welcome back
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to access your account
-          </p>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-12 font-mono">
+      <div className="w-full max-w-md space-y-6">
+        
         <LoginForm />
-        <p className="px-8 text-center text-sm text-muted-foreground">
-          New to BundleBoard?{" "}
+        
+        <p className="px-8 text-center text-xs font-black uppercase tracking-tight text-black">
+          New_to_BundleBoard?{" "}
           <Link 
             href="/register" 
-            className="font-semibold text-primary underline-offset-4 hover:underline"
+            className="text-red-600 underline underline-offset-4 decoration-2 hover:text-black transition-colors"
           >
-            Create an account
+            Create_an_account
           </Link>
         </p>
       </div>
