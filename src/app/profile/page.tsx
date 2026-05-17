@@ -37,14 +37,13 @@ const GET_USER_PROFILE = `
   }
 `;
 
-// 2. Исправленные интерфейсы
 interface Purchase {
   id: string;
   amount: number;
   currency: string;
   status: string;
   snapshotPrice: number;
-  createdAt: string; // В JSON приходит createdAt
+  createdAt: string;
   asset: {
     id: string;
     name: string;
@@ -105,7 +104,6 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-white text-black font-mono p-4 md:p-10 lg:p-16">
-      {/* HEADER SECTION */}
       <nav className="mb-16 border-b-8 border-black pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -121,7 +119,6 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
         
-        {/* LEFT COLUMN: IDENTITY */}
         <div className="lg:col-span-4 space-y-10">
           <section className="border-4 border-black p-8 shadow-[12px_12px_0px_rgba(0,0,0,1)] relative overflow-hidden bg-white">
             <div className="absolute top-0 right-0 p-2 bg-black text-white text-[8px] font-black uppercase">ID_{userData?.id}</div>
@@ -218,7 +215,6 @@ export default function ProfilePage() {
             )}
           </section>
 
-          {/* BILLING TABLE */}
           <section className="mt-20">
             <div className="flex items-center gap-4 mb-8 opacity-40">
               <h3 className="text-xl font-black uppercase italic">Billing_Ledger</h3>
