@@ -4,11 +4,16 @@ import React, { useEffect, useState } from 'react'
 import { useSession, signOut } from "next-auth/react"
 import { 
   Loader2, User, Settings, LogOut, 
-  Terminal, ExternalLink, Download, ShieldCheck 
+  Terminal, ExternalLink, Download, ShieldCheck, Upload
 } from "lucide-react"
 import Link from 'next/link'
+import { createClient } from "@supabase/supabase-js"
 
-// 1. Обновленный запрос под новый эндпоинт и структуру
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 const GET_USER_PROFILE = `
   query GetUserProfile {
     getUserProfile {
@@ -33,6 +38,16 @@ const GET_USER_PROFILE = `
           }
         }
       }
+    }
+  }
+`;
+
+const UPDATE_AVATAR_MUTATION = `
+  mutation UpdateAvatar($input: UpdateAvatarRequest!) {
+    updateAvatar(input: $input) {
+      id
+      avatarUrl
+      updatedAt
     }
   }
 `;
@@ -64,34 +79,138 @@ interface UserData {
 }
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
+
+  const fetchUser = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/graphql", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(session as any)?.accessToken}` 
+        },
+        body: JSON.stringify({
+          query: GET_USER_PROFILE
+        }),
+      })
+      const result = await response.json()
+
+      if (result.errors) {
+        console.error("GraphQL вернул ошибку при загрузке профиля:", result.errors)
+      } else {
+        console.log("Данные профиля успешно получены:", result.data?.getUserProfile)
+        setUserData(result.data?.getUserProfile)
+      }
+    } catch (err) {
+      console.error("PROFILE_CRITICAL_ERROR:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/graphql", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${(session as any)?.accessToken}` 
-          },
-          body: JSON.stringify({
-            query: GET_USER_PROFILE
-          }),
-        })
-        const result = await response.json()
-        setUserData(result.data?.getUserProfile)
-      } catch (err) {
-        console.error("PROFILE_CRITICAL_ERROR:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     if (status === "authenticated") fetchUser()
   }, [session, status])
+
+  const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          canvas.width = 300
+          canvas.height = 300
+          const ctx = canvas.getContext("2d")
+          if (!ctx) return reject(new Error("Canvas failure"))
+
+          const size = Math.min(img.width, img.height)
+          const xIdx = (img.width - size) / 2
+          const yIdx = (img.height - size) / 2
+
+          ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 300, 300)
+
+          canvas.toBlob(
+            (blob) => blob ? resolve(blob) : reject(new Error("Serialization error")),
+            "image/webp",
+            0.85
+          )
+        }
+      }
+      reader.onerror = (err) => reject(err)
+    })
+  }
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+
+    console.log("Файл выбран успешно!", event.target.files?.[0]);
+    console.log("Текущее состояние userData:", userData);
+    
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+
+    if(!userData) {
+      console.error("Критическая ошибка: у userData отсутствует ID!")
+      setIsUploading(false)
+      return
+    }
+
+    try {
+      const processedBlob = await resizeAndConvertToWebP(file)
+      const fileName = `avatars/${userData.id}_${Date.now()}.webp`
+
+      const { error: uploadError } = await supabase.storage
+        .from("previews")
+        .upload(fileName, processedBlob, {
+          contentType: "image/webp",
+          upsert: true
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("previews")
+        .getPublicUrl(fileName)
+
+      const response = await fetch("http://localhost:8080/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(session as any)?.accessToken}`
+        },
+        body: JSON.stringify({
+          query: UPDATE_AVATAR_MUTATION,
+          variables: {
+            input: {
+              id: userData.id,
+              avatarUrl: publicUrl
+            }
+          }
+        })
+      })
+
+      const mutationResult = await response.json()
+      
+      if (mutationResult.errors) {
+        throw new Error(mutationResult.errors[0].message)
+      }
+      
+      // Локально переключаем аватарку на экране, чтобы юзер сразу видел изменения
+      setUserData(prev => prev ? { ...prev, avatarUrl: publicUrl } : null)
+      await updateSession()
+    } catch (err) {
+      console.error("AVATAR_UPDATE_PROTOCOL_FAILED:", err)
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   if (loading || status === "loading") return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white font-mono">
@@ -123,7 +242,8 @@ export default function ProfilePage() {
           <section className="border-4 border-black p-8 shadow-[12px_12px_0px_rgba(0,0,0,1)] relative overflow-hidden bg-white">
             <div className="absolute top-0 right-0 p-2 bg-black text-white text-[8px] font-black uppercase">ID_{userData?.id}</div>
             
-            <div className="aspect-square border-4 border-black mb-8 overflow-hidden bg-zinc-200 shadow-[8px_8px_0px_rgba(239,68,68,1)]">
+            {/* Карточка аватарки */}
+            <div className="relative aspect-square border-4 border-black mb-6 overflow-hidden bg-zinc-200 shadow-[8px_8px_0px_rgba(239,68,68,1)] group/avatar">
               {userData?.avatarUrl ? (
                 <img src={userData.avatarUrl} alt="avatar" className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-500" />
               ) : (
@@ -131,6 +251,29 @@ export default function ProfilePage() {
                   <User size={80} strokeWidth={1} />
                 </div>
               )}
+
+              {/* Спиннер загрузки поверх аватарки */}
+              {isUploading && (
+                <div className="absolute inset-0 bg-white/90 border-black flex flex-col items-center justify-center z-10">
+                  <Loader2 className="animate-spin text-black mb-2" size={24} />
+                  <span className="text-[8px] font-black uppercase tracking-wider">Flashing_Node...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Брутальная кнопка загрузки нового изображения */}
+            <div className="mb-8">
+              <label className="flex items-center justify-center gap-2 w-full border-2 border-black bg-zinc-50 p-3 hover:bg-black hover:text-white transition-all font-black text-[11px] uppercase cursor-pointer select-none shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+                <Upload size={14} className="stroke-[3]" /> 
+                {isUploading ? "Syncing_Data..." : "Upload_Identity_Image"}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleAvatarChange} 
+                  disabled={isUploading} 
+                />
+              </label>
             </div>
             
             <div className="space-y-4">
