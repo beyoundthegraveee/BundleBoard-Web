@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import Link from 'next/link'
 import { createClient } from "@supabase/supabase-js"
+import { useAuthActions } from '@/lib/useAuthActions'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -83,6 +84,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const { terminateSession } = useAuthActions()
 
   const fetchUser = async () => {
     try {
@@ -99,9 +101,9 @@ export default function ProfilePage() {
       const result = await response.json()
 
       if (result.errors) {
-        console.error("GraphQL вернул ошибку при загрузке профиля:", result.errors)
+        console.error("GRAPHQL_ERRORS:", result.errors)
       } else {
-        console.log("Данные профиля успешно получены:", result.data?.getUserProfile)
+        console.log("GRAPHQL_SUCCESS:", result.data?.getUserProfile)
         setUserData(result.data?.getUserProfile)
       }
     } catch (err) {
@@ -282,7 +284,7 @@ export default function ProfilePage() {
                 Settings <Settings size={18} className="group-hover:rotate-90 transition-transform" />
               </Link>
               <button 
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => terminateSession()}
                 className="flex items-center justify-between w-full border-2 border-red-600 text-red-600 p-4 hover:bg-red-600 hover:text-white transition-all font-black text-[12px] uppercase"
               >
                 Terminate <LogOut size={18} />
