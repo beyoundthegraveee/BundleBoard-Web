@@ -2,6 +2,9 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
+
+const ACCESS_TOKEN_EXPIRY_MS = parseInt(process.env.JWT_ACCESS_EXPIRY_MS || "900000", 10);
+
 const SOCIAL_LOGIN_MUTATION = `
   mutation SocialLogin($input: SocialAuthRequest!) {
     socialLogin(input: $input) {
@@ -24,6 +27,50 @@ const LOGIN_MUTATION = `
     }
   }
 `;
+
+const REFRESH_TOKEN_MUTATION = `
+  mutation RefreshToken($input: RefreshTokenRequest!) {
+    refreshToken(input: $input) {
+      accessToken
+      refreshToken
+    }
+  }
+`
+
+async function refreshAccessToken(token: any) {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: REFRESH_TOKEN_MUTATION,
+        variables: { token: token.refreshToken },
+      }),
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (refreshedTokens.errors) {
+      throw new Error(refreshedTokens.errors[0].message || "Failed to refresh token");
+    }
+
+    const { accessToken, refreshToken } = refreshedTokens.data?.refreshToken || {};
+
+    return {
+      ...token,
+      accessToken: accessToken,
+      refreshToken: refreshToken ?? token.refreshToken,
+      accessTokenExpires: Date.now() + ACCESS_TOKEN_EXPIRY_MS,
+    };
+  } catch (error) {
+    console.error("CRITICAL_REFRESH_ERROR:", error);
+    return {
+      ...token,
+      error: "RefreshAccessTokenError",
+    };
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -124,10 +171,12 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, session, trigger }) {
       if (user) {
-        token.accessToken = (user as any).accessToken
-        token.refreshToken = (user as any).refreshToken
-        token.isNewUser = (user as any).isNewUser
-        token.roles = (user as any).roles || []
+        token.accessToken = (user as any).accessToken;
+        token.refreshToken = (user as any).refreshToken;
+        token.isNewUser = (user as any).isNewUser;
+        token.roles = (user as any).roles || [];
+        token.accessTokenExpires = Date.now() + ACCESS_TOKEN_EXPIRY_MS;
+        return token
       }
 
       if (trigger === "update" && session) {
@@ -135,16 +184,22 @@ export const authOptions: NextAuthOptions = {
           token.isNewUser = session.isNewUser
         }
         if (session.roles) {
-          token.roles = [session.role]
+          token.roles = session.roles
         }
       }
 
-      return token
+      if (Date.now() < (token.accessTokenExpires as number) - 60 * 1000) {
+        return token
+      }
+
+      return refreshAccessToken(token)
     },
     async session({ session, token }) {
       const s = session as any;
       s.accessToken = token.accessToken
       s.isNewUser = token.isNewUser
+      s.error = token.error
+
       if(s.user) {
         s.user.roles = token.roles || []
       }
