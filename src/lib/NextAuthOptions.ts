@@ -37,6 +37,31 @@ const REFRESH_TOKEN_MUTATION = `
   }
 `
 
+const LOGOUT_MUTATION = `
+  mutation Logout($input: RefreshTokenRequest!) {
+    logout(input: $input)
+  }
+`;
+
+export async function performLogout(refreshToken: string, accessToken: string) {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
+    await fetch(apiUrl, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}` 
+      },
+      body: JSON.stringify({
+        query: LOGOUT_MUTATION,
+        variables: { input: { refreshToken } }
+      })
+    });
+  } catch (err) {
+    console.error("LOGOUT_SERVER_ERROR:", err);
+  }
+}
+
 async function refreshAccessToken(token: any) {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
@@ -199,6 +224,7 @@ export const authOptions: NextAuthOptions = {
       s.accessToken = token.accessToken
       s.isNewUser = token.isNewUser
       s.error = token.error
+      s.refreshToken = token.refreshToken
 
       if(s.user) {
         s.user.roles = token.roles || []

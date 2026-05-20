@@ -1,10 +1,10 @@
 "use client"
 
 import { ShoppingBagIcon, User, Search, LogOut } from "lucide-react"
-import { Button } from "./ui/button"
 import * as React from "react"
 import Link from "next/link"
-import { useSession, signOut } from "next-auth/react"
+import { useAuthActions } from "@/lib/useAuthActions"
+import { useSession } from "next-auth/react"
 import { SearchOverlay } from "./SearchOverlay"
 import { cn } from "@/lib/utils"
 
@@ -40,6 +40,7 @@ const components = [
 
 export function Navbar() {
   const { data: session, status } = useSession();
+  const { terminateSession } = useAuthActions();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -47,14 +48,12 @@ export function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b-4 border-black bg-white font-mono">
         <div className="container flex h-20 items-center px-4 md:px-8">
           
-          {/* ЛЕВО: ЛОГОТИП */}
           <div className="flex-shrink-0">
             <Link href="/" className="font-bold text-2xl tracking-tighter uppercase hover:bg-black hover:text-white px-2 transition-colors">
               BUNDLEBOARD
             </Link>
           </div>
 
-          {/* ЦЕНТР: НАВИГАЦИЯ (Исправлено выравнивание) */}
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
               <NavigationMenuList className="gap-2">
@@ -103,7 +102,6 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          {/* ПРАВО: ДЕЙСТВИЯ */}
           <div className="flex items-center gap-4 flex-shrink-0">
             <button 
               className="p-2 border-2 border-transparent hover:border-black transition-all"
@@ -145,7 +143,7 @@ export function Navbar() {
                   <DropdownMenuSeparator className="bg-black h-0.5" />
                   <DropdownMenuItem 
                     className="rounded-none p-4 text-red-600 focus:bg-red-600 focus:text-white font-bold uppercase text-xs cursor-pointer"
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={terminateSession}
                   >
                     <LogOut className="mr-2 h-4 w-4 stroke-[2.5]" />
                     Terminate_Session
