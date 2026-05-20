@@ -5,19 +5,28 @@ import { useParams, useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft } from "lucide-react"
 import CollectionDetails from '@/components/CollectionDetails'
 import AuthorSidebar from '@/components/AuthorSidebar'
+import { useSession } from 'next-auth/react'
 
 export default function CollectionPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { data: session } = useSession()
   const [collection, setCollection] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [errorLog, setErrorLog] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchCollection = async () => {
       try {
-        const response = await fetch("http://localhost:8080/graphql", {
+        setErrorLog(null)
+        const headers: HeadersInit = { "Content-Type": "application/json" }
+        if ((session as any)?.accessToken) {
+          headers["Authorization"] = `Bearer ${(session as any).accessToken}`
+        }
+
+        const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({
             query: `
               query GetCollection($id: ID!) {
@@ -44,15 +53,21 @@ export default function CollectionPage() {
           }),
         })
         const result = await response.json()
+        
+        if (result.errors) {
+          throw new Error(result.errors[0].message || "GRAPHQL_QUERY_FAILED")
+        }
+
         setCollection(result.data?.getCollectionById)
-      } catch (err) {
-        console.error("CRITICAL_FETCH_ERROR:", err)
+      } catch (err: any) {
+        console.error("❌ CRITICAL_FETCH_ERROR:", err)
+        setErrorLog(err.message || "MUTATION_DISCONNECT")
       } finally {
         setLoading(false)
       }
     }
     if (id) fetchCollection()
-  }, [id])
+  }, [id, session])
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white font-mono">
@@ -69,7 +84,6 @@ export default function CollectionPage() {
 
   return (
     <main className="min-h-screen bg-white text-black font-mono p-4 md:p-10 lg:p-16">
-      {/* NAVIGATION_HEADER */}
       <nav className="mb-12 border-b-2 border-black pb-6 flex justify-between items-center">
         <button 
           onClick={() => router.back()}
@@ -84,9 +98,7 @@ export default function CollectionPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
         
-        {/* LEFT_SECTION: Visual & Details (8 Columns) */}
         <div className="lg:col-span-8 space-y-12">
-          {/* Main Visual */}
           <div className="border-4 border-black bg-zinc-100 shadow-[16px_16px_0px_rgba(0,0,0,1)] overflow-hidden">
             <img 
               src={collection.previewImage.filePath} 
@@ -94,18 +106,13 @@ export default function CollectionPage() {
               className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700 block"
             />
           </div>
-
-          {/* Наш компонент с описанием */}
           <CollectionDetails collection={collection} />
         </div>
 
-        {/* RIGHT_SECTION: Author & Stats (4 Columns) */}
         <div className="lg:col-span-4">
           <div className="sticky top-10 space-y-8">
-             {/* Блок автора (создадим его сейчас) */}
              <AuthorSidebar author={collection.author} />
 
-             {/* Дополнительная техническая сводка */}
              <div className="border-2 border-black p-6 bg-zinc-50 text-[10px] font-black uppercase space-y-2 opacity-60 italic">
                <div>Transmission_Status: Encrypted</div>
                <div>Format_Support: Verified</div>

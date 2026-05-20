@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import Link from 'next/link'
 import { createClient } from "@supabase/supabase-js"
+import { useAuthActions } from '@/lib/useAuthActions'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -83,6 +84,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const { terminateSession } = useAuthActions()
 
   const fetchUser = async () => {
     try {
@@ -99,9 +101,9 @@ export default function ProfilePage() {
       const result = await response.json()
 
       if (result.errors) {
-        console.error("GraphQL вернул ошибку при загрузке профиля:", result.errors)
+        console.error("GRAPHQL_ERRORS:", result.errors)
       } else {
-        console.log("Данные профиля успешно получены:", result.data?.getUserProfile)
+        console.log("GRAPHQL_SUCCESS:", result.data?.getUserProfile)
         setUserData(result.data?.getUserProfile)
       }
     } catch (err) {
@@ -147,9 +149,6 @@ export default function ProfilePage() {
   }
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-
-    console.log("Файл выбран успешно!", event.target.files?.[0]);
-    console.log("Текущее состояние userData:", userData);
     
     const file = event.target.files?.[0]
     if (!file) return
@@ -157,7 +156,7 @@ export default function ProfilePage() {
     setIsUploading(true)
 
     if(!userData) {
-      console.error("Критическая ошибка: у userData отсутствует ID!")
+      console.error("User data is not loaded, cannot update avatar.")
       setIsUploading(false)
       return
     }
@@ -202,7 +201,6 @@ export default function ProfilePage() {
         throw new Error(mutationResult.errors[0].message)
       }
       
-      // Локально переключаем аватарку на экране, чтобы юзер сразу видел изменения
       setUserData(prev => prev ? { ...prev, avatarUrl: publicUrl } : null)
       await updateSession()
     } catch (err) {
@@ -242,7 +240,6 @@ export default function ProfilePage() {
           <section className="border-4 border-black p-8 shadow-[12px_12px_0px_rgba(0,0,0,1)] relative overflow-hidden bg-white">
             <div className="absolute top-0 right-0 p-2 bg-black text-white text-[8px] font-black uppercase">ID_{userData?.id}</div>
             
-            {/* Карточка аватарки */}
             <div className="relative aspect-square border-4 border-black mb-6 overflow-hidden bg-zinc-200 shadow-[8px_8px_0px_rgba(239,68,68,1)] group/avatar">
               {userData?.avatarUrl ? (
                 <img src={userData.avatarUrl} alt="avatar" className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-500" />
@@ -252,7 +249,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Спиннер загрузки поверх аватарки */}
               {isUploading && (
                 <div className="absolute inset-0 bg-white/90 border-black flex flex-col items-center justify-center z-10">
                   <Loader2 className="animate-spin text-black mb-2" size={24} />
@@ -261,7 +257,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Брутальная кнопка загрузки нового изображения */}
             <div className="mb-8">
               <label className="flex items-center justify-center gap-2 w-full border-2 border-black bg-zinc-50 p-3 hover:bg-black hover:text-white transition-all font-black text-[11px] uppercase cursor-pointer select-none shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
                 <Upload size={14} className="stroke-[3]" /> 
@@ -289,7 +284,7 @@ export default function ProfilePage() {
                 Settings <Settings size={18} className="group-hover:rotate-90 transition-transform" />
               </Link>
               <button 
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => terminateSession()}
                 className="flex items-center justify-between w-full border-2 border-red-600 text-red-600 p-4 hover:bg-red-600 hover:text-white transition-all font-black text-[12px] uppercase"
               >
                 Terminate <LogOut size={18} />
@@ -309,7 +304,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: PURCHASES */}
         <div className="lg:col-span-8 space-y-12">
           <section>
             <div className="flex items-end gap-4 mb-10">
