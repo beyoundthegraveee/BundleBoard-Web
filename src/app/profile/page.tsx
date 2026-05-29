@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react'
 import { useSession, signOut } from "next-auth/react"
 import { 
   Loader2, User, Settings, LogOut, 
-  Terminal, ExternalLink, Download, ShieldCheck, Upload
+  Terminal, Download, ShieldCheck, Upload, Plus, BarChart3
 } from "lucide-react"
 import Link from 'next/link'
 import { createClient } from "@supabase/supabase-js"
 import { useAuthActions } from '@/lib/useAuthActions'
+import { DeployAssetModal } from '@/components/DeployAssetModal'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +24,16 @@ const GET_USER_PROFILE = `
       email
       avatarUrl
       status
+      roles
+      authoredCollections {
+        id
+        name
+        price
+        description
+        previewImage { 
+          filePath
+        }
+      }
       purchases {
         id
         amount
@@ -70,12 +81,24 @@ interface Purchase {
   };
 }
 
+interface AuthoredCollection {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  previewImage: {
+    filePath: string;
+  };
+}
+
 interface UserData {
   id: string;
   username: string;
   email: string;
   avatarUrl: string;
   status: string;
+  roles: string[];
+  authoredCollections?: AuthoredCollection[];
   purchases: Purchase[];
 }
 
@@ -84,6 +107,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { terminateSession } = useAuthActions()
 
   const fetchUser = async () => {
@@ -217,6 +241,7 @@ export default function ProfilePage() {
     </div>
   )
 
+  const isAuthor = userData?.roles?.includes("author")
   const totalSpent = userData?.purchases?.reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2) || "0.00"
 
   return (
@@ -225,12 +250,11 @@ export default function ProfilePage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="h-4 w-4 bg-red-600 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest">User_Access_Level: {userData?.status || 'Unknown'}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              User_Access_Level: {isAuthor ? "AUTHOR_PRIVILEGES_ENABLED" : "STANDARD_CLIENT_NODE"}
+            </span>
           </div>
           <h1 className="text-6xl font-black uppercase tracking-tighter leading-none">Node_Control</h1>
-        </div>
-        <div className="border-2 border-black p-3 bg-zinc-100 text-[11px] font-black uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-          Last_Sync: {new Date().toLocaleDateString()}
         </div>
       </nav>
 
@@ -298,13 +322,67 @@ export default function ProfilePage() {
             </div>
             <div className="text-[9px] font-mono space-y-2 leading-none uppercase">
               <div className="flex justify-between"><span>Status:</span> <span className="text-white">{userData?.status}</span></div>
-              <div className="flex justify-between"><span>Connection:</span> <span className="text-white">Secure</span></div>
+              <div className="flex justify-between"><span>Authority:</span> <span className="text-white">{isAuthor ? "ROOT_AUTHOR" : "CLIENT_NODE"}</span></div>
               <div className="pt-2 text-green-800 italic">...access_granted...</div>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-8 space-y-12">
+          
+          {isAuthor && (
+            <section className="border-4 border-red-600 p-6 bg-zinc-50 shadow-[12px_12px_0px_rgba(0,0,0,1)]">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b-4 border-black pb-4">
+                <div>
+                  <h3 className="text-3xl font-black uppercase tracking-tighter text-red-600">Author_Station</h3>
+                  <p className="text-[10px] font-bold uppercase opacity-60">Deploy and monitor custom digital asset nodes</p>
+                </div>
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 bg-black text-white px-5 py-3 font-black text-xs uppercase hover:bg-red-600 transition-all shadow-[4px_4px_0px_rgba(239,68,68,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+                >
+                  <Plus size={16} strokeWidth={3} /> Deploy_Asset
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6 text-black">
+                <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                  <div className="text-[9px] font-black uppercase opacity-40 flex items-center gap-1"><BarChart3 size={10}/> Total_Sales</div>
+                  <div className="text-2xl font-black mt-1">0 // LOCKED</div>
+                </div>
+                <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                  <div className="text-[9px] font-black uppercase opacity-40">Net_Profit</div>
+                  <div className="text-2xl font-black mt-1 text-red-600">$0.00</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider block mb-2">Deployed_Nodes_Inventory:</span>
+                {userData?.authoredCollections && userData.authoredCollections.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {userData.authoredCollections.map((col) => (
+                      <div key={col.id} className="border-2 border-black bg-white p-4 flex gap-4 items-center shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                        <div className="w-12 h-12 border-2 border-black bg-zinc-100 flex-shrink-0 overflow-hidden">
+                          {col.previewImage?.filePath && (
+                            <img src={col.previewImage.filePath} alt="" className="w-full h-full object-cover grayscale" />
+                          )}
+                        </div>
+                        <div className="overflow-hidden">
+                          <h4 className="font-black text-xs uppercase truncate">{col.name}</h4>
+                          <span className="text-[10px] font-black font-mono text-red-600">${col.price}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 border-2 border-black border-dashed bg-white text-[10px] font-black uppercase text-zinc-400">
+                    No active product nodes deployed by this station.
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           <section>
             <div className="flex items-end gap-4 mb-10">
               <h3 className="text-4xl font-black uppercase tracking-tighter italic">Archive_v.1</h3>
@@ -320,20 +398,20 @@ export default function ProfilePage() {
                   <div key={purchase.id} className="group border-4 border-black bg-white shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all duration-300">
                     <div className="aspect-video border-b-4 border-black overflow-hidden">
                       <img 
-                        src={purchase.asset.previewImage.filePath} 
-                        alt={purchase.asset.name}
+                        src={purchase.asset?.previewImage?.filePath} 
+                        alt={purchase.asset?.name}
                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" 
                       />
                     </div>
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-4">
-                        <span className="font-black uppercase text-sm leading-tight">{purchase.asset.name}</span>
+                        <span className="font-black uppercase text-sm leading-tight">{purchase.asset?.name}</span>
                         <div className="text-[9px] bg-zinc-100 border border-black px-2 py-0.5 font-black uppercase">
                           {purchase.status}
                         </div>
                       </div>
                       <Link 
-                        href={`/assets/${purchase.asset.id}`}
+                        href={`/assets/${purchase.asset?.id}`}
                         className="flex items-center justify-center gap-2 w-full bg-black text-white p-3 font-black text-[10px] uppercase hover:bg-red-600 transition-colors"
                       >
                         <Download size={14} /> Access_Data
@@ -346,7 +424,7 @@ export default function ProfilePage() {
               <div className="border-4 border-black border-dashed p-24 text-center">
                 <div className="font-black uppercase text-zinc-300 text-2xl tracking-[0.3em] mb-4">Storage_Empty</div>
                 <Link href="/" className="inline-flex items-center gap-2 font-black text-[12px] uppercase border-2 border-black p-4 hover:bg-black hover:text-white transition-all">
-                  Browse_Assets <ExternalLink size={16} />
+                  Browse_Assets
                 </Link>
               </div>
             )}
@@ -371,7 +449,7 @@ export default function ProfilePage() {
                   {userData?.purchases?.map((p) => (
                     <tr key={p.id} className="border-b border-black/10">
                       <td className="py-4 font-black">{new Date(p.createdAt).toLocaleDateString()}</td>
-                      <td className="py-4 text-center font-mono opacity-50">#{p.asset.id}</td>
+                      <td className="py-4 text-center font-mono opacity-50">#{p.asset?.id}</td>
                       <td className="py-4 text-right">{p.amount} {p.currency}</td>
                     </tr>
                   ))}
@@ -390,6 +468,16 @@ export default function ProfilePage() {
           </section>
         </div>
       </div>
+
+      {isAuthor && (
+        <DeployAssetModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          userId={userData?.id || ""}
+          accessToken={(session as any)?.accessToken || ""}
+          onSuccess={fetchUser} 
+        />
+      )}
     </main>
   )
 }
