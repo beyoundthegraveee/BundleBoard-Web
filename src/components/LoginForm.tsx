@@ -49,13 +49,17 @@ export function LoginForm() {
       })
 
       if (result?.error) {
-        throw new Error(result.error)
+        if(result.error === "CredentialsSignin") {
+          setServerError("Invalid username or password")
+        } else {
+          setServerError(result.error)
+        }
       } else {
         router.push(callBackUrl)
         router.refresh()
       }
     } catch (error: any) {
-      setServerError(error.message)
+      setServerError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }

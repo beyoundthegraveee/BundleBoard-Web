@@ -5,8 +5,10 @@ import { ShieldAlert, Check } from "lucide-react"
 
 export function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
     const consent = localStorage.getItem("cookie-consent")
     if (!consent) {
       setIsVisible(true)
@@ -18,7 +20,7 @@ export function CookieBanner() {
     setIsVisible(false)
   }
 
-  if (!isVisible) return null
+  if (!hasMounted || !isVisible) return null
 
   return (
     <div className="fixed bottom-0 left-0 w-full z-[100] p-4 md:p-8 animate-in slide-in-from-bottom duration-500">
