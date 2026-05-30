@@ -3,6 +3,7 @@ import { Space_Grotesk, Syncopate } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AuthSessionProvider } from "@/components/provider/SessionProvider";
+import { ThemeProvider } from "@/components/provider/ThemeProvider";
 import { CookieBanner } from "@/components/CookieBanner";
 
 const spaceGrotesk = Space_Grotesk({
@@ -31,15 +32,22 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${spaceGrotesk.variable} ${syncopate.variable} h-full dark`}
+      className={`${spaceGrotesk.variable} ${syncopate.variable} h-full`}
     >
       <body className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
         <AuthSessionProvider>
-          <Navbar />
-          <main className="flex-1 w-full relative">
-            {children}
-          </main>
-          <CookieBanner />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <main className="flex-1 w-full relative">
+              {children}
+            </main>
+            <CookieBanner />
+          </ThemeProvider>
         </AuthSessionProvider>
       </body>
     </html>

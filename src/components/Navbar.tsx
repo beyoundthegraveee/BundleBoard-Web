@@ -1,10 +1,11 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, LogOut } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
+import { useTheme } from "next-themes"
 import { SearchOverlay } from "./SearchOverlay"
 import { cn } from "@/lib/utils"
 
@@ -27,7 +28,7 @@ import {
   NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const components = [
   { title: "Brushes", href: "/bundles/brushes", description: "Digital art brushes." },
@@ -41,21 +42,27 @@ const components = [
 export function Navbar() {
   const { data: session, status } = useSession();
   const { terminateSession } = useAuthActions();
+  const { theme, setTheme } = useTheme();
+  
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md font-sans">
         <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-          
-          {/* LOGO */}
+
           <div className="flex-shrink-0">
             <Link href="/" className="font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
               BUNDLE<span className="opacity-40 font-normal">BOARD</span>
             </Link>
           </div>
 
-          {/* NAVIGATION MENU */}
+
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
@@ -104,10 +111,24 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          {/* ACTION BUTTONS */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            
-            {/* SEARCH */}
+
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="h-9 w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center transition-colors relative"
+              aria-label="Toggle inversion node"
+            >
+              {mounted ? (
+                theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )
+              ) : (
+                <div className="h-4 w-4 bg-transparent" />
+              )}
+            </button>
+
             <button 
               className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
               onClick={() => setIsSearchOpen(true)}
@@ -115,7 +136,6 @@ export function Navbar() {
               <Search className="h-4 w-4" />
             </button>
 
-            {/* CART */}
             <Link href="/cart" className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative">
               <ShoppingBagIcon className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
@@ -123,7 +143,6 @@ export function Navbar() {
               </span>
             </Link>
 
-            {/* USER CONTROLS */}
             {status === "authenticated" ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
