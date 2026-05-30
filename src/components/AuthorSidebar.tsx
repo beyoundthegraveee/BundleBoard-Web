@@ -23,62 +23,72 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
   const { username, bio, rating, totalSales, avatarUrl, socialLinks } = author;
 
   return (
-    <div className="border-2 border-black p-1 bg-white font-mono shadow-[8px_8px_0px_rgba(0,0,0,1)]">
-      <div className="bg-black text-white p-3 flex justify-between items-center mb-4">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operator_Profile_v4</span>
-        <div className="flex gap-1">
-          <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-          <div className="w-2 h-2 bg-zinc-600 rounded-full" />
+    <div className="border border-border/60 bg-card text-foreground rounded-none shadow-xl font-sans overflow-hidden">
+      
+      <div className="border-b border-border/40 p-4 flex justify-between items-center bg-muted/20">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          Author Profile
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
+          <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">Verified</span>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="p-6 space-y-6">
+
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-zinc-100 border-2 border-black relative overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 bg-background border border-border/40 rounded-none relative overflow-hidden flex-shrink-0">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={username} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" />
+              <img 
+                src={avatarUrl} 
+                alt={username} 
+                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300" 
+              />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <User size={40} strokeWidth={1} />
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <User size={28} strokeWidth={1.5} />
               </div>
             )}
           </div>
-          <div>
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter leading-none">
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold tracking-tight text-foreground">
               @{username}
             </h3>
-            <div className="mt-2 inline-block bg-black text-white text-[8px] px-2 py-0.5 font-black uppercase tracking-widest">
-              Verified_Author
-            </div>
+            <span className="inline-block text-[9px] font-medium uppercase tracking-widest text-muted-foreground border border-border/60 px-2 py-0.5">
+              Studio Partner
+            </span>
           </div>
         </div>
 
-        <div className="text-[11px] font-bold uppercase leading-tight text-zinc-500 italic border-l-2 border-zinc-200 pl-4">
-          // {bio}
+        <p className="text-[13px] leading-relaxed text-muted-foreground font-normal">
+          {bio || "No custom bio parameters submitted for this profile matrix."}
+        </p>
+
+        <div className="grid grid-cols-2 border border-border/40 bg-background divide-x divide-border/40 rounded-none">
+          <div className="p-3 text-center">
+            <div className="flex justify-center items-center gap-1.5 text-muted-foreground mb-1">
+              <Star size={13} className="text-primary fill-primary/20 stroke-[1.5]" />
+              <span className="text-[10px] font-medium uppercase tracking-wider">Rating</span>
+            </div>
+            <div className="text-lg font-bold tracking-tight text-foreground">{rating.toFixed(1)}</div>
+          </div>
+          
+          <div className="p-3 text-center">
+            <div className="flex justify-center items-center gap-1.5 text-muted-foreground mb-1">
+              <ShoppingCart size={13} className="stroke-[1.5]" />
+              <span className="text-[10px] font-medium uppercase tracking-wider">Sales</span>
+            </div>
+            <div className="text-lg font-bold tracking-tight text-foreground">{totalSales}</div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-px bg-black border border-black text-center">
-          <div className="bg-white p-3">
-            <div className="flex justify-center items-center gap-1 text-red-600 mb-1">
-              <Star size={12} fill="currentColor" />
-              <span className="text-[9px] font-black uppercase">Rating</span>
-            </div>
-            <div className="text-xl font-black">{rating.toFixed(1)}</div>
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Share2 size={13} className="stroke-[1.5]" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">External Channels</span>
           </div>
-          <div className="bg-white p-3">
-            <div className="flex justify-center items-center gap-1 text-zinc-400 mb-1">
-              <ShoppingCart size={12} />
-              <span className="text-[9px] font-black uppercase">Sales</span>
-            </div>
-            <div className="text-xl font-black">{totalSales}</div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Share2 size={14} />
-            <span className="text-[10px] font-black uppercase tracking-widest">External_Channels</span>
-          </div>
+          
           <div className="grid grid-cols-1 gap-2">
             {socialLinks && socialLinks.length > 0 ? (
               socialLinks.map((link, idx) => (
@@ -87,25 +97,25 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
                   href={link.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="group flex justify-between items-center border-2 border-black p-3 hover:bg-black hover:text-white transition-all"
+                  className="group flex justify-between items-center border border-border/60 p-3 bg-background hover:bg-accent text-foreground transition-all rounded-none"
                 >
-                  <span className="text-xs font-black uppercase tracking-tighter italic">
-                    [{link.platform}]
+                  <span className="text-xs font-medium uppercase tracking-wider">
+                    {link.platform}
                   </span>
-                  <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink size={13} className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-px transition-all stroke-[1.5]" />
                 </a>
               ))
             ) : (
-              <div className="text-[10px] opacity-30 italic uppercase p-2 border border-dashed border-black">
-                No_Social_Nodes_Detected
+              <div className="text-[10px] text-muted-foreground/60 text-center py-4 border border-dashed border-border/40 rounded-none uppercase tracking-wide">
+                No external links submitted
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="bg-zinc-100 p-2 text-[8px] font-black uppercase text-center border-t border-black opacity-50">
-        System_Status: Online // Last_Activity: Stable
+      <div className="bg-muted/30 p-2.5 text-[9px] font-medium uppercase text-center border-t border-border/30 text-muted-foreground/60 tracking-wider">
+        Active Node Registry System Verified
       </div>
     </div>
   )
