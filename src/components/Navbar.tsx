@@ -34,7 +34,7 @@ const components = [
   { title: "Mockups", href: "/bundles/mockups", description: "Design templates." },
   { title: "Textures", href: "/bundles/textures", description: "Surface details." },
   { title: "Fonts", href: "/bundles/fonts", description: "Selection of typefaces." },
-  { title: "Illustrations", href: "/bundles/illustrations", description: "Pre-made art." },
+  { title: "Gradients", href: "/bundles/gradients", description: "Color transitions." },
   { title: "Graphics", href: "/bundles/graphics", description: "Graphic elements." },
 ]
 

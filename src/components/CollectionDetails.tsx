@@ -1,7 +1,16 @@
 "use client"
 
-import React from 'react'
-import { HardDrive, FileDigit, Shield, Activity, Hash } from "lucide-react"
+import React, { useState } from 'react'
+import { HardDrive, Shield, Activity, Hash, ChevronLeft, ChevronRight, Images } from "lucide-react"
+
+interface GalleryImage {
+  id: string;
+  fileName: string;
+  filePath: string;
+  width: number;
+  height: number;
+  fileSize: number;
+}
 
 interface CollectionDetailsProps {
   collection: {
@@ -15,6 +24,7 @@ interface CollectionDetailsProps {
       mimeType: string;
       provider: string;
     };
+    galleryImages?: GalleryImage[];
   }
 }
 
@@ -27,11 +37,21 @@ const formatBytes = (bytes: number) => {
 };
 
 export default function CollectionDetails({ collection }: CollectionDetailsProps) {
-  const { name, description, price, mediaResource, id } = collection;
+  const { name, description, price, mediaResource, id, galleryImages = [] } = collection;
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const nextSlide = () => {
+    if (galleryImages.length === 0) return;
+    setCurrentSlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    if (galleryImages.length === 0) return;
+    setCurrentSlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  };
 
   return (
     <div className="font-mono text-black space-y-8">
-      {/* HEADER_BLOCK */}
       <div className="border-b-4 border-black pb-6 relative">
         <div className="flex items-center gap-2 mb-2 text-red-600">
           <Activity size={14} className="animate-pulse" />
@@ -44,6 +64,58 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
           #{id.padStart(4, '0')}
         </div>
       </div>
+
+      {galleryImages.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+            <Images size={12} className="text-red-600" />
+            Visual_Payload_Manifest ({galleryImages.length}/{galleryImages.length})
+          </div>
+          
+          <div className="relative border-4 border-black bg-zinc-100 aspect-video w-full overflow-hidden shadow-[8px_8px_0px_rgba(0,0,0,1)] group">
+            <img 
+              src={galleryImages[currentSlide].filePath} 
+              alt={galleryImages[currentSlide].fileName} 
+              className="w-full h-full object-cover transition-all duration-300 select-none"
+            />
+
+            <div className="absolute bottom-0 left-0 bg-black text-white px-3 py-1.5 text-[9px] font-black uppercase border-t-2 border-r-2 border-black max-w-[70%] truncate">
+              {galleryImages[currentSlide].fileName} [{galleryImages[currentSlide].width}x{galleryImages[currentSlide].height}] ({formatBytes(galleryImages[currentSlide].fileSize)})
+            </div>
+
+            {galleryImages.length > 1 && (
+              <>
+                <button 
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white border-2 border-black p-2 hover:bg-black hover:text-white text-black transition-colors shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                >
+                  <ChevronLeft size={20} strokeWidth={3} />
+                </button>
+                <button 
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white border-2 border-black p-2 hover:bg-black hover:text-white text-black transition-colors shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                >
+                  <ChevronRight size={20} strokeWidth={3} />
+                </button>
+              </>
+            )}
+          </div>
+
+          {galleryImages.length > 1 && (
+            <div className="flex gap-1.5 justify-start pt-1">
+              {galleryImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`w-3 h-3 border-2 border-black transition-all ${
+                    idx === currentSlide ? 'bg-black scale-110' : 'bg-white hover:bg-zinc-200'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-px bg-black border-2 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)]">
         <div className="md:col-span-4 bg-white p-6 flex flex-col justify-center">
@@ -96,6 +168,7 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
           </div>
         </div>
       </div>
+
       <div className="text-[10px] font-black uppercase opacity-20 pt-10 flex justify-between">
         <span>License: Single_User_Commercial</span>
         <span>Secure_Connection_Verified</span>
