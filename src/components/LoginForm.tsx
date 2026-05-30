@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useForm, Controller } from "react-hook-form"
 import { useState } from "react"
-import { Loader2, AlertCircle, Check } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 import { FaGoogle } from "react-icons/fa"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -70,52 +70,55 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] font-mono">
-      <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50">
-        <CardTitle className="text-3xl font-black uppercase tracking-tighter">Sign_In</CardTitle>
-        <CardDescription className="font-bold uppercase text-[10px] opacity-70">
-          Node_Authorization_Required
+    <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
+      
+      <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
+        <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground">
+          Sign In
+        </CardTitle>
+        <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
+          Authorization Node Key Required
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="grid gap-6 p-8">
+      <CardContent className="grid gap-5 p-8">
         <div className="grid grid-cols-1 gap-4">
           <Button 
             variant="outline" 
-            className="border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+            className="border border-border/80 rounded-none font-semibold uppercase text-[11px] tracking-wider py-5 bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => handleSocialLogin('google')} 
             disabled={isLoading}
           >
-            <FaGoogle className="mr-2 h-4 w-4 text-[#DB4437]" />
-            Continue_with_Google
+            <FaGoogle className="mr-2 h-3.5 w-3.5 opacity-70" />
+            Continue with Google
           </Button>
         </div>
 
-        <div className="relative">
+        <div className="relative my-2">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t-2 border-black" />
+            <span className="w-full border-t border-border/30" />
           </div>
-          <div className="relative flex justify-center text-[10px] uppercase font-black">
-            <span className="bg-white px-2 italic">Or_Legacy_Login</span>
+          <div className="relative flex justify-center text-[10px] uppercase font-medium tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Or use access key</span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           {serverError && (
-            <Alert className="border-2 border-red-600 rounded-none bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-600 font-bold uppercase text-[10px]">
+            <Alert className="border border-destructive/30 rounded-none bg-destructive/5 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+              <AlertDescription className="text-destructive font-semibold uppercase text-[11px] tracking-wider">
                 {serverError}
               </AlertDescription>
             </Alert>
           )}
           
-          <div className="grid gap-2">
-            <Label htmlFor="username" className="font-black uppercase text-xs">Username</Label>
+          <div className="grid gap-1.5">
+            <Label htmlFor="username" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Username</Label>
             <Input
               id="username"
-              className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
-              placeholder="USER_ID"
+              className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+              placeholder="Enter username"
               disabled={isLoading}
               {...register("username", { 
                 required: "Username is required",
@@ -123,23 +126,24 @@ export function LoginForm() {
               })}
             />
             {errors.username && (
-              <p className="text-[9px] text-red-600 font-black uppercase italic">
-                {errors.username.message as string}
+              <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                // {errors.username.message as string}
               </p>
             )}
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="font-black uppercase text-xs">Password</Label>
-              <Link href="/forgot-password"  className="text-[10px] line-clamp-1 font-black uppercase text-red-600 hover:underline">
+              <Label htmlFor="password" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Password</Label>
+              <Link href="/forgot-password" className="text-[11px] font-medium uppercase tracking-wider text-primary hover:opacity-80 transition-opacity">
                 Recover?
               </Link>
             </div>
             <Input
               id="password"
-              className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
               type="password"
+              className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+              placeholder="Enter password"
               disabled={isLoading}
               {...register("password", { 
                 required: "Password is required",
@@ -147,19 +151,20 @@ export function LoginForm() {
               })}
             />
             {errors.password && (
-              <p className="text-[9px] text-red-600 font-black uppercase italic">
-                {errors.password.message as string}
+              <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                // {errors.password.message as string}
               </p>
             )}
           </div>
 
-          <div className="flex items-center space-x-3 py-2">
+          <div className="flex items-center space-x-2.5 py-1.5">
             <Controller
               name="rememberMe"
               control={control}
               render={({ field }) => (
                 <Checkbox
                   id="rememberMe"
+                  className="rounded-none border-border/80 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
@@ -167,21 +172,21 @@ export function LoginForm() {
             />
             <Label 
               htmlFor="rememberMe" 
-              className="text-[10px] font-black uppercase cursor-pointer select-none leading-none"
+              className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer select-none leading-none"
             >
-              Remember_My_Node
+              Remember session identity
             </Label>
           </div>
 
           <Button 
-            className="w-full mt-2 bg-black text-white rounded-none font-black uppercase shadow-[6px_6px_0px_rgba(239,68,68,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all py-6" 
+            className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm" 
             type="submit" 
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Initiate_Session"
+              "Initialize Session"
             )}
           </Button>
         </form>

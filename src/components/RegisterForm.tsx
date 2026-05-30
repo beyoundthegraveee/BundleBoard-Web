@@ -96,52 +96,55 @@ export function RegisterForm() {
 
   return (
     <>
-      <Card className="w-full max-w-md mx-auto border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] font-mono">
-        <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50">
-          <CardTitle className="text-3xl font-black uppercase tracking-tighter">Sign_Up</CardTitle>
-          <CardDescription className="font-bold uppercase text-[10px] opacity-70">
-            Create_Node_Identity_BundleBoard
+      <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
+        
+        <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
+          <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground">
+            Sign Up
+          </CardTitle>
+          <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
+            Create Platform Account Identity
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="grid gap-6 p-8">
+        <CardContent className="grid gap-5 p-8">
           <div className="grid grid-cols-1 gap-4">
             <Button 
               variant="outline" 
-              className="border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+              className="border border-border/80 rounded-none font-semibold uppercase text-[11px] tracking-wider py-5 bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => handleSocialLogin('google')} 
               disabled={isLoading}
             >
-              <FaGoogle className="mr-2 h-4 w-4 text-[#DB4437]" />
-              Continue_with_Google
+              <FaGoogle className="mr-2 h-3.5 w-3.5 opacity-70" />
+              Continue with Google
             </Button>
           </div>
 
-          <div className="relative">
+          <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t-2 border-black" />
+              <span className="w-full border-t border-border/30" />
             </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-black">
-              <span className="bg-white px-2 italic">Register_New_Identity</span>
+            <div className="relative flex justify-center text-[10px] uppercase font-medium tracking-widest text-muted-foreground">
+              <span className="bg-card px-3">Or register via email</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             {serverError && (
-              <Alert className="border-2 border-red-600 rounded-none bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-600 font-bold uppercase text-[10px]">
+              <Alert className="border border-destructive/30 rounded-none bg-destructive/5 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                <AlertDescription className="text-destructive font-semibold uppercase text-[11px] tracking-wider">
                   {serverError}
                 </AlertDescription>
               </Alert>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="username" className="font-black uppercase text-xs">Username</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="username" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Username</Label>
               <Input
                 id="username"
-                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
-                placeholder="USER_ID"
+                className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+                placeholder="Enter username"
                 disabled={isLoading}
                 {...register("username", { 
                   required: "Username is required",
@@ -149,36 +152,36 @@ export function RegisterForm() {
                 })}
               />
               {errors.username && (
-                <p className="text-[9px] text-red-600 font-black uppercase italic">
-                  {errors.username.message as string}
+                <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                  // {errors.username.message as string}
                 </p>
               )}
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="font-black uppercase text-xs">Email</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="email" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Email</Label>
               <Input
                 id="email"
                 type="email"
-                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
-                placeholder="EMAIL_ADDRESS"
+                className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+                placeholder="name@example.com"
                 disabled={isLoading}
                 {...register("email", { required: "Email is required" })}
               />
               {errors.email && (
-                <p className="text-[9px] text-red-600 font-black uppercase italic">
-                  {errors.email.message as string}
+                <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                  // {errors.email.message as string}
                 </p>
               )}
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="password" className="font-black uppercase text-xs">Password</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="password" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Password</Label>
               <Input
                 id="password"
                 type="password"
-                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
-                placeholder="SECURE_KEY"
+                className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+                placeholder="Minimum 8 characters"
                 disabled={isLoading}
                 {...register("password", { 
                   required: "Password is required",
@@ -186,19 +189,19 @@ export function RegisterForm() {
                 })}
               />
               {errors.password && (
-                <p className="text-[9px] text-red-600 font-black uppercase italic">
-                  {errors.password.message as string}
+                <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                  // {errors.password.message as string}
                 </p>
               )}
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword" className="font-black uppercase text-xs">Confirm Password</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="confirmPassword" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-red-600 font-bold"
-                placeholder="CONFIRM_KEY"
+                className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
+                placeholder="Re-enter password"
                 disabled={isLoading}
                 {...register("confirmPassword", { 
                   required: "Confirm your password",
@@ -206,21 +209,21 @@ export function RegisterForm() {
                 })}
               />
               {errors.confirmPassword && (
-                <p className="text-[9px] text-red-600 font-black uppercase italic">
-                  {errors.confirmPassword.message as string}
+                <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
+                  // {errors.confirmPassword.message as string}
                 </p>
               )}
             </div>
 
             <Button 
-              className="w-full mt-2 bg-black text-white rounded-none font-black uppercase shadow-[6px_6px_0px_rgba(239,68,68,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all py-6" 
+              className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm" 
               type="submit" 
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "Complete_Registration"
+                "Create Account"
               )}
             </Button>
           </form>
