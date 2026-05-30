@@ -17,20 +17,20 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
   const roles = [
     {
       id: "client",
-      title: "Buyer_Node",
-      description: "LOG_IN_TO_BROWSE_AND_ACQUIRE_HIGH_QUALITY_DESIGN_ASSETS.",
+      title: "Buyer Node",
+      description: "Access the curation platform to browse and acquire production-grade assets.",
       icon: User,
     },
     {
       id: "author",
-      title: "Author_Node",
-      description: "LOG_IN_TO_DEPLOY_DIGITAL_PRODUCTS_AND_EXPAND_YOUR_BRAND.",
+      title: "Author Node",
+      description: "Deploy digital products, license vector streams, and manage your brand pipeline.",
       icon: PenTool,
     },
   ] as const;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 font-mono text-black">
+    <div className="grid gap-6 md:grid-cols-2 font-sans text-foreground">
       {roles.map((role) => {
         const isSelected = selected === role.id;
         return (
@@ -38,34 +38,34 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
             key={role.id}
             onClick={() => setSelected(role.id)}
             className={cn(
-              "relative flex flex-col p-6 rounded-none border-4 border-black cursor-pointer select-none duration-150 transition-all",
+              "relative flex flex-col p-6 rounded-none border border-border/60 bg-card cursor-pointer select-none transition-all duration-200 shadow-md",
               isSelected 
-                ? "bg-zinc-100 translate-x-[4px] translate-y-[4px] shadow-none border-red-600" 
-                : "bg-white shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                : "hover:border-foreground/40 hover:bg-muted/10"
             )}
           >
             {isSelected && (
-              <div className="absolute top-3 right-3 h-6 w-6 rounded-none border-2 border-black bg-red-600 flex items-center justify-center shadow-[2px_2px_0px_rgba(0,0,0,1)] animate-pulse">
-                <Check className="h-4 w-4 text-white stroke-[4]" />
+              <div className="absolute top-4 right-4 h-5 w-5 rounded-none border border-primary bg-primary flex items-center justify-center text-primary-foreground">
+                <Check className="h-3 w-3 stroke-[2.5]" />
               </div>
             )}
-            
+
             <div className={cn(
-              "mb-6 flex h-14 w-14 items-center justify-center rounded-none border-4 border-black transition-colors duration-150",
+              "mb-6 flex h-12 w-12 items-center justify-center rounded-none border border-border/60 transition-colors duration-200",
               isSelected 
-                ? "bg-black text-white" 
-                : "bg-zinc-50 text-black shadow-[4px_4px_0px_rgba(0,0,0,1)] group-hover:bg-zinc-100"
+                ? "bg-primary text-primary-foreground border-primary" 
+                : "bg-background text-muted-foreground"
             )}>
-              <role.icon className="h-6 w-6 stroke-[2.5]" />
+              <role.icon className="h-5 w-5 stroke-[1.5]" />
             </div>
 
             <h3 className={cn(
-              "text-2xl font-black uppercase tracking-tighter leading-none transition-colors",
-              isSelected ? "text-red-600" : "text-black"
+              "text-xl font-bold uppercase tracking-wider transition-colors",
+              isSelected ? "text-primary" : "text-foreground"
             )}>
               {role.title}
             </h3>
-            <p className="text-[10px] leading-relaxed font-bold text-zinc-500 uppercase mt-3 tracking-wide">
+            <p className="text-xs leading-relaxed text-muted-foreground font-normal mt-2.5">
               {role.description}
             </p>
           </div>
@@ -74,21 +74,21 @@ export function RoleSelection({ onSelect, isLoading }: RoleSelectionProps) {
 
       <Button 
         className={cn(
-          "md:col-span-2 mt-6 rounded-none font-black uppercase text-sm py-7 border-4 border-black transition-all duration-150 select-none",
+          "md:col-span-2 mt-4 rounded-none font-semibold uppercase text-xs tracking-widest py-6 border transition-all duration-200 select-none shadow-sm",
           selected
-            ? "bg-black text-white shadow-[8px_8px_0px_rgba(239,68,68,1)] hover:bg-zinc-900 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
-            : "bg-zinc-200 text-zinc-400 border-zinc-400 cursor-not-allowed shadow-none"
+            ? "bg-primary text-primary-foreground border-primary hover:opacity-90 cursor-pointer"
+            : "bg-muted/30 text-muted-foreground/40 border-border/40 cursor-not-allowed"
         )}
         disabled={!selected || isLoading}
         onClick={() => selected && onSelect(selected)}
       >
         {isLoading ? (
           <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-red-600 stroke-[3]" />
-            <span>Initializing_Protocol...</span>
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-foreground" />
+            <span>Initializing Protocol</span>
           </div>
         ) : (
-          "Confirm_Identity_Protocol"
+          "Confirm Platform Role"
         )}
       </Button>
     </div>

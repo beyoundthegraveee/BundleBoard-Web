@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShieldAlert, Check } from "lucide-react"
+import { Shield, Check } from "lucide-react"
 
 export function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false)
@@ -23,47 +23,44 @@ export function CookieBanner() {
   if (!hasMounted || !isVisible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 w-full z-[100] p-4 md:p-8 animate-in slide-in-from-bottom duration-500">
-      <div className="container max-w-4xl mx-auto">
-        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_rgba(0,0,0,1)] p-6 md:p-8 font-mono relative overflow-hidden">
-          
-          <div className="absolute top-0 left-0 w-full h-2 bg-black opacity-10" />
+    <div className="fixed bottom-0 left-0 w-full z-[100] p-6 md:p-8 animate-in slide-in-from-bottom duration-300">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-card/90 backdrop-blur-xl border border-border/60 p-6 md:p-8 font-sans rounded-none shadow-2xl relative overflow-hidden">
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex-1 space-y-3">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="text-red-600 h-6 w-6 stroke-[2.5]" />
-                <h3 className="text-lg font-bold uppercase tracking-tighter">
-                  GDPR_Protocol: Privacy_Notice
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2 text-primary">
+                <Shield className="h-4 w-4 stroke-[1.5]" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
+                  Privacy Compliance Notice
                 </h3>
               </div>
-              <p className="text-[11px] md:text-xs font-medium leading-relaxed uppercase opacity-80">
+              <p className="text-xs font-normal leading-relaxed text-muted-foreground">
                 We use cookies to ensure you get the best experience on BundleBoard. 
-                In accordance with GDPR regulations, we require your consent to process analytical data.
+                In accordance with global privacy standards, we require your consent to process anonymous analytical data.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
               <button
                 onClick={() => handleConsent("essential")}
-                className="px-6 py-3 border-2 border-black font-bold uppercase text-[10px] hover:bg-zinc-100 transition-all active:translate-x-[1px] active:translate-y-[1px]"
+                className="px-5 py-2.5 border border-border/80 text-foreground bg-background hover:bg-accent font-semibold uppercase text-[10px] tracking-wider transition-colors rounded-none"
               >
-                Only_Essential
+                Only Essential
               </button>
 
               <button
                 onClick={() => handleConsent("all")}
-                className="px-6 py-3 bg-black text-white border-2 border-black font-bold uppercase text-[10px] shadow-[4px_4px_0px_rgba(239,68,68,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+                className="px-5 py-2.5 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[10px] tracking-wider transition-opacity flex items-center justify-center gap-2 rounded-none"
               >
-                Accept_All <Check size={14} strokeWidth={3} />
+                Accept All <Check size={12} strokeWidth={2} />
               </button>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t-2 border-black border-dotted">
-            <p className="text-[9px] opacity-40 font-bold uppercase tracking-widest">
-              Current_Node: Warsaw_Masovian_District // Privacy_Compliance: Active
-            </p>
+          <div className="mt-5 pt-4 border-t border-border/30 border-dashed flex justify-between items-center text-[9px] text-muted-foreground/60 uppercase tracking-widest font-medium">
+            <span>Location Framework: Warsaw District</span>
+            <span>Privacy Protocol Active</span>
           </div>
         </div>
       </div>

@@ -1,10 +1,11 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, LogOut } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
+import { useTheme } from "next-themes"
 import { SearchOverlay } from "./SearchOverlay"
 import { cn } from "@/lib/utils"
 
@@ -27,7 +28,7 @@ import {
   NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const components = [
   { title: "Brushes", href: "/bundles/brushes", description: "Digital art brushes." },
@@ -41,41 +42,48 @@ const components = [
 export function Navbar() {
   const { data: session, status } = useSession();
   const { terminateSession } = useAuthActions();
+  const { theme, setTheme } = useTheme();
+  
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b-4 border-black bg-white font-mono">
-        <div className="container flex h-20 items-center px-4 md:px-8">
-          
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md font-sans">
+        <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6 md:px-8">
+
           <div className="flex-shrink-0">
-            <Link href="/" className="font-bold text-2xl tracking-tighter uppercase hover:bg-black hover:text-white px-2 transition-colors">
-              BUNDLEBOARD
+            <Link href="/" className="font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
+              BUNDLE<span className="opacity-40 font-normal">BOARD</span>
             </Link>
           </div>
 
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
-              <NavigationMenuList className="gap-2">
+              <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent border-2 border-transparent hover:border-black rounded-none font-bold uppercase text-xs tracking-widest">
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent/50 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
                     Learn
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-0 border-4 border-black bg-white p-0 shadow-[8px_8px_0px_rgba(0,0,0,1)]">
-                      <ListItem href="/tutorials" title="Tutorials">Guides for Node_Access.</ListItem>
-                      <ListItem href="/tutorials/video" title="Video Player">Visual data_streams.</ListItem>
-                      <ListItem href="/tutorials/read" title="Read Articles">Documentation_logs.</ListItem>
+                    <ul className="grid w-[320px] gap-0 border border-border/60 bg-card p-1 rounded-none shadow-xl">
+                      <ListItem href="/tutorials" title="Tutorials">Guides for platform tools.</ListItem>
+                      <ListItem href="/tutorials/video" title="Video Streams">Visual asset walk-throughs.</ListItem>
+                      <ListItem href="/tutorials/read" title="Documentation">Core integration logs.</ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent border-2 border-transparent hover:border-black rounded-none font-bold uppercase text-xs tracking-widest">
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent/50 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
                     Bundles
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[500px] grid-cols-2 border-4 border-black bg-white p-0 shadow-[8px_8px_0px_rgba(0,0,0,1)]">
+                    <ul className="grid w-[480px] grid-cols-2 border border-border/60 bg-card p-1 rounded-none shadow-xl">
                       {components.map((component) => (
                         <ListItem key={component.title} title={component.title} href={component.href}>
                           {component.description}
@@ -91,7 +99,7 @@ export function Navbar() {
                       href="/about" 
                       className={cn(
                         navigationMenuTriggerStyle(), 
-                        "bg-transparent hover:bg-black hover:text-white rounded-none font-bold uppercase text-xs tracking-widest h-auto py-2"
+                        "bg-transparent hover:bg-accent hover:text-accent-foreground rounded-none font-medium uppercase text-[11px] tracking-wider h-auto py-2 px-4 transition-colors"
                       )}
                     >
                       About
@@ -102,60 +110,79 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <button 
-              className="p-2 border-2 border-transparent hover:border-black transition-all"
-              onClick={() => setIsSearchOpen(true)}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="h-9 w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center transition-colors relative"
+              aria-label="Toggle inversion node"
             >
-              <Search className="h-6 w-6 stroke-[2.5]" />
+              {mounted ? (
+                theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )
+              ) : (
+                <div className="h-4 w-4 bg-transparent" />
+              )}
             </button>
 
-            <Link href="/cart" className="p-2 border-2 border-transparent hover:border-black transition-all relative">
-              <ShoppingBagIcon className="h-6 w-6 stroke-[2.5]" />
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] px-1 font-bold">0</span>
+            <button 
+              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search className="h-4 w-4" />
+            </button>
+
+            <Link href="/cart" className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative">
+              <ShoppingBagIcon className="h-4 w-4" />
+              <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
+                0
+              </span>
             </Link>
 
             {status === "authenticated" ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="relative h-10 w-10 border-2 border-black overflow-hidden shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
-                    <div className="flex h-full w-full items-center justify-center bg-zinc-100">
-                      <User className="h-6 w-6 stroke-[2]" />
+                  <button className="relative h-9 w-9 border border-border/60 rounded-none overflow-hidden hover:bg-accent transition-colors">
+                    <div className="flex h-full w-full items-center justify-center bg-card text-muted-foreground hover:text-foreground">
+                      <User className="h-4 w-4" />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-64 rounded-none border-4 border-black bg-white p-0 shadow-[8px_8px_0px_rgba(0,0,0,1)]" align="end">
-                  <DropdownMenuLabel className="p-4 border-b-2 border-black bg-zinc-50">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-[10px] font-bold uppercase text-red-600 tracking-tighter">User_Session_Active</p>
-                      <p className="text-sm font-bold uppercase truncate">{session.user?.name}</p>
-                      <p className="text-[9px] font-medium opacity-50 truncate uppercase">{session.user?.email}</p>
+                <DropdownMenuContent className="w-56 rounded-none border border-border/60 bg-card p-1 shadow-2xl" align="end">
+                  <DropdownMenuLabel className="p-3 bg-muted/40 mb-1 border-b border-border/40">
+                    <div className="flex flex-col space-y-0.5">
+                      <p className="text-[9px] font-bold uppercase text-primary tracking-widest">Active Session</p>
+                      <p className="text-xs font-semibold text-foreground truncate uppercase">{session.user?.name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate font-normal">{session.user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuGroup className="p-2">
-                    <DropdownMenuItem asChild className="rounded-none hover:bg-black hover:text-white focus:bg-black focus:text-white font-bold uppercase text-xs p-3 cursor-pointer">
-                      <Link href="/profile">Profile_Data</Link>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                      <Link href="/profile">Account Node</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-none hover:bg-black hover:text-white focus:bg-black focus:text-white font-bold uppercase text-xs p-3 cursor-pointer">
-                      <Link href="/settings">System_Config</Link>
+                    <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                      <Link href="/settings">Configuration</Link>
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
-                  <DropdownMenuSeparator className="bg-black h-0.5" />
+                  <DropdownMenuSeparator className="bg-border/40 my-1" />
                   <DropdownMenuItem 
-                    className="rounded-none p-4 text-red-600 focus:bg-red-600 focus:text-white font-bold uppercase text-xs cursor-pointer"
+                    className="rounded-none p-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive font-semibold text-xs cursor-pointer uppercase tracking-wider"
                     onClick={terminateSession}
                   >
-                    <LogOut className="mr-2 h-4 w-4 stroke-[2.5]" />
-                    Terminate_Session
+                    <LogOut className="mr-2 h-3.5 w-3.5" />
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Link 
                 href="/login" 
-                className="border-2 border-black px-4 py-2 text-xs font-bold uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                className="border border-border/80 hover:border-foreground bg-background text-foreground px-4 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors rounded-none"
               >
-                Access_Node
+                Access Account
               </Link>
             )}
           </div>
@@ -171,11 +198,11 @@ export function Navbar() {
 
 function ListItem({ title, children, href }: { title: string; children: React.ReactNode; href: string }) {
   return (
-    <li className="border-b-2 border-black last:border-b-0">
+    <li className="w-full">
       <NavigationMenuLink asChild>
-        <Link href={href} className="block p-4 hover:bg-zinc-100 transition-colors group">
-          <div className="text-xs font-bold uppercase mb-1 group-hover:text-red-600">{title}</div>
-          <div className="text-[10px] font-medium leading-tight text-zinc-500 uppercase">{children}</div>
+        <Link href={href} className="block p-3 hover:bg-accent text-foreground transition-colors group rounded-none">
+          <div className="text-[12px] font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">{title}</div>
+          <div className="text-[11px] text-muted-foreground font-normal leading-tight mt-0.5">{children}</div>
         </Link>
       </NavigationMenuLink>
     </li>

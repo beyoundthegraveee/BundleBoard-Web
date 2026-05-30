@@ -3,8 +3,8 @@
 import * as React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { User, PenTool, Check, Loader2, AlertTriangle } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { AlertTriangle } from "lucide-react"
+import { RoleSelection } from "@/components/RoleSelection"
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 
 interface RoleModalProps {
   isOpen: boolean
@@ -33,11 +32,10 @@ const UPDATE_ROLE_MUTATION = `
 
 export function RoleModal({ isOpen, onOpenChange, registeredEmail }: RoleModalProps) {
   const router = useRouter()
-  const [selectedRole, setSelectedRole] = useState<"client" | "author">("client")
   const [isLoading, setIsLoading] = useState(false)
   const [errorProtocol, setErrorProtocol] = useState<string | null>(null)
 
-  const handleConfirm = async () => {
+  const handleRoleConfirm = async (role: "client" | "author") => {
     setIsLoading(true)
     setErrorProtocol(null)
     
@@ -50,7 +48,7 @@ export function RoleModal({ isOpen, onOpenChange, registeredEmail }: RoleModalPr
           variables: { 
             input: {
               email: registeredEmail, 
-              role: selectedRole
+              role: role
             }
           },
         }),
@@ -59,128 +57,60 @@ export function RoleModal({ isOpen, onOpenChange, registeredEmail }: RoleModalPr
       const result = await response.json()
       
       if (result.errors) {
-        throw new Error(result.errors[0].message || "MUTATION_VALIDATION_FAILED")
+        throw new Error(result.errors[0].message || "Internal server error occurred")
       }
 
       const data = result.data?.updateUserRole
       if (!data?.success) {
-        throw new Error(data?.message || "BACKEND_INITIALIZATION_FAILED")
+        throw new Error(data?.message || "Role configuration mutation failed")
       }
 
-      goToVerify();
+      // Перенаправление на страницу ожидания письма
+      const targetUrl = `/mail/verify-email?email=${encodeURIComponent(registeredEmail)}&role=${role}`
+      router.push(targetUrl)
     } catch (error: any) {
-      console.error("Failed to update role:", error)
-      setErrorProtocol(error.message || "CRITICAL_SERVER_DROP")
+      console.error("Role update failure:", error)
+      setErrorProtocol(error.message || "Critical connection failure")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const goToVerify = () => {
-    const targetUrl = `/mail/verify-email?email=${encodeURIComponent(registeredEmail)}&role=${selectedRole}`
-    router.push(targetUrl)
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] bg-white font-mono text-black p-6 gap-0">
+      {/* Контейнер модального окна: убрали border-4, перевели на швейцарские субпиксельные линии */}
+      <DialogContent className="sm:max-w-[540px] border border-border/60 rounded-none shadow-2xl bg-card font-sans text-foreground p-0 gap-0 overflow-hidden">
         
-        <DialogHeader className="mb-6 relative">
-          <div className="absolute -top-6 -left-6 bg-red-600 text-white text-[8px] font-black uppercase px-2 py-0.5">
-            Securing_Node...
+        {/* Шапка модального окна */}
+        <div className="space-y-2 text-center border-b border-border/40 bg-muted/20 p-6 relative">
+          <div className="absolute top-0 left-0 bg-primary text-primary-foreground text-[9px] font-semibold uppercase tracking-wider px-2.5 py-1">
+            Security Layer
           </div>
-          <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-left leading-none mt-2">
-            One_Last_Step
+          <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-foreground pt-2">
+            One Last Step
           </DialogTitle>
-          <DialogDescription className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 text-left mt-1">
-            Configure_BundleBoard_Node_Permissions
+          <DialogDescription className="font-semibold uppercase text-[10px] tracking-widest text-muted-foreground/80">
+            Configure Account Permission Profile
           </DialogDescription>
-        </DialogHeader>
-
-        {errorProtocol && (
-          <div className="border-2 border-red-600 bg-red-50 text-red-600 p-3 mb-4 rounded-none flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 stroke-[2.5]" />
-            <div className="text-[9px] font-black uppercase tracking-wide leading-tight">
-              <span className="bg-red-600 text-white px-1 mr-1">FAIL:</span> {errorProtocol}
-            </div>
-          </div>
-        )}
-
-        <div className="grid gap-4 py-2 mb-6">
-          <div
-            onClick={() => setSelectedRole("client")}
-            className={cn(
-              "relative flex items-center gap-4 p-4 rounded-none border-4 border-black cursor-pointer select-none duration-150 transition-all",
-              selectedRole === "client" 
-                ? "bg-zinc-100 translate-x-[2px] translate-y-[2px] shadow-none border-red-600" 
-                : "bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            )}
-          >
-            <div className={cn(
-              "p-2 rounded-none border-2 border-black transition-colors duration-150",
-              selectedRole === "client" ? "bg-black text-white" : "bg-zinc-50 text-black"
-            )}>
-              <User className="h-5 w-5 stroke-[2.5]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className={cn("font-black text-xs uppercase tracking-tight", selectedRole === "client" ? "text-red-600" : "text-black")}>
-                Buyer_Node
-              </p>
-              <p className="text-[9px] font-bold text-zinc-500 uppercase mt-0.5 tracking-wide truncate">
-                Acquire_High_Quality_Assets
-              </p>
-            </div>
-            {selectedRole === "client" && (
-              <div className="h-5 w-5 border-2 border-black bg-black text-white flex items-center justify-center shadow-[1px_1px_0px_rgba(239,68,68,1)]">
-                <Check className="h-3 w-3 stroke-[4]" />
-              </div>
-            )}
-          </div>
-
-          <div
-            onClick={() => setSelectedRole("author")}
-            className={cn(
-              "relative flex items-center gap-4 p-4 rounded-none border-4 border-black cursor-pointer select-none duration-150 transition-all",
-              selectedRole === "author" 
-                ? "bg-zinc-100 translate-x-[2px] translate-y-[2px] shadow-none border-red-600" 
-                : "bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            )}
-          >
-            <div className={cn(
-              "p-2 rounded-none border-2 border-black transition-colors duration-150",
-              selectedRole === "author" ? "bg-black text-white" : "bg-zinc-50 text-black"
-            )}>
-              <PenTool className="h-5 w-5 stroke-[2.5]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className={cn("font-black text-xs uppercase tracking-tight", selectedRole === "author" ? "text-red-600" : "text-black")}>
-                Author_Node
-              </p>
-              <p className="text-[9px] font-bold text-zinc-500 uppercase mt-0.5 tracking-wide truncate">
-                Deploy_Digital_Products
-              </p>
-            </div>
-            {selectedRole === "author" && (
-              <div className="h-5 w-5 border-2 border-black bg-black text-white flex items-center justify-center shadow-[1px_1px_0px_rgba(239,68,68,1)]">
-                <Check className="h-3 w-3 stroke-[4]" />
-              </div>
-            )}
-          </div>
         </div>
-        <Button 
-          className="w-full py-6 rounded-none border-4 border-black bg-black text-white font-black uppercase text-xs shadow-[6px_6px_0px_rgba(239,68,68,1)] hover:bg-zinc-900 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150" 
-          onClick={handleConfirm}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-red-600 stroke-[3]" />
-              <span>Deploying_Identity...</span>
+
+        {/* Тело модального окна */}
+        <div className="p-6 space-y-4">
+          
+          {/* Блок ошибок в чистом стиле */}
+          {errorProtocol && (
+            <div className="border border-destructive/20 bg-destructive/5 text-destructive p-4 rounded-none flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 shrink-0 stroke-[1.8] mt-0.5" />
+              <div className="text-xs leading-relaxed font-semibold uppercase tracking-wide">
+                <span className="font-bold mr-1.5 text-destructive border-b border-destructive/30">Error Matrix:</span> 
+                {errorProtocol}
+              </div>
             </div>
-          ) : (
-            "Confirm_&_Check_Email"
           )}
-        </Button>
+
+          {/* Интегрировали наш идеальный швейцарский компонент выбора роли */}
+          <RoleSelection onSelect={handleRoleConfirm} isLoading={isLoading} />
+        </div>
       </DialogContent>
     </Dialog>
   )
