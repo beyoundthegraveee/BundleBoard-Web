@@ -103,7 +103,7 @@ export function RegisterForm() {
             Sign Up
           </CardTitle>
           <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
-            Create Platform Account Identity
+            Create Platform Account
           </CardDescription>
         </CardHeader>
         
@@ -223,7 +223,7 @@ export function RegisterForm() {
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "Create Account"
+                "Sign Up"
               )}
             </Button>
           </form>
