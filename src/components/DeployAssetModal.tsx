@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2 } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { convertToWebP } from '@/lib/imageProcessor'
@@ -48,6 +48,13 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
   const [previewFiles, setPreviewFiles] = useState<File[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [objectUrls, setObjectUrls] = useState<string[]>([])
+
+  useEffect(() => {
+    return () => {
+      objectUrls.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [objectUrls])
 
   if (!isOpen) return null
 
@@ -60,7 +67,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
         const totalFiles = [...prev, ...incomingFiles]
 
         if (totalFiles.length > 5) {
-          setValidationError("Max limit reached: Only the first 5 images will be deployed into the gallery.")
+          setValidationError("Maximum five gallery preview images are allowed for this deployment layout.")
           return totalFiles.slice(0, 5)
         }
         
@@ -81,23 +88,18 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
     setValidationError(null)
 
     if (newAsset.description.length < 100) {
-      setValidationError(`Description is too short (${newAsset.description.length}/100 symbols min). Specify pack components, version compatibility, and file resolutions.`)
+      setValidationError(`Description requires minimum one hundred characters. Content parameters too short (${newAsset.description.length}/100).`)
       return
     }
 
     const numericPrice = parseFloat(newAsset.price)
     if (isNaN(numericPrice) || numericPrice < 5.00) {
-      setValidationError("Minimal bundle price allowed is 5.00 USD.")
+      setValidationError("Minimum allowed single product asset license is 5.00 USD.")
       return
     }
 
     if (previewFiles.length === 0 || !projectFile) {
-      setValidationError("Please make sure you selected both preview gallery images and a valid project archive.")
-      return
-    }
-
-    if (previewFiles.length > 5) {
-      setValidationError("Gallery manifest violation: Maximum 5 preview images are allowed.")
+      setValidationError("Deployment manifest incomplete. Upload gallery previews and a secure project archive.")
       return
     }
 
@@ -106,13 +108,13 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
     try {
       const timestamp = Date.now()
       const category = newAsset.category
-      const folderId = `col_${timestamp}`
+      const folderId = `collection-${timestamp}`
 
       const uploadPreviewsPromises = previewFiles.map(async (file, index) => {
         const webpBlob = await convertToWebP(file, 1200, 0.82)
         const { width, height } = await getImageDimensions(webpBlob)
         
-        const previewFileName = `preview_${index}_${timestamp}.webp`
+        const previewFileName = `preview-${index}-${timestamp}.webp`
         const previewPath = `${category}/${folderId}/${previewFileName}`
         
         const { error: pError } = await supabase.storage
@@ -147,10 +149,9 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
         
       if (vError) throw vError
 
-
       let calculatedMime = "zip"
       if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
-      if (projectFile.name.endsWith(".7z")) calculatedMime = "seven_z"
+      if (projectFile.name.endsWith(".7z")) calculatedMime = "sevenz"
 
       const response = await fetch("http://localhost:8080/graphql", {
         method: "POST",
@@ -189,35 +190,43 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       onSuccess()
       onClose()
     } catch (err: any) {
-      console.error("DEPLOYMENT_PROTOCOL_FAILED:", err)
-      setValidationError(err.message || "An unexpected error occurred during asset package deployment.")
+      console.error("CATALOG_DEPLOYMENT_FAILURE:", err)
+      setValidationError(err.message || "An unexpected system variation occurred during asset compilation.")
     } finally {
       setIsCreatingAsset(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans">
-      <div className="bg-white border border-zinc-100 w-full max-w-lg p-8 relative rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto text-zinc-900">
-        <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 transition-colors">
-          <X size={18} />
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans">
+      <div className="bg-card border border-border/60 w-full max-w-lg p-8 relative rounded-none shadow-2xl max-h-[90vh] overflow-y-auto text-foreground">
+        
+        <button 
+          onClick={onClose} 
+          className="absolute top-5 right-5 p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-none"
+        >
+          <X className="h-4 w-4 stroke-[1.8]" />
         </button>
         
-        <div className="mb-6">
-          <h3 className="text-xl font-bold tracking-tight text-zinc-900">Deploy New Asset</h3>
-          <p className="text-xs text-zinc-400 mt-1">Fill out the fields to publish your resources into the network ecosystem.</p>
+        <div className="mb-6 border-b border-border/40 pb-4">
+          <h3 className="text-xl font-bold tracking-tight text-foreground uppercase">Deploy New Asset</h3>
+          <p className="text-xs text-muted-foreground mt-1.5 font-normal">Submit asset components and manifest parameters to initialize catalog database stream.</p>
         </div>
         
         {validationError && (
-          <div className="mb-4 p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-medium">
+          <div className="mb-5 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none">
             {validationError}
           </div>
         )}
         
         <form onSubmit={handleDeployCollection} className="space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider">Target Category</label>
-            <select className="w-full border border-zinc-200 rounded-xl p-3 bg-zinc-50 outline-none text-sm transition-all focus:border-zinc-400" value={newAsset.category} onChange={e => setNewAsset({...newAsset, category: e.target.value})}>
+          <div className="grid gap-1.5">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Category</label>
+            <select 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 outline-none text-sm font-normal transition-all focus:border-primary" 
+              value={newAsset.category} 
+              onChange={e => setNewAsset({...newAsset, category: e.target.value})}
+            >
               <option value="gradients">Gradients</option>
               <option value="graphics">Graphics</option>
               <option value="actions-effects">Actions & Effects</option>
@@ -228,64 +237,104 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider">Asset Title</label>
-            <input type="text" required minLength={3} maxLength={100} className="w-full border border-zinc-200 rounded-xl p-3 text-sm outline-none transition-all focus:border-zinc-400" placeholder="e.g., Ultra Chrome Gradient Pack" value={newAsset.name} onChange={e => setNewAsset({...newAsset, name: e.target.value})} />
+          <div className="grid gap-1.5">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Title</label>
+            <input 
+              type="text" 
+              required 
+              minLength={3} 
+              maxLength={100} 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40" 
+              placeholder="e.g., Ultra Chrome Gradient Pack" 
+              value={newAsset.name} 
+              onChange={e => setNewAsset({...newAsset, name: e.target.value})} 
+            />
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">Description</label>
-              <span className={`text-[10px] font-bold ${newAsset.description.length >= 100 ? 'text-emerald-600' : 'text-amber-500'}`}>
-                {newAsset.description.length}/100 symbols min
+          <div className="grid gap-1.5">
+            <div className="flex justify-between items-center">
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
+              <span className={`text-[10px] font-bold tracking-wide uppercase ${newAsset.description.length >= 100 ? 'text-primary' : 'text-amber-500'}`}>
+                {newAsset.description.length} of 100 characters minimum
               </span>
             </div>
-            <textarea required rows={4} className="w-full border border-zinc-200 rounded-xl p-3 text-sm outline-none transition-all focus:border-zinc-400 resize-none" placeholder="Specify pack components, compatibility, and file resolutions (minimum 100 characters)..." value={newAsset.description} onChange={e => setNewAsset({...newAsset, description: e.target.value})} />
+            <textarea 
+              required 
+              rows={4} 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed" 
+              placeholder="Specify bundle details, file dimensions, and software compatibility versions..." 
+              value={newAsset.description} 
+              onChange={e => setNewAsset({...newAsset, description: e.target.value})} 
+            />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider">License Price (USD)</label>
-            <input type="number" step="0.01" required min="5.00" className="w-full border border-zinc-200 rounded-xl p-3 text-sm outline-none transition-all focus:border-zinc-400 font-semibold" placeholder="Min 5.00" value={newAsset.price} onChange={e => setNewAsset({...newAsset, price: e.target.value})} />
+          <div className="grid gap-1.5">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">License Price (USD)</label>
+            <input 
+              type="number" 
+              step="0.01" 
+              required 
+              min="5.00" 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm outline-none transition-all focus:border-primary font-bold placeholder:text-muted-foreground/40" 
+              placeholder="Minimum 5.00" 
+              value={newAsset.price} 
+              onChange={e => setNewAsset({...newAsset, price: e.target.value})} 
+            />
           </div>
 
           <div className="space-y-3">
-            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">Asset Media Files</label>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Media Files</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
-
-              <div className="border border-dashed border-zinc-200 p-4 rounded-xl bg-zinc-50/50 flex flex-col items-center justify-center text-center relative hover:bg-zinc-50 transition-colors">
-                <ImageIcon size={20} className="text-zinc-400 mb-2" />
-                <span className="text-xs font-medium text-zinc-600">Gallery Previews</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">{previewFiles.length} images selected</span>
+              <div className="border border-dashed border-border/80 p-5 bg-background hover:bg-accent/50 text-center flex flex-col items-center justify-center relative cursor-pointer group transition-colors rounded-none">
+                <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
+                <span className="text-xs font-semibold text-foreground">Gallery Previews</span>
+                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{previewFiles.length} files selected</span>
                 <input type="file" accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
               </div>
-
-              <div className={`border p-4 rounded-xl flex flex-col items-center justify-center text-center relative transition-all ${projectFile ? 'border-zinc-300 bg-zinc-50/20' : 'border-dashed border-zinc-200 bg-zinc-50/50 hover:bg-zinc-50'}`}>
-                <FileArchive size={20} className={projectFile ? "text-emerald-500 mb-2" : "text-zinc-400 mb-2"} />
-                <span className="text-xs font-medium text-zinc-600 truncate max-w-full px-2">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Private archive node"}</span>
+              <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
+                <FileArchive size={18} className={projectFile ? "text-primary mb-2 stroke-[1.5]" : "text-muted-foreground mb-2 stroke-[1.5]"} />
+                <span className="text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
+                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Archive core package"}</span>
                 {!projectFile && <input type="file" accept=".zip,.rar,.7z,.grd,.asl,.atn" className="absolute inset-0 opacity-0 cursor-pointer" required onChange={e => { setValidationError(null); setProjectFile(e.target.files?.[0] || null); }} />}
-                {projectFile && <button type="button" onClick={() => setProjectFile(null)} className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-red-500 rounded-full transition-colors"><X size={14} /></button>}
+                {projectFile && <button type="button" onClick={() => setProjectFile(null)} className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-none transition-colors"><X size={12} /></button>}
               </div>
 
             </div>
 
             {previewFiles.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 border border-zinc-100 rounded-xl p-3 bg-zinc-50/30 max-h-32 overflow-y-auto">
-                {previewFiles.map((file, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-lg bg-zinc-100 overflow-hidden border border-zinc-200/50 group">
-                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removePreviewFile(idx)} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
+              <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 max-h-32 overflow-y-auto rounded-none">
+                {previewFiles.map((file, idx) => {
+                  const blobUrl = URL.createObjectURL(file);
+                  if (!objectUrls.includes(blobUrl)) objectUrls.push(blobUrl);
+
+                  return (
+                    <div key={idx} className="relative aspect-square rounded-none bg-muted/40 overflow-hidden border border-border/40 group">
+                      <img src={blobUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                      <button 
+                        type="button" 
+                        onClick={() => removePreviewFile(idx)} 
+                        className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none"
+                      >
+                        <Trash2 size={13} className="stroke-[1.8]" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <button type="submit" disabled={isCreatingAsset || previewFiles.length === 0 || !projectFile} className="w-full bg-zinc-900 text-white rounded-xl font-semibold p-3.5 text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-800">
-            {isCreatingAsset ? <><Loader2 className="animate-spin" size={16} /> Deploying asset node...</> : "Deploy Asset Collection"}
+          <button 
+            type="submit" 
+            disabled={isCreatingAsset || previewFiles.length === 0 || !projectFile} 
+            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-xs tracking-widest p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
+          >
+            {isCreatingAsset ? (
+              <><Loader2 className="animate-spin h-3.5 w-3.5 text-primary-foreground" /> Initializing node upload...</>
+            ) : (
+              "Deploy Asset Collection"
+            )}
           </button>
         </form>
       </div>
