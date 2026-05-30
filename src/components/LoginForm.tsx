@@ -186,7 +186,7 @@ export function LoginForm() {
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Initialize Session"
+              "Sign In"
             )}
           </Button>
         </form>
