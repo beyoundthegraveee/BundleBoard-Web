@@ -12,20 +12,20 @@ export default function RegisterPage() {
         <RegisterForm />
 
         <p className="px-8 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Already have an account?{" "}
+          Already have an account?
           <Link 
             href="/login" 
-            className="text-primary font-semibold border-b border-primary/30 hover:border-primary transition-colors pb-0.5 ml-1"
+            className="text-primary font-semibold border-b border-primary/30 hover:border-primary transition-colors pb-0.5 ml-1.5"
           >
             Sign in
           </Link>
         </p>
 
         <p className="px-8 text-center text-[10px] text-muted-foreground font-normal uppercase tracking-wider leading-relaxed">
-          By clicking continue, you agree to our{" "}
+          By signing up, you agree to our
           <Link 
             href="/terms" 
-            className="text-foreground font-medium border-b border-border hover:border-foreground transition-colors pb-px ml-0.5"
+            className="text-foreground font-medium border-b border-border hover:border-foreground transition-colors pb-px ml-1"
           >
             Terms of Service
           </Link>

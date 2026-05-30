@@ -63,60 +63,62 @@ export default function VerifyRequestPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 font-mono">
-      <Card className="w-full max-w-md border-4 border-black rounded-none shadow-[12px_12px_0px_rgba(0,0,0,1)] text-center bg-white">
+    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-background px-4 py-12 font-sans text-foreground relative overflow-hidden">
+
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none z-0" />
+      <Card className="w-full max-w-md border border-border/60 rounded-none shadow-2xl text-center bg-card relative z-10 overflow-hidden">
         
-        <CardHeader className="space-y-1 text-center border-b-4 border-black bg-zinc-50 p-6">
-          <div className="flex justify-center mb-2">
-            <div className="border-4 border-black bg-white p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-              <MailCheck className="h-8 w-8 text-black" />
+        <CardHeader className="space-y-2 text-center border-b border-border/40 bg-muted/20 p-6">
+          <div className="flex justify-center mb-1">
+            <div className="border border-border/60 bg-background p-2.5 text-foreground">
+              <MailCheck className="h-6 w-6 stroke-[1.5]" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-black uppercase tracking-tighter">Check_Email</CardTitle>
-          <CardDescription className="font-bold uppercase text-[10px] opacity-70">
-            Verification_Link_Dispatched
+          <CardTitle className="text-xl font-bold uppercase tracking-wider text-foreground">Check your email</CardTitle>
+          <CardDescription className="font-semibold uppercase text-[10px] tracking-widest text-muted-foreground/80">
+            Verification link sent
           </CardDescription>
         </CardHeader>
 
         <CardContent className="grid gap-4 p-8 text-left">
           {message && (
-            <Alert className={`border-2 rounded-none ${message.type === 'success' ? 'border-black bg-zinc-50' : 'border-red-600 bg-red-50'}`}>
-              <AlertDescription className={`font-bold uppercase text-[10px] ${message.type === 'success' ? 'text-black' : 'text-red-600'}`}>
-                {message.text}
-              </AlertDescription>
-            </Alert>
+            <div className={`border p-3.5 rounded-none text-xs font-semibold uppercase tracking-wide ${
+              message.type === 'success' 
+                ? 'border-border/60 bg-muted/40 text-foreground' 
+                : 'border-destructive/20 bg-destructive/5 text-destructive'
+            }`}>
+              {message.text}
+            </div>
           )}
           
-          <p className="text-xs font-bold uppercase leading-relaxed text-zinc-700">
-            We have transmitted an activation key to your node destination. 
-            Confirm the connection via your inbox to initialize the identity.
+          <p className="text-xs font-normal leading-relaxed text-muted-foreground">
+            We have transmitted an activation key to your destination address. 
+            Confirm the connection via your inbox to initialize the account identity.
           </p>
-          <p className="text-[10px] italic font-black uppercase text-red-600">
-            * Check spam directory if protocol is delayed.
+          <p className="text-[10px] font-medium uppercase tracking-wider text-destructive">
+            * Check your spam directory if the delivery is delayed.
           </p>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3 p-8 pt-0">
           <Button 
-            variant="outline" 
-            className="w-full border-2 border-black rounded-none font-black uppercase text-xs shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all py-5" 
+            className="w-full bg-primary text-primary-foreground hover:opacity-90 rounded-none font-bold uppercase text-xs tracking-widest py-6 transition-opacity shadow-sm" 
             onClick={handleResendEmail}
             disabled={isResending}
           >
             {isResending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-foreground" />
             ) : (
-              "Resend_Verification_Email"
+              "Resend verification email"
             )}
           </Button>
-
           <Button 
-            variant="ghost" 
+            variant="outline" 
             asChild 
-            className="w-full rounded-none font-black uppercase text-xs hover:bg-zinc-100 border-2 border-transparent hover:border-black transition-all py-5"
+            className="w-full border border-border/80 text-foreground bg-background hover:bg-accent rounded-none font-semibold uppercase text-xs tracking-widest py-6 transition-colors"
           >
             <Link href="/login" className="flex items-center justify-center gap-2">
-              <ArrowLeft className="h-4 w-4 stroke-[3]" /> Return_to_Sign_In
+              <ArrowLeft className="h-3.5 w-3.5 stroke-[1.8]" /> Return to sign in
             </Link>
           </Button>
         </CardFooter>

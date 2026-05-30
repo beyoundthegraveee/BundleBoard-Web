@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { 
   Loader2, User, Settings, LogOut, 
   Terminal, Download, ShieldCheck, Upload, Plus, BarChart3
@@ -124,14 +124,11 @@ export default function ProfilePage() {
       })
       const result = await response.json()
 
-      if (result.errors) {
-        console.error("GRAPHQL_ERRORS:", result.errors)
-      } else {
-        console.log("GRAPHQL_SUCCESS:", result.data?.getUserProfile)
+      if (!result.errors) {
         setUserData(result.data?.getUserProfile)
       }
     } catch (err) {
-      console.error("PROFILE_CRITICAL_ERROR:", err)
+      console.error("PROFILE_FETCH_FAILURE:", err)
     } finally {
       setLoading(false)
     }
@@ -150,8 +147,8 @@ export default function ProfilePage() {
         img.src = event.target?.result as string
         img.onload = () => {
           const canvas = document.createElement("canvas")
-          canvas.width = 300
-          canvas.height = 300
+          canvas.width = 200
+          canvas.height = 200
           const ctx = canvas.getContext("2d")
           if (!ctx) return reject(new Error("Canvas failure"))
 
@@ -159,7 +156,7 @@ export default function ProfilePage() {
           const xIdx = (img.width - size) / 2
           const yIdx = (img.height - size) / 2
 
-          ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 300, 300)
+          ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 200, 200)
 
           canvas.toBlob(
             (blob) => blob ? resolve(blob) : reject(new Error("Serialization error")),
@@ -173,21 +170,19 @@ export default function ProfilePage() {
   }
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    
     const file = event.target.files?.[0]
     if (!file) return
 
     setIsUploading(true)
 
     if(!userData) {
-      console.error("User data is not loaded, cannot update avatar.")
       setIsUploading(false)
       return
     }
 
     try {
       const processedBlob = await resizeAndConvertToWebP(file)
-      const fileName = `avatars/${userData.id}_${Date.now()}.webp`
+      const fileName = `avatars/${userData.id}-${Date.now()}.webp`
 
       const { error: uploadError } = await supabase.storage
         .from("previews")
@@ -220,24 +215,21 @@ export default function ProfilePage() {
       })
 
       const mutationResult = await response.json()
-      
-      if (mutationResult.errors) {
-        throw new Error(mutationResult.errors[0].message)
-      }
+      if (mutationResult.errors) throw new Error(mutationResult.errors[0].message)
       
       setUserData(prev => prev ? { ...prev, avatarUrl: publicUrl } : null)
       await updateSession()
     } catch (err) {
-      console.error("AVATAR_UPDATE_PROTOCOL_FAILED:", err)
+      console.error("AVATAR_UPLOAD_FAILURE:", err)
     } finally {
       setIsUploading(false)
     }
   }
 
   if (loading || status === "loading") return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white font-mono">
-      <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
-      <span className="font-black uppercase tracking-[0.3em] text-[10px]">Authorizing_Access...</span>
+    <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans">
+      <Loader2 className="animate-spin text-primary mb-4 stroke-[1.5]" size={36} />
+      <span className="font-medium uppercase tracking-[0.2em] text-[11px] text-muted-foreground">Verifying access rights...</span>
     </div>
   )
 
@@ -245,227 +237,225 @@ export default function ProfilePage() {
   const totalSpent = userData?.purchases?.reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2) || "0.00"
 
   return (
-    <main className="min-h-screen bg-white text-black font-mono p-4 md:p-10 lg:p-16">
-      <nav className="mb-16 border-b-8 border-black pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-12 relative">
+
+      <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-4 w-4 bg-red-600 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              User_Access_Level: {isAuthor ? "AUTHOR_PRIVILEGES_ENABLED" : "STANDARD_CLIENT_NODE"}
+          <div className="flex items-center gap-2 mb-1.5 text-primary">
+            <span className="h-2 w-2 bg-primary rounded-none" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Access Scope: {isAuthor ? "Partner Privileges Enabled" : "Standard Client Account"}
             </span>
           </div>
-          <h1 className="text-6xl font-black uppercase tracking-tighter leading-none">Node_Control</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-tight text-foreground">Node Control</h1>
         </div>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        <div className="lg:col-span-4 space-y-10">
-          <section className="border-4 border-black p-8 shadow-[12px_12px_0px_rgba(0,0,0,1)] relative overflow-hidden bg-white">
-            <div className="absolute top-0 right-0 p-2 bg-black text-white text-[8px] font-black uppercase">ID_{userData?.id}</div>
+        <div className="lg:col-span-4 space-y-6">
+          <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
+            <div className="absolute top-0 right-0 px-2.5 py-1 bg-muted border-b border-l border-border/40 text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
+              ID // {userData?.id.slice(0, 8)}
+            </div>
             
-            <div className="relative aspect-square border-4 border-black mb-6 overflow-hidden bg-zinc-200 shadow-[8px_8px_0px_rgba(239,68,68,1)] group/avatar">
-              {userData?.avatarUrl ? (
-                <img src={userData.avatarUrl} alt="avatar" className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-500" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-400">
-                  <User size={80} strokeWidth={1} />
-                </div>
-              )}
+            <div className="flex items-center gap-5 mb-6 pt-2">
+              <div className="relative h-16 w-16 border border-border/80 rounded-none bg-muted shrink-0 overflow-hidden">
+                {userData?.avatarUrl ? (
+                  <img src={userData.avatarUrl} alt="avatar" className="w-full h-full object-cover opacity-90" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
+                    <User size={24} strokeWidth={1.5} />
+                  </div>
+                )}
 
-              {isUploading && (
-                <div className="absolute inset-0 bg-white/90 border-black flex flex-col items-center justify-center z-10">
-                  <Loader2 className="animate-spin text-black mb-2" size={24} />
-                  <span className="text-[8px] font-black uppercase tracking-wider">Flashing_Node...</span>
-                </div>
-              )}
+                {isUploading && (
+                  <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center z-10">
+                    <Loader2 className="animate-spin text-primary" size={16} />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1 overflow-hidden">
+                <h2 className="text-lg font-bold uppercase tracking-tight text-foreground truncate">{userData?.username || "Guest Node"}</h2>
+                <p className="text-[11px] font-normal text-muted-foreground truncate lowercase">
+                  {userData?.email}
+                </p>
+              </div>
             </div>
 
-            <div className="mb-8">
-              <label className="flex items-center justify-center gap-2 w-full border-2 border-black bg-zinc-50 p-3 hover:bg-black hover:text-white transition-all font-black text-[11px] uppercase cursor-pointer select-none shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
-                <Upload size={14} className="stroke-[3]" /> 
-                {isUploading ? "Syncing_Data..." : "Upload_Identity_Image"}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleAvatarChange} 
-                  disabled={isUploading} 
-                />
+            <div className="mb-6">
+              <label className="flex items-center justify-center gap-2 w-full border border-border/80 bg-background text-foreground p-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none">
+                <Upload size={12} className="stroke-[1.8]" /> 
+                {isUploading ? "Syncing..." : "Update Photo"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploading} />
               </label>
             </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-3xl font-black uppercase break-all leading-none">{userData?.username || "Guest_Node"}</h2>
-              <div className="h-1 w-full bg-black" />
-              <p className="text-[11px] font-bold leading-relaxed uppercase opacity-60 italic">
-                Email: {userData?.email}
-              </p>
-            </div>
 
-            <div className="mt-10 space-y-3">
-              <Link href="/settings" className="flex items-center justify-between w-full border-2 border-black p-4 hover:bg-black hover:text-white transition-all font-black text-[12px] uppercase group">
-                Settings <Settings size={18} className="group-hover:rotate-90 transition-transform" />
+            <div className="space-y-2 border-t border-border/30 pt-4">
+              <Link href="/settings" className="flex items-center justify-between w-full border border-border/60 bg-background text-foreground p-3 hover:bg-accent text-xs font-semibold uppercase tracking-wider transition-colors rounded-none group">
+                Settings Configuration <Settings size={14} className="text-muted-foreground group-hover:rotate-45 transition-transform" />
               </Link>
               <button 
                 onClick={() => terminateSession()}
-                className="flex items-center justify-between w-full border-2 border-red-600 text-red-600 p-4 hover:bg-red-600 hover:text-white transition-all font-black text-[12px] uppercase"
+                className="flex items-center justify-between w-full border border-destructive/40 text-destructive bg-background p-3 hover:bg-destructive/5 text-xs font-semibold uppercase tracking-wider transition-colors rounded-none"
               >
-                Terminate <LogOut size={18} />
+                Sign Out Account <LogOut size={14} />
               </button>
             </div>
           </section>
 
-          <div className="border-2 border-black bg-zinc-950 text-green-500 p-6 shadow-[8px_8px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase mb-4 text-green-400 border-b border-green-900 pb-2">
-              <Terminal size={14} /> System_Logs:
+          <div className="border border-border/40 bg-muted/20 p-4 rounded-none text-[11px] tracking-wide text-muted-foreground uppercase">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground border-b border-border/30 pb-2 mb-2">
+              <Terminal size={12} /> System Registry
             </div>
-            <div className="text-[9px] font-mono space-y-2 leading-none uppercase">
-              <div className="flex justify-between"><span>Status:</span> <span className="text-white">{userData?.status}</span></div>
-              <div className="flex justify-between"><span>Authority:</span> <span className="text-white">{isAuthor ? "ROOT_AUTHOR" : "CLIENT_NODE"}</span></div>
-              <div className="pt-2 text-green-800 italic">...access_granted...</div>
+            <div className="space-y-1.5 font-medium">
+              <div className="flex justify-between"><span>Status:</span> <span className="text-foreground">{userData?.status}</span></div>
+              <div className="flex justify-between"><span>Authority:</span> <span className="text-foreground">{isAuthor ? "Platform Partner" : "Standard Client"}</span></div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-8 space-y-12">
+        <div className="lg:col-span-8 space-y-10">
           
           {isAuthor && (
-            <section className="border-4 border-red-600 p-6 bg-zinc-50 shadow-[12px_12px_0px_rgba(0,0,0,1)]">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b-4 border-black pb-4">
+            <section className="border border-border/60 p-6 bg-card rounded-none shadow-md">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4">
                 <div>
-                  <h3 className="text-3xl font-black uppercase tracking-tighter text-red-600">Author_Station</h3>
-                  <p className="text-[10px] font-bold uppercase opacity-60">Deploy and monitor custom digital asset nodes</p>
+                  <h3 className="text-xl font-bold uppercase tracking-wider text-foreground">Author Station</h3>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground mt-0.5">Deploy and monitor studio assets</p>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-2 bg-black text-white px-5 py-3 font-black text-xs uppercase hover:bg-red-600 transition-all shadow-[4px_4px_0px_rgba(239,68,68,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 font-semibold text-xs uppercase hover:opacity-90 transition-opacity rounded-none tracking-wider"
                 >
-                  <Plus size={16} strokeWidth={3} /> Deploy_Asset
+                  <Plus size={14} /> Deploy Asset
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6 text-black">
-                <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-                  <div className="text-[9px] font-black uppercase opacity-40 flex items-center gap-1"><BarChart3 size={10}/> Total_Sales</div>
-                  <div className="text-2xl font-black mt-1">0 // LOCKED</div>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="border border-border/40 p-4 bg-background">
+                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1"><BarChart3 size={11}/> Total Sales</div>
+                  <div className="text-xl font-bold mt-1 text-foreground">0 Units</div>
                 </div>
-                <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-                  <div className="text-[9px] font-black uppercase opacity-40">Net_Profit</div>
-                  <div className="text-2xl font-black mt-1 text-red-600">$0.00</div>
+                <div className="border border-border/40 p-4 bg-background">
+                  <div className="text-[9px] font-semibold uppercase text-muted-foreground">Net Profit</div>
+                  <div className="text-xl font-bold mt-1 text-primary">$0.00</div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider block mb-2">Deployed_Nodes_Inventory:</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">Active Product Inventory</span>
                 {userData?.authoredCollections && userData.authoredCollections.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {userData.authoredCollections.map((col) => (
-                      <div key={col.id} className="border-2 border-black bg-white p-4 flex gap-4 items-center shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-                        <div className="w-12 h-12 border-2 border-black bg-zinc-100 flex-shrink-0 overflow-hidden">
+                      <div key={col.id} className="border border-border/40 bg-background p-3 flex gap-3 items-center rounded-none">
+                        <div className="w-10 h-10 border border-border/40 bg-muted flex-shrink-0 overflow-hidden">
                           {col.previewImage?.filePath && (
-                            <img src={col.previewImage.filePath} alt="" className="w-full h-full object-cover grayscale" />
+                            <img src={col.previewImage.filePath} alt="" className="w-full h-full object-cover" />
                           )}
                         </div>
-                        <div className="overflow-hidden">
-                          <h4 className="font-black text-xs uppercase truncate">{col.name}</h4>
-                          <span className="text-[10px] font-black font-mono text-red-600">${col.price}</span>
+                        <div className="overflow-hidden space-y-0.5">
+                          <h4 className="font-bold text-xs uppercase truncate text-foreground">{col.name}</h4>
+                          <span className="text-[11px] font-bold text-primary block">${col.price.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 border-2 border-black border-dashed bg-white text-[10px] font-black uppercase text-zinc-400">
-                    No active product nodes deployed by this station.
+                  <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
+                    No product nodes submitted by this station.
                   </div>
                 )}
               </div>
             </section>
           )}
 
-          <section>
-            <div className="flex items-end gap-4 mb-10">
-              <h3 className="text-4xl font-black uppercase tracking-tighter italic">Archive_v.1</h3>
-              <div className="flex-1 border-b-4 border-black mb-1"></div>
-              <span className="text-xs font-black uppercase px-2 bg-black text-white">
+          <section className="space-y-6">
+            <div className="flex items-center gap-4 border-b border-border/40 pb-3">
+              <h3 className="text-lg font-bold uppercase tracking-wider text-foreground">Purchased Core Vault</h3>
+              <div className="flex-1" />
+              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 bg-muted text-muted-foreground border border-border/40">
                 {userData?.purchases?.length || 0} Assets
               </span>
             </div>
 
             {userData?.purchases && userData.purchases.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {userData.purchases.map((purchase) => (
-                  <div key={purchase.id} className="group border-4 border-black bg-white shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all duration-300">
-                    <div className="aspect-video border-b-4 border-black overflow-hidden">
+                  <div key={purchase.id} className="group border border-border/40 bg-card rounded-none shadow-sm overflow-hidden flex flex-col justify-between">
+                    <div className="aspect-video border-b border-border/30 overflow-hidden bg-muted">
                       <img 
                         src={purchase.asset?.previewImage?.filePath} 
                         alt={purchase.asset?.name}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" 
+                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300" 
                       />
                     </div>
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="font-black uppercase text-sm leading-tight">{purchase.asset?.name}</span>
-                        <div className="text-[9px] bg-zinc-100 border border-black px-2 py-0.5 font-black uppercase">
+                    <div className="p-4 space-y-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">{purchase.asset?.name}</span>
+                        <div className="text-[9px] bg-muted border border-border/60 px-1.5 py-0.5 font-semibold uppercase text-muted-foreground tracking-wider shrink-0">
                           {purchase.status}
                         </div>
                       </div>
                       <Link 
                         href={`/assets/${purchase.asset?.id}`}
-                        className="flex items-center justify-center gap-2 w-full bg-black text-white p-3 font-black text-[10px] uppercase hover:bg-red-600 transition-colors"
+                        className="flex items-center justify-center gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2.5 font-bold text-[10px] uppercase tracking-widest transition-colors rounded-none"
                       >
-                        <Download size={14} /> Access_Data
+                        <Download size={12} /> Download Package
                       </Link>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="border-4 border-black border-dashed p-24 text-center">
-                <div className="font-black uppercase text-zinc-300 text-2xl tracking-[0.3em] mb-4">Storage_Empty</div>
-                <Link href="/" className="inline-flex items-center gap-2 font-black text-[12px] uppercase border-2 border-black p-4 hover:bg-black hover:text-white transition-all">
-                  Browse_Assets
+              <div className="border border-dashed border-border/60 p-16 text-center bg-card/20">
+                <div className="font-semibold uppercase text-muted-foreground/40 text-sm tracking-widest mb-4">Storage Directory Empty</div>
+                <Link href="/" className="inline-flex items-center gap-2 font-semibold text-[11px] uppercase border border-border/80 px-4 py-2 bg-background hover:bg-accent tracking-wider transition-colors rounded-none">
+                  Browse Active Catalog
                 </Link>
               </div>
             )}
           </section>
 
-          <section className="mt-20">
-            <div className="flex items-center gap-4 mb-8 opacity-40">
-              <h3 className="text-xl font-black uppercase italic">Billing_Ledger</h3>
-              <div className="flex-1 border-b-2 border-black border-dotted"></div>
+          <section className="space-y-4 pt-4">
+            <div className="flex items-center gap-4 opacity-50">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Billing History Ledger</h3>
+              <div className="flex-1 border-b border-border/40 border-dashed" />
             </div>
             
-            <div className="bg-zinc-50 border-2 border-black p-8 font-mono shadow-[12px_12px_0px_rgba(0,0,0,0.05)] relative">
-              <table className="w-full text-left text-[11px]">
+            <div className="bg-card border border-border/40 p-5 rounded-none shadow-sm">
+              <table className="w-full text-left text-[11px] font-sans">
                 <thead>
-                  <tr className="border-b-2 border-black uppercase font-black">
+                  <tr className="border-b border-border/40 uppercase font-semibold text-muted-foreground tracking-wider">
                     <th className="pb-2">Date</th>
-                    <th className="pb-2 text-center">Asset_ID</th>
-                    <th className="pb-2 text-right">Sum</th>
+                    <th className="pb-2 text-center">Reference ID</th>
+                    <th className="pb-2 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="font-bold opacity-80 uppercase leading-relaxed">
+                <tbody className="font-medium text-foreground uppercase tracking-wide">
                   {userData?.purchases?.map((p) => (
-                    <tr key={p.id} className="border-b border-black/10">
-                      <td className="py-4 font-black">{new Date(p.createdAt).toLocaleDateString()}</td>
-                      <td className="py-4 text-center font-mono opacity-50">#{p.asset?.id}</td>
-                      <td className="py-4 text-right">{p.amount} {p.currency}</td>
+                    <tr key={p.id} className="border-b border-border/20 last:border-0 text-xs">
+                      <td className="py-3.5 font-semibold">{new Date(p.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3.5 text-center text-[11px] text-muted-foreground opacity-60">#{p.asset?.id.slice(0, 6)}</td>
+                      <td className="py-3.5 text-right font-bold text-foreground">{p.amount.toFixed(2)} {p.currency}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="mt-8 flex justify-between items-center border-t-4 border-black pt-6">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase">
-                  <ShieldCheck size={16} className="text-red-600" /> Secure_Transaction_Node
+
+              <div className="mt-6 pt-4 border-t border-border/40 flex justify-between items-center">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <ShieldCheck size={14} className="text-primary" /> Gateway Verified
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-[9px] uppercase font-black opacity-40">Net_Network_Value</span>
-                  <span className="text-2xl font-black">{totalSpent} {userData?.purchases?.[0]?.currency || "USD"}</span>
+                  <span className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider">Total Value Processed</span>
+                  <span className="text-xl font-bold tracking-tight text-foreground">{totalSpent} {userData?.purchases?.[0]?.currency || "USD"}</span>
                 </div>
               </div>
             </div>
           </section>
+
         </div>
       </div>
 

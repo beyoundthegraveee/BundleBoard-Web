@@ -62,7 +62,6 @@ export function Navbar() {
             </Link>
           </div>
 
-
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
@@ -174,7 +173,7 @@ export function Navbar() {
                     onClick={terminateSession}
                   >
                     <LogOut className="mr-2 h-3.5 w-3.5" />
-                    Terminate
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
