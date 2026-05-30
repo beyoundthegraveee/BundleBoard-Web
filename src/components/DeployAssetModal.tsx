@@ -148,7 +148,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
               value={newAsset.category} onChange={e => setNewAsset({...newAsset, category: e.target.value})}
             >
               <option value="gradients">Gradients</option>
-              <option value="layer-styles">Layer Styles</option>
+              <option value="graphics">Graphics</option>
               <option value="actions-effects">Actions & Effects</option>
               <option value="brushes">Brushes</option>
               <option value="mockups">Mockups</option>
