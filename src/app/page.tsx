@@ -51,6 +51,7 @@ export default function Home() {
                 Unlock high-fidelity digital assets, custom vector graphs, and production-grade gradients optimized to enhance professional studio processing pipelines.
               </p>
             </div>
+            
             <div className="lg:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-border/60 pt-8 lg:pt-0 lg:pl-12 relative">
               <div className="space-y-4">
                 <div className="flex justify-between items-baseline border-b border-border/40 pb-2.5">
@@ -59,7 +60,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between items-baseline border-b border-border/40 pb-2.5">
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution</span>
-                  <span className="text-xs font-bold uppercase tracking-wide">EU_CLUSTER</span>
+                  <span className="text-xs font-bold uppercase tracking-wide">EU CLUSTER</span>
                 </div>
                 
                 <div className="pt-6">
@@ -81,18 +82,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- INVENTORY SECTION --- */}
-      <section className="relative py-24 max-w-7xl mx-auto px-6 md:px-8 z-10">
-        
-        <div className="mb-16 flex items-center justify-between border-b border-border/40 pb-6 relative">
+      <section className="relative py-20 border-t border-white/5 z-10">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-16 flex items-center justify-between relative">
           <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-foreground" />
           <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-foreground" />
           
           <div className="flex items-center gap-3">
-            <Grid3X3 size={16} className="text-primary" />
-            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-foreground">Active_Inventory_Directory</h2>
+            <Grid3X3 size={14} className="text-primary" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-foreground">Active Inventory Directory</h2>
           </div>
-          <span className="text-[10px] font-mono opacity-40 tracking-widest">STREAM_VOL_001</span>
+          <span className="text-[10px] font-medium opacity-40 tracking-widest uppercase">Stream Vol 001</span>
         </div>
 
         <CollectionGrid />
@@ -123,8 +122,8 @@ export default function Home() {
               </div>
             ))}
           </div>
-          
-          <div className="flex flex-col sm:flex-row justify-between items-center border-t border-background/10 pt-8 gap-4 text-[10px] text-background/40 tracking-widest uppercase font-mono">
+
+          <div className="flex flex-col sm:flex-row justify-between items-center border-t border-background/10 pt-8 gap-4 text-[10px] text-background/40 tracking-widest uppercase font-medium">
             <span>Core Node: 52.2297° N, 21.0122° E</span>
             <div className="flex gap-8 items-center">
               <span className="hover:text-background transition-colors cursor-pointer">Privacy Protocol</span>

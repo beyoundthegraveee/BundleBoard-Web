@@ -12,12 +12,12 @@ interface SearchOverlayProps {
 }
 
 const RECOMMENDATIONS = [
-  { id: 1, title: "Ultimate_Photoshop_Brushes", category: "Brushes", price: "$19" },
-  { id: 2, title: "Minimalist_Device_Mockups", category: "Mockups", price: "$25" },
-  { id: 3, title: "Grainy_Texture_Pack", category: "Textures", price: "$12" },
+  { id: 1, title: "Ultimate Photoshop Brushes", category: "Brushes", price: "$19" },
+  { id: 2, title: "Minimalist Device Mockups", category: "Mockups", price: "$25" },
+  { id: 3, title: "Grainy Texture Pack", category: "Textures", price: "$12" },
 ]
 
-const QUICK_LINKS = ["New_Arrivals", "Best_Sellers", "Free_Assets", "Premium_Bundles"]
+const QUICK_LINKS = ["New Arrivals", "Best Sellers", "Free Assets", "Premium Bundles"]
 
 export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("")
@@ -99,7 +99,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
                 <div className="md:col-span-2 space-y-4">
                   <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-zinc-400 flex items-center gap-2">
-                    <Star className="h-3.5 w-3.5 stroke-[1.8] text-blue-500" /> Recommended_Bundles
+                    <Star className="h-3.5 w-3.5 stroke-[1.8] text-blue-500" /> Recommended Bundles
                   </h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -108,8 +108,7 @@ export function CollectionGrid() {
         }
       } catch (err: any) {
         if (err.name === 'AbortError') return;
-        console.error("❌ CATALOG_STREAM_FAILURE:", err);
-        setError(err.message || "PROTOCOL_MUTATION_FAILED");
+        setError(err.message || "FAILED_TO_STREAM_DATA");
       } finally {
         if (!signal.aborted) {
           setLoading(false);
@@ -150,7 +149,7 @@ export function CollectionGrid() {
   if (error) return (
     <div className="p-8 border border-destructive/20 text-destructive font-sans text-xs uppercase tracking-wider bg-destructive/5 flex flex-col items-start gap-4 rounded-none max-w-xl mx-auto">
       <div>
-        <span className="font-bold mr-2">[CRITICAL_NETWORK_ERROR]:</span> 
+        <span className="font-bold mr-2">Registry connection error:</span> 
         {error}
       </div>
       <button 
@@ -164,7 +163,7 @@ export function CollectionGrid() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-24">
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
         {collections.map((item) => {
           const fileName = item.previewImage?.filePath || "";
@@ -178,19 +177,15 @@ export function CollectionGrid() {
               key={item.id} 
               className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
             >
-
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <img 
                   src={imageUrl || "/placeholder.png"} 
                   alt={item.name}
                   className="object-cover w-full h-full opacity-75 group-hover:opacity-100 transition-all duration-500 block"
                 />
-                <div className="absolute bottom-4 left-4 bg-background/90 border border-border/40 text-muted-foreground text-[9px] font-medium px-2 py-0.5 uppercase tracking-widest">
-                  SYS_ID // {item.id.padStart(3, '0')}
-                </div>
               </div>
 
-              <div className="pt-6 flex-grow flex flex-col justify-between">
+              <div className="pt-5 flex-grow flex flex-col justify-between">
                 <div className="space-y-2.5">
                   <div className="flex justify-between items-baseline gap-4">
                     <h3 className="font-bold text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover:text-zinc-400">
@@ -201,11 +196,11 @@ export function CollectionGrid() {
                     </span>
                   </div>
                   <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
-                    {item.description || "No layout parameters or description log submitted for this node."}
+                    {item.description || "No parameters or description data submitted for this catalog item."}
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[11px] text-muted-foreground uppercase tracking-wider">
+                <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider">
                   <div>
                     <span>Author: </span>
                     <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
@@ -230,7 +225,7 @@ export function CollectionGrid() {
           )}
           {!hasMore && collections.length > 0 && (
             <div className="text-muted-foreground font-normal uppercase tracking-[0.25em] text-[10px] opacity-30">
-              // End of active inventory registry stream
+              // End of active directory stream
             </div>
           )}
         </div>
