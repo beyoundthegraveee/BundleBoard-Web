@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Syncopate } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
 import { AuthSessionProvider } from "@/components/provider/SessionProvider";
 import { ThemeProvider } from "@/components/provider/ThemeProvider";
-import { CookieBanner } from "@/components/CookieBanner";
+import { AppLayoutContent } from "@/components/provider/AppLayoutContent";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -42,11 +41,9 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <Navbar />
-            <main className="flex-1 w-full relative">
+            <AppLayoutContent>
               {children}
-            </main>
-            <CookieBanner />
+            </AppLayoutContent>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>
