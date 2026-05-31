@@ -53,9 +53,8 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md font-sans">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/80 dark:bg-background/80 backdrop-blur-md font-sans transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-
           <div className="flex-shrink-0">
             <Link href="/" className="font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
               BUNDLE<span className="opacity-40 font-normal">BOARD</span>
@@ -66,11 +65,11 @@ export function Navbar() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent/50 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
+                  <NavigationMenuTrigger className="bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/60 data-[state=open]:bg-accent/40 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
                     Learn
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[320px] gap-0 border border-border/60 bg-card p-1 rounded-none shadow-xl">
+                    <ul className="grid w-[320px] gap-0 border border-border/60 bg-popover p-1 rounded-none shadow-xl">
                       <ListItem href="/tutorials" title="Tutorials">Guides for platform tools.</ListItem>
                       <ListItem href="/tutorials/video" title="Video Streams">Visual asset walk-throughs.</ListItem>
                       <ListItem href="/tutorials/read" title="Documentation">Core integration logs.</ListItem>
@@ -79,11 +78,11 @@ export function Navbar() {
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent/50 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
+                  <NavigationMenuTrigger className="bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/60 data-[state=open]:bg-accent/40 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
                     Bundles
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[480px] grid-cols-2 border border-border/60 bg-card p-1 rounded-none shadow-xl">
+                    <ul className="grid w-[480px] grid-cols-2 border border-border/60 bg-popover p-1 rounded-none shadow-xl">
                       {components.map((component) => (
                         <ListItem key={component.title} title={component.title} href={component.href}>
                           {component.description}
@@ -99,7 +98,7 @@ export function Navbar() {
                       href="/about" 
                       className={cn(
                         navigationMenuTriggerStyle(), 
-                        "bg-transparent hover:bg-accent hover:text-accent-foreground rounded-none font-medium uppercase text-[11px] tracking-wider h-auto py-2 px-4 transition-colors"
+                        "bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-none font-medium uppercase text-[11px] tracking-wider h-auto py-2 px-4 transition-colors"
                       )}
                     >
                       About
@@ -119,9 +118,9 @@ export function Navbar() {
             >
               {mounted ? (
                 theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
+                  <Sun className="h-4 w-4 stroke-[1.8]" />
                 ) : (
-                  <Moon className="h-4 w-4" />
+                  <Moon className="h-4 w-4 stroke-[1.8]" />
                 )
               ) : (
                 <div className="h-4 w-4 bg-transparent" />
@@ -132,11 +131,11 @@ export function Navbar() {
               className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
               onClick={() => setIsSearchOpen(true)}
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-4 w-4 stroke-[1.8]" />
             </button>
 
             <Link href="/cart" className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative">
-              <ShoppingBagIcon className="h-4 w-4" />
+              <ShoppingBagIcon className="h-4 w-4 stroke-[1.8]" />
               <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
                 0
               </span>
@@ -146,13 +145,13 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="relative h-9 w-9 border border-border/60 rounded-none overflow-hidden hover:bg-accent transition-colors">
-                    <div className="flex h-full w-full items-center justify-center bg-card text-muted-foreground hover:text-foreground">
-                      <User className="h-4 w-4" />
+                    <div className="flex h-full w-full items-center justify-center bg-background text-muted-foreground hover:text-foreground">
+                      <User className="h-4 w-4 stroke-[1.8]" />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 rounded-none border border-border/60 bg-card p-1 shadow-2xl" align="end">
-                  <DropdownMenuLabel className="p-3 bg-muted/40 mb-1 border-b border-border/40">
+                <DropdownMenuContent className="w-56 rounded-none border border-border/60 bg-popover p-1 shadow-2xl animate-in fade-in-50 duration-200" align="end">
+                  <DropdownMenuLabel className="p-3 bg-muted/50 mb-1 border-b border-border/40">
                     <div className="flex flex-col space-y-0.5">
                       <p className="text-[9px] font-bold uppercase text-primary tracking-widest">Active Session</p>
                       <p className="text-xs font-semibold text-foreground truncate uppercase">{session.user?.name}</p>
@@ -172,7 +171,7 @@ export function Navbar() {
                     className="rounded-none p-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive font-semibold text-xs cursor-pointer uppercase tracking-wider"
                     onClick={terminateSession}
                   >
-                    <LogOut className="mr-2 h-3.5 w-3.5" />
+                    <LogOut className="mr-2 h-3.5 w-3.5 stroke-[1.8]" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
