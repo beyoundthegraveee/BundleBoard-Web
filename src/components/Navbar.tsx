@@ -7,6 +7,7 @@ import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
 import { SearchOverlay } from "./SearchOverlay"
+import { CartDrawer } from "./CartDrawer"
 import { cn } from "@/lib/utils"
 
 import {
@@ -45,11 +46,25 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+    const updateCountFromStorage = () => {
+      if (typeof window !== "undefined") {
+        const items = JSON.parse(localStorage.getItem("bundleboard-cart") || "[]");
+        setCartCount(items.length);
+      }
+    };
+
+    updateCountFromStorage();
+    window.addEventListener("cart-updated", updateCountFromStorage);
+    return () => {
+      window.removeEventListener("cart-updated", updateCountFromStorage);
+    };
+  }, []);
 
   return (
     <>
@@ -133,13 +148,16 @@ export function Navbar() {
             >
               <Search className="h-4 w-4 stroke-[1.8]" />
             </button>
-
-            <Link href="/cart" className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
+              aria-label="Open shopping cart drawer"
+            >
               <ShoppingBagIcon className="h-4 w-4 stroke-[1.8]" />
               <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
-                0
+                {cartCount}
               </span>
-            </Link>
+            </button>
 
             {status === "authenticated" ? (
               <DropdownMenu>
@@ -187,9 +205,14 @@ export function Navbar() {
           </div>
         </div>
       </header>
+
       <SearchOverlay 
         isOpen={isSearchOpen} 
         onClose={() => setIsSearchOpen(false)} 
+      />
+      <CartDrawer 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
       />
     </>
   )

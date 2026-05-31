@@ -34,6 +34,11 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
   });
 };
 
+interface PreviewFileItem {
+  file: File;
+  previewUrl: string;
+}
+
 interface DeployAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -45,16 +50,16 @@ interface DeployAssetModalProps {
 export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
   const [newAsset, setNewAsset] = useState({ name: "", description: "", price: "", category: "gradients" })
-  const [previewFiles, setPreviewFiles] = useState<File[]>([])
+  
+  const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [objectUrls, setObjectUrls] = useState<string[]>([])
 
   useEffect(() => {
     return () => {
-      objectUrls.forEach(url => URL.revokeObjectURL(url))
+      previewItems.forEach(item => URL.revokeObjectURL(item.previewUrl))
     }
-  }, [objectUrls])
+  }, [previewItems])
 
   if (!isOpen) return null
 
@@ -63,15 +68,19 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       setValidationError(null)
       const incomingFiles = Array.from(e.target.files)
       
-      setPreviewFiles((prev) => {
-        const totalFiles = [...prev, ...incomingFiles]
-
-        if (totalFiles.length > 5) {
+      setPreviewItems((prev) => {
+        const currentTotal = prev.length + incomingFiles.length;
+        if (currentTotal > 5) {
           setValidationError("Maximum five gallery preview images are allowed for this deployment layout.")
-          return totalFiles.slice(0, 5)
+          return prev;
         }
-        
-        return totalFiles
+
+        const newItems = incomingFiles.map(file => ({
+          file,
+          previewUrl: URL.createObjectURL(file)
+        }))
+
+        return [...prev, ...newItems]
       })
       
       e.target.value = ""
@@ -80,7 +89,10 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
 
   const removePreviewFile = (indexToRemove: number) => {
     setValidationError(null)
-    setPreviewFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove))
+    setPreviewItems((prev) => {
+      URL.revokeObjectURL(prev[indexToRemove].previewUrl)
+      return prev.filter((_, idx) => idx !== indexToRemove)
+    })
   }
 
   const handleDeployCollection = async (e: React.FormEvent) => {
@@ -98,7 +110,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       return
     }
 
-    if (previewFiles.length === 0 || !projectFile) {
+    if (previewItems.length === 0 || !projectFile) {
       setValidationError("Deployment manifest incomplete. Upload gallery previews and a secure project archive.")
       return
     }
@@ -109,9 +121,8 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       const timestamp = Date.now()
       const category = newAsset.category
       const folderId = `collection-${timestamp}`
-
-      const uploadPreviewsPromises = previewFiles.map(async (file, index) => {
-        const webpBlob = await convertToWebP(file, 1200, 0.82)
+      const uploadPreviewsPromises = previewItems.map(async (item, index) => {
+        const webpBlob = await convertToWebP(item.file, 1200, 0.82)
         const { width, height } = await getImageDimensions(webpBlob)
         
         const previewFileName = `preview-${index}-${timestamp}.webp`
@@ -166,7 +177,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
               name: newAsset.name,
               description: newAsset.description,
               price: numericPrice,
-              videoTutorialUrl: "https://youtube.com/watch?v=placeholder", 
+              videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
               tagIds: [1, 2],
               mediaResource: {
                 fileName: projectFile.name,
@@ -182,10 +193,13 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       })
 
       const mutationResult = await response.json()
-      if (mutationResult.errors) throw new Error(mutationResult.errors[0].message)
+    
+      if (mutationResult.errors) {
+        throw new Error(mutationResult.errors[0].message || "GraphQL Mutation Internal Error")
+      }
 
       setNewAsset({ name: "", description: "", price: "", category: "gradients" })
-      setPreviewFiles([])
+      setPreviewItems([])
       setProjectFile(null)
       onSuccess()
       onClose()
@@ -214,7 +228,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
         </div>
         
         {validationError && (
-          <div className="mb-5 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none">
+          <div className="mb-5 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
             {validationError}
           </div>
         )}
@@ -289,7 +303,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
               <div className="border border-dashed border-border/80 p-5 bg-background hover:bg-accent/50 text-center flex flex-col items-center justify-center relative cursor-pointer group transition-colors rounded-none">
                 <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
                 <span className="text-xs font-semibold text-foreground">Gallery Previews</span>
-                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{previewFiles.length} files selected</span>
+                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{previewItems.length} files selected</span>
                 <input type="file" accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
               </div>
               <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
@@ -302,32 +316,27 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
 
             </div>
 
-            {previewFiles.length > 0 && (
+            {previewItems.length > 0 && (
               <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 max-h-32 overflow-y-auto rounded-none">
-                {previewFiles.map((file, idx) => {
-                  const blobUrl = URL.createObjectURL(file);
-                  if (!objectUrls.includes(blobUrl)) objectUrls.push(blobUrl);
-
-                  return (
-                    <div key={idx} className="relative aspect-square rounded-none bg-muted/40 overflow-hidden border border-border/40 group">
-                      <img src={blobUrl} alt="" className="w-full h-full object-cover opacity-80" />
-                      <button 
-                        type="button" 
-                        onClick={() => removePreviewFile(idx)} 
-                        className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none"
-                      >
-                        <Trash2 size={13} className="stroke-[1.8]" />
-                      </button>
-                    </div>
-                  );
-                })}
+                {previewItems.map((item, idx) => (
+                  <div key={idx} className="relative aspect-square rounded-none bg-muted/40 overflow-hidden border border-border/40 group">
+                    <img src={item.previewUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                    <button 
+                      type="button" 
+                      onClick={() => removePreviewFile(idx)} 
+                      className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none"
+                    >
+                      <Trash2 size={13} className="stroke-[1.8]" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           <button 
             type="submit" 
-            disabled={isCreatingAsset || previewFiles.length === 0 || !projectFile} 
+            disabled={isCreatingAsset || previewItems.length === 0 || !projectFile} 
             className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-xs tracking-widest p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
           >
             {isCreatingAsset ? (
