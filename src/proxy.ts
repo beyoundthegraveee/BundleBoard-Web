@@ -8,7 +8,15 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token?.accessToken,
+      authorized: ({ req, token }) => {
+        const { pathname } = req.nextUrl
+
+        if (pathname === "/" || pathname.startsWith("/collection/")) {
+          return true 
+        }
+
+        return !!token?.accessToken
+      },
     },
     pages: {
       signIn: "/login",
@@ -17,5 +25,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/((?!register|login|mail/verify-email|mail/verify|select-role).*)'],
+  matcher: ['/((?!register|login|mail/verify-email|mail/verify|select-role|_next/static|_next/image|favicon.ico).*)'],
 };
