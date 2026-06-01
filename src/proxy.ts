@@ -11,8 +11,14 @@ export default withAuth(
       authorized: ({ req, token }) => {
         const { pathname } = req.nextUrl
 
-        if (pathname === "/" || pathname.startsWith("/collection/")) {
-          return true 
+        if (
+          pathname === "/" || 
+          pathname.startsWith("/collection/") || 
+          pathname.startsWith("/bundles/") ||
+          pathname === "/about" ||
+          pathname.startsWith("/tutorials")
+        ) {
+          return true
         }
 
         return !!token?.accessToken
