@@ -9,10 +9,13 @@ export function CookieBanner() {
 
   useEffect(() => {
     setHasMounted(true)
-    const consent = localStorage.getItem("cookie-consent")
-    if (!consent) {
-      setIsVisible(true)
-    }
+    const timer = setTimeout(() => {
+      const consent = localStorage.getItem("cookie-consent")
+      if (!consent) {
+        setIsVisible(true)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
   }, [])
 
   const handleConsent = (type: "all" | "essential") => {
@@ -23,9 +26,9 @@ export function CookieBanner() {
   if (!hasMounted || !isVisible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 w-full z-[100] p-6 md:p-8 animate-in slide-in-from-bottom duration-300">
+    <div className="fixed bottom-0 left-0 w-full z-[100] p-6 md:p-8 animate-in slide-in-from-bottom ease-out duration-500">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-card/90 backdrop-blur-xl border border-border/60 p-6 md:p-8 font-sans rounded-none shadow-2xl relative overflow-hidden">
+        <div className="bg-card/95 backdrop-blur-xl border border-border/80 p-6 md:p-8 font-sans rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex-1 space-y-2">
@@ -35,7 +38,7 @@ export function CookieBanner() {
                   Privacy Compliance Notice
                 </h3>
               </div>
-              <p className="text-xs font-normal leading-relaxed text-muted-foreground">
+              <p className="text-xs font-normal leading-relaxed text-muted-foreground/90">
                 We use cookies to ensure you get the best experience on BundleBoard. 
                 In accordance with global privacy standards, we require your consent to process anonymous analytical data.
               </p>
