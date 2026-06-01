@@ -3,7 +3,8 @@ import { Space_Grotesk, Syncopate } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/provider/SessionProvider";
 import { ThemeProvider } from "@/components/provider/ThemeProvider";
-import { AppLayoutContent } from "@/components/provider/AppLayoutContent";
+import { CookieBanner } from "@/components/CookieBanner";
+import { Navbar } from "@/components/Navbar";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -16,11 +17,6 @@ const syncopate = Syncopate({
   weight: ["400", "700"],
   variable: "--font-display",
 });
-
-export const metadata: Metadata = {
-  title: "BUNDLEBOARD // Curated Supply Node",
-  description: "High-end digital assets and intelligent data pipeline streams.",
-};
 
 export default function RootLayout({
   children,
@@ -41,9 +37,11 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <AppLayoutContent>
+            <Navbar />
+            <main className="flex-1 w-full relative">
               {children}
-            </AppLayoutContent>
+            </main>
+            <CookieBanner />
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

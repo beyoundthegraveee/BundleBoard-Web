@@ -2,16 +2,16 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
-
 const ACCESS_TOKEN_EXPIRY_MS = parseInt(process.env.JWT_ACCESS_EXPIRY_MS || "900000", 10);
 
 const SOCIAL_LOGIN_MUTATION = `
-  mutation SocialLogin($input: SocialAuthRequest!) {
+  mutation SocialLogin($input: SocialLoginRequest!) {
     socialLogin(input: $input) {
       accessToken
       refreshToken
       isNew
-      user { id username email roles}
+      error
+      user { id username email roles }
     }
   }
 `;
@@ -22,7 +22,7 @@ const LOGIN_MUTATION = `
       accessToken
       refreshToken
       error
-      user { id username email roles}
+      user { id username email roles }
       isNew
     }
   }
@@ -35,7 +35,7 @@ const REFRESH_TOKEN_MUTATION = `
       refreshToken
     }
   }
-`
+`;
 
 const LOGOUT_MUTATION = `
   mutation Logout($input: RefreshTokenRequest!) {
@@ -70,7 +70,7 @@ async function refreshAccessToken(token: any) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: REFRESH_TOKEN_MUTATION,
-        variables: { token: token.refreshToken },
+        variables: { input: { refreshToken: token.refreshToken } },
       }),
     });
 
@@ -128,7 +128,7 @@ export const authOptions: NextAuthOptions = {
         const result = await res.json()
 
         if (result.errors) {
-            throw new Error(result.errors[0].message || "Server error")
+          throw new Error(result.errors[0].message || "Server error")
         }
 
         const authData = result.data?.login
@@ -161,38 +161,46 @@ export const authOptions: NextAuthOptions = {
               query: SOCIAL_LOGIN_MUTATION,
               variables: {
                 input: {
-                    email: user.email,
-                    username: user.name || user.email?.split("@")[0],
-                    provider: account.provider
+                  email: user.email,
+                  username: user.name || user.email?.split("@")[0],
+                  provider: account.provider
                 }
               }
             })
           });
 
-          const result = await res.json()
+          const result = await res.json();
 
-          if (result.errors) {
-            console.error("GraphQL Errors:", result.errors);
+          if (result.errors && result.errors.length > 0) {
+            const errMsg = result.errors[0].message;
+
+            if (errMsg === "User not found") {
+              const email = encodeURIComponent(user.email || '');
+              const username = encodeURIComponent(user.name || user.email?.split("@")[0] || '');
+              return `/register?mode=social-setup&email=${email}&username=${username}`;
+            }
+
+            console.error("GraphQL Signin Error:", result.errors);
             return false;
           }
 
           const socialData = result.data?.socialLogin;
 
-          if(socialData?.accessToken) {
-            const u = user as any
+          if (socialData?.accessToken) {
+            const u = user as any;
             u.accessToken = socialData.accessToken;
             u.refreshToken = socialData.refreshToken;
             u.isNewUser = socialData.isNew;
             u.roles = socialData.user?.roles || [];
-            return true
+            return true;
           }
-          return false
+          return false;
         } catch (error) {
-          console.error("Error during social login:", error)
-          return false
+          console.error("Error during social login:", error);
+          return false;
         }
       }
-    return true
+      return true;
     },
     async jwt({ token, user, session, trigger }) {
       if (user) {
@@ -201,35 +209,35 @@ export const authOptions: NextAuthOptions = {
         token.isNewUser = (user as any).isNewUser;
         token.roles = (user as any).roles || [];
         token.accessTokenExpires = Date.now() + ACCESS_TOKEN_EXPIRY_MS;
-        return token
+        return token;
       }
 
       if (trigger === "update" && session) {
         if (session.isNewUser !== undefined) {
-          token.isNewUser = session.isNewUser
+          token.isNewUser = session.isNewUser;
         }
         if (session.roles) {
-          token.roles = session.roles
+          token.roles = session.roles;
         }
       }
 
       if (Date.now() < (token.accessTokenExpires as number) - 60 * 1000) {
-        return token
+        return token;
       }
 
-      return refreshAccessToken(token)
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
       const s = session as any;
-      s.accessToken = token.accessToken
-      s.isNewUser = token.isNewUser
-      s.error = token.error
-      s.refreshToken = token.refreshToken
+      s.accessToken = token.accessToken;
+      s.isNewUser = token.isNewUser;
+      s.error = token.error;
+      s.refreshToken = token.refreshToken;
 
-      if(s.user) {
-        s.user.roles = token.roles || []
+      if (s.user) {
+        s.user.roles = token.roles || [];
       }
-      return session
+      return session;
     }
   },
   pages: {
@@ -239,4 +247,4 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-}
+};
