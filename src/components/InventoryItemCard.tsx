@@ -129,18 +129,27 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
 
         <div className="mt-4 pt-3 border-t border-white/[0.04] flex justify-between items-center text-[9px] uppercase tracking-wider text-muted-foreground">
           <span className="opacity-40 group-hover:opacity-100 group-hover:text-foreground transition-all">Inspect Node →</span>
-          <div className="flex gap-2" onClick={(e) => e.preventDefault()}>
+          <div className="flex gap-2">
             <button 
-              onClick={() => setIsEditOpen(true)}
+              onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsEditOpen(true)
+                }
+              }
               className="p-2 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
               title="Edit Node Parameters"
             >
               <Edit3 size={12} />
             </button>
             <button 
-              onClick={() => setIsDeleteOpen(true)}
-              className="p-2 border border-destructive/20 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-all rounded-none"
-              title="Destroy Node"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeleteOpen(true);
+                }}
+                className="p-2 border border-destructive/20 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-all rounded-none"
+                title="Destroy Node"
             >
               <Trash2 size={12} />
             </button>
