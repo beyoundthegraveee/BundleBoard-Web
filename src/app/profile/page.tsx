@@ -7,14 +7,10 @@ import {
   Terminal, Download, ShieldCheck, Upload, Plus, BarChart3
 } from "lucide-react"
 import Link from 'next/link'
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from '@/lib/supabaseClient'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { DeployAssetModal } from '@/components/DeployAssetModal'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { InventoryItemCard, AuthoredCollection } from '@/components/InventoryItemCard'
 
 const GET_USER_PROFILE = `
   query GetUserProfile {
@@ -78,16 +74,6 @@ interface Purchase {
       filePath: string;
       fileName: string;
     };
-  };
-}
-
-interface AuthoredCollection {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  previewImage: {
-    filePath: string;
   };
 }
 
@@ -255,9 +241,6 @@ export default function ProfilePage() {
         
         <div className="lg:col-span-4 space-y-6">
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
-            <div className="absolute top-0 right-0 px-2.5 py-1 bg-muted border-b border-l border-border/40 text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
-              ID // {userData?.id.slice(0, 8)}
-            </div>
             
             <div className="flex items-center gap-5 mb-6 pt-2">
               <div className="relative h-16 w-16 border border-border/80 rounded-none bg-muted shrink-0 overflow-hidden">
@@ -349,17 +332,12 @@ export default function ProfilePage() {
                 {userData?.authoredCollections && userData.authoredCollections.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {userData.authoredCollections.map((col) => (
-                      <div key={col.id} className="border border-border/40 bg-background p-3 flex gap-3 items-center rounded-none">
-                        <div className="w-10 h-10 border border-border/40 bg-muted flex-shrink-0 overflow-hidden">
-                          {col.previewImage?.filePath && (
-                            <img src={col.previewImage.filePath} alt="" className="w-full h-full object-cover" />
-                          )}
-                        </div>
-                        <div className="overflow-hidden space-y-0.5">
-                          <h4 className="font-bold text-xs uppercase truncate text-foreground">{col.name}</h4>
-                          <span className="text-[11px] font-bold text-primary block">${col.price.toFixed(2)}</span>
-                        </div>
-                      </div>
+                      <InventoryItemCard 
+                        key={col.id} 
+                        collection={col}
+                        accessToken={(session as any)?.accessToken || ""}
+                        onRefreshNeeded={fetchUser} 
+                      />
                     ))}
                   </div>
                 ) : (
