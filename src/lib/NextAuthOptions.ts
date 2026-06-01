@@ -11,7 +11,7 @@ const SOCIAL_LOGIN_MUTATION = `
       accessToken
       refreshToken
       isNew
-      user { id username email }
+      user { id username email roles}
     }
   }
 `;
@@ -22,7 +22,7 @@ const LOGIN_MUTATION = `
       accessToken
       refreshToken
       error
-      user { id username email }
+      user { id username email roles}
       isNew
     }
   }
