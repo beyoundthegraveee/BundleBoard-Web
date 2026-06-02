@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { cn } from "@/lib/utils";
 
 interface SplashScreenProps {
   onAnimationComplete: () => void;
@@ -30,35 +31,15 @@ export default function SplashScreen({ onAnimationComplete }: SplashScreenProps)
 
   return (
     <div 
-      className="fixed inset-0 bg-black flex items-center justify-center select-none z-[99999]"
-      style={{
-        animation: fadeExit ? 'fadeOutBg 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards' : 'none',
-      }}
+      className={cn(
+        "fixed inset-0 bg-black flex items-center justify-center select-none z-[99999]",
+        fadeExit && "animate-splash-bg-exit"
+      )}
     >
-      <h1 
-        className="font-display text-4xl sm:text-5xl tracking-[0.25em] uppercase flex items-center opacity-0"
-        style={{
-          animation: 'fadeInLogo 1.2s cubic-bezier(0.215, 0.610, 0.355, 1) forwards, zoomLogo 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-        }}
-      >
+      <h1 className="font-display text-4xl sm:text-5xl tracking-[0.25em] uppercase flex items-center opacity-0 animate-splash-logo">
         <span className="font-black text-white">Bundle</span>
         <span className="font-extralight text-zinc-300">board</span>
       </h1>
-
-      <style jsx global>{`
-        @keyframes fadeInLogo {
-          0% { opacity: 0; filter: blur(8px); }
-          100% { opacity: 1; filter: blur(0); }
-        }
-        @keyframes zoomLogo {
-          0% { transform: scale(0.95); }
-          100% { transform: scale(1.03); }
-        }
-        @keyframes fadeOutBg {
-          0% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }

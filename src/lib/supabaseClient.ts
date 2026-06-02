@@ -10,9 +10,9 @@ declare global {
 
 export const supabase = globalThis.globalSupabase || createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
   }
 })
 

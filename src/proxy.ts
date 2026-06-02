@@ -8,21 +8,7 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ req, token }) => {
-        const { pathname } = req.nextUrl
-
-        if (
-          pathname === "/" || 
-          pathname.startsWith("/collection/") || 
-          pathname.startsWith("/bundles/") ||
-          pathname === "/about" ||
-          pathname.startsWith("/tutorials")
-        ) {
-          return true
-        }
-
-        return !!token?.accessToken
-      },
+      authorized: ({ token }) => !!token?.accessToken,
     },
     pages: {
       signIn: "/login",
@@ -31,5 +17,7 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/((?!register|login|mail/verify-email|mail/verify|select-role|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!register|login|mail/verify-email|mail/verify|select-role|api/auth|_next/static|_next/image|favicon.ico).*)'
+  ],
 };

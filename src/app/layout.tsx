@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
 import { Space_Grotesk, Syncopate } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/provider/SessionProvider";
 import { ThemeProvider } from "@/components/provider/ThemeProvider";
-import { AppLayoutContent } from "@/components/provider/AppLayoutContent";
+import { CookieBanner } from "@/components/CookieBanner";
+import { Navbar } from "@/components/Navbar";
+import { SplashProvider } from "@/components/SplashProvider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -17,9 +18,9 @@ const syncopate = Syncopate({
   variable: "--font-display",
 });
 
-export const metadata: Metadata = {
-  title: "BUNDLEBOARD // Curated Supply Node",
-  description: "High-end digital assets and intelligent data pipeline streams.",
+export const metadata = {
+  title: "BundleBoard",
+  description: "Production-grade asset platform",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${syncopate.variable} h-full`}
     >
@@ -41,9 +43,13 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <AppLayoutContent>
-              {children}
-            </AppLayoutContent>
+            <SplashProvider>
+              <Navbar />
+              <main className="flex-1 w-full relative">
+                {children}
+              </main>
+              <CookieBanner />
+            </SplashProvider>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>
