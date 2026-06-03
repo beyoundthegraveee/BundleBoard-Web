@@ -54,15 +54,17 @@ export function Navbar() {
     setMounted(true);
     const updateCountFromStorage = () => {
       if (typeof window !== "undefined") {
-        const items = JSON.parse(localStorage.getItem("bundleboard-cart") || "[]");
+        const items = JSON.parse(localStorage.getItem("bundleboard_cart") || "[]");
         setCartCount(items.length);
       }
     };
 
     updateCountFromStorage();
-    window.addEventListener("cart-updated", updateCountFromStorage);
+    window.addEventListener("cartUpdate", updateCountFromStorage);
+    window.addEventListener("cart_updated", updateCountFromStorage);
     return () => {
-      window.removeEventListener("cart-updated", updateCountFromStorage);
+      window.removeEventListener("cartUpdate", updateCountFromStorage);
+      window.removeEventListener("cart_updated", updateCountFromStorage);
     };
   }, []);
 

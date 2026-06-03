@@ -57,14 +57,6 @@ export default function CollectionPage() {
                   }
                   previewImage { filePath }
                   mediaResource { fileName fileSize mimeType provider }
-                  galleryImages {
-                    id
-                    fileName
-                    filePath
-                    width
-                    height
-                    fileSize
-                  }
                 }
               }
             `,

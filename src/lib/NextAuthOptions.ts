@@ -188,6 +188,7 @@ export const authOptions: NextAuthOptions = {
 
           if (socialData?.accessToken) {
             const u = user as any;
+            u.id = socialData.user?.id;
             u.accessToken = socialData.accessToken;
             u.refreshToken = socialData.refreshToken;
             u.isNewUser = socialData.isNew;
@@ -204,6 +205,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, session, trigger }) {
       if (user) {
+        token.id = user.id;
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.isNewUser = (user as any).isNewUser;
@@ -236,6 +238,7 @@ export const authOptions: NextAuthOptions = {
 
       if (s.user) {
         s.user.roles = token.roles || [];
+        s.user.id = (token as any).id || token.sub;
       }
       return session;
     }
