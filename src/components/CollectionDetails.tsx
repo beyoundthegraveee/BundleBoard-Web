@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from 'react'
-import { HardDrive, Shield, Activity, Hash, ChevronLeft, ChevronRight, Images } from "lucide-react"
+import { HardDrive, Shield, Activity, Hash, ChevronLeft, ChevronRight, Images, ShoppingCart } from "lucide-react"
 
 interface GalleryImage {
   id: string;
@@ -25,7 +25,9 @@ interface CollectionDetailsProps {
       provider: string;
     };
     galleryImages?: GalleryImage[];
-  }
+  };
+  onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
+  isInCart?: boolean;
 }
 
 const formatBytes = (bytes: number) => {
@@ -36,7 +38,7 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export default function CollectionDetails({ collection }: CollectionDetailsProps) {
+export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
   const { name, description, price, mediaResource, id, galleryImages = [] } = collection;
   const [currentSlide, setCurrentSlide] = useState(0);
   
@@ -66,6 +68,17 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
     setRotateY(0);
   };
 
+  const handleAddToCartClick = () => {
+    if (isInCart) return;
+    onAddToCart({
+      id,
+      name,
+      price,
+      category: mediaResource.mimeType.split('/')[0] || "Asset",
+      previewImage: galleryImages[0]?.filePath || "/placeholder.png"
+    });
+  };
+
   return (
     <div className="font-sans text-foreground space-y-10">
       
@@ -87,8 +100,17 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
             <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Value</span>
             <div className="text-xl font-bold text-foreground">${price.toFixed(2)}</div>
           </div>
-          <button className="bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-[10px] tracking-widest transition-opacity py-3 px-5 rounded-none h-full">
-            Purchase Asset
+          <button 
+            onClick={handleAddToCartClick}
+            disabled={isInCart}
+            className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
+              isInCart 
+                ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
+                : 'bg-primary hover:opacity-90'
+            }`}
+          >
+            <ShoppingCart size={12} />
+            {isInCart ? "In Cart" : "Add to Cart"}
           </button>
         </div>
 
@@ -105,7 +127,6 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
           </div>
           
           <div className="max-w-2xl w-full perspective-[1000px]">
-            
             <div 
               ref={cardRef}
               onMouseMove={handleMouseMove}
@@ -148,7 +169,6 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
                 </>
               )}
             </div>
-
           </div>
 
           {galleryImages.length > 1 && (

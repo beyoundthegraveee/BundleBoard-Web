@@ -14,6 +14,17 @@ export default function CollectionPage() {
   const [collection, setCollection] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [errorLog, setErrorLog] = useState<string | null>(null)
+  const [isInCart, setIsInCart] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('bundleboard_cart')
+      if (savedCart) {
+        const items = JSON.parse(savedCart)
+        setIsInCart(items.some((item: any) => item.id === id))
+      }
+    }
+  }, [id])
 
   useEffect(() => {
     const fetchCollection = async () => {
@@ -46,6 +57,14 @@ export default function CollectionPage() {
                   }
                   previewImage { filePath }
                   mediaResource { fileName fileSize mimeType provider }
+                  galleryImages {
+                    id
+                    fileName
+                    filePath
+                    width
+                    height
+                    fileSize
+                  }
                 }
               }
             `,
@@ -55,19 +74,33 @@ export default function CollectionPage() {
         const result = await response.json()
         
         if (result.errors) {
-          throw new Error(result.errors[0].message || "FAILED_TO_FETCH_COLLECTION")
+          throw new Error(result.errors[0].message || "Failed to fetch collection data")
         }
 
         setCollection(result.data?.getCollectionById)
       } catch (err: any) {
-        console.error("CATALOG_FETCH_FAILURE:", err)
-        setErrorLog(err.message || "STREAM_DISCONNECT")
+        console.error("Catalog fetch failure:", err)
+        setErrorLog(err.message || "Stream disconnected")
       } finally {
         if (id) setLoading(false)
       }
     }
     if (id) fetchCollection()
   }, [id, session])
+
+  const handleAddToCart = (item: { id: string; name: string; price: number; category: string; previewImage: string }) => {
+    if (typeof window !== 'undefined') {
+      const currentCart = localStorage.getItem('bundleboard_cart')
+      const items = currentCart ? JSON.parse(currentCart) : []
+      
+      if (!items.some((cartItem: any) => cartItem.id === item.id)) {
+        const updatedCart = [...items, item]
+        localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
+        setIsInCart(true)
+        window.dispatchEvent(new Event('cartUpdate'))
+      }
+    }
+  }
 
   if (loading) return (
     <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans">
@@ -78,7 +111,7 @@ export default function CollectionPage() {
 
   if (!collection) return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center font-sans font-semibold uppercase text-xs tracking-widest text-destructive bg-background">
-      Error: Asset catalog node not found
+      Error: Asset catalog node not found {errorLog && `// ${errorLog}`}
     </div>
   )
 
@@ -116,7 +149,11 @@ export default function CollectionPage() {
               className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 block"
             />
           </div>
-          <CollectionDetails collection={collection} />
+          <CollectionDetails 
+            collection={collection} 
+            onAddToCart={handleAddToCart}
+            isInCart={isInCart}
+          />
         </div>
 
         <div className="lg:col-span-4">
