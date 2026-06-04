@@ -35,14 +35,17 @@ const GET_USER_PROFILE = `
         amount
         currency
         status
-        snapshotPrice
         createdAt
-        asset {
+        items {
           id
-          name
-          previewImage { 
-            filePath
-            fileName
+          snapshotPrice
+          asset {
+            id
+            name
+            previewImage { 
+              filePath
+              fileName
+            }
           }
         }
       }
@@ -60,13 +63,9 @@ const UPDATE_AVATAR_MUTATION = `
   }
 `;
 
-interface Purchase {
+interface PurchaseItem {
   id: string;
-  amount: number;
-  currency: string;
-  status: string;
   snapshotPrice: number;
-  createdAt: string;
   asset: {
     id: string;
     name: string;
@@ -75,6 +74,15 @@ interface Purchase {
       fileName: string;
     };
   };
+}
+
+interface Purchase {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  items: PurchaseItem[];
 }
 
 interface UserData {
@@ -221,6 +229,8 @@ export default function ProfilePage() {
 
   const isAuthor = userData?.roles?.includes("author")
   const totalSpent = userData?.purchases?.reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2) || "0.00"
+  
+  const totalAssetsCount = userData?.purchases?.reduce((acc, curr) => acc + (curr.items?.length || 0), 0) || 0
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-12 relative">
@@ -354,36 +364,40 @@ export default function ProfilePage() {
               <h3 className="text-lg font-bold uppercase tracking-wider text-foreground">Purchased Core Vault</h3>
               <div className="flex-1" />
               <span className="text-[10px] font-semibold uppercase px-2 py-0.5 bg-muted text-muted-foreground border border-border/40">
-                {userData?.purchases?.length || 0} Assets
+                {totalAssetsCount} Assets
               </span>
             </div>
 
-            {userData?.purchases && userData.purchases.length > 0 ? (
+            {totalAssetsCount > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {userData.purchases.map((purchase) => (
-                  <div key={purchase.id} className="group border border-border/40 bg-card rounded-none shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div className="aspect-video border-b border-border/30 overflow-hidden bg-muted">
-                      <img 
-                        src={purchase.asset?.previewImage?.filePath} 
-                        alt={purchase.asset?.name}
-                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300" 
-                      />
-                    </div>
-                    <div className="p-4 space-y-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">{purchase.asset?.name}</span>
-                        <div className="text-[9px] bg-muted border border-border/60 px-1.5 py-0.5 font-semibold uppercase text-muted-foreground tracking-wider shrink-0">
-                          {purchase.status}
+                {userData?.purchases?.map((purchase) => (
+                  <React.Fragment key={purchase.id}>
+                    {purchase.items?.map((item) => (
+                      <div key={item.id} className="group border border-border/40 bg-card rounded-none shadow-sm overflow-hidden flex flex-col justify-between">
+                        <div className="aspect-video border-b border-border/30 overflow-hidden bg-muted">
+                          <img 
+                            src={item.asset?.previewImage?.filePath} 
+                            alt={item.asset?.name}
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300" 
+                          />
+                        </div>
+                        <div className="p-4 space-y-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">{item.asset?.name}</span>
+                            <div className="text-[9px] bg-muted border border-border/60 px-1.5 py-0.5 font-semibold uppercase text-muted-foreground tracking-wider shrink-0">
+                              {purchase.status}
+                            </div>
+                          </div>
+                          <Link 
+                            href={`/assets/${item.asset?.id}`}
+                            className="flex items-center justify-center gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2.5 font-bold text-[10px] uppercase tracking-widest transition-colors rounded-none"
+                          >
+                            <Download size={12} /> Download Package
+                          </Link>
                         </div>
                       </div>
-                      <Link 
-                        href={`/assets/${purchase.asset?.id}`}
-                        className="flex items-center justify-center gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2.5 font-bold text-[10px] uppercase tracking-widest transition-colors rounded-none"
-                      >
-                        <Download size={12} /> Download Package
-                      </Link>
-                    </div>
-                  </div>
+                    ))}
+                  </React.Fragment>
                 ))}
               </div>
             ) : (
@@ -415,7 +429,7 @@ export default function ProfilePage() {
                   {userData?.purchases?.map((p) => (
                     <tr key={p.id} className="border-b border-border/20 last:border-0 text-xs">
                       <td className="py-3.5 font-semibold">{new Date(p.createdAt).toLocaleDateString()}</td>
-                      <td className="py-3.5 text-center text-[11px] text-muted-foreground opacity-60">#{p.asset?.id.slice(0, 6)}</td>
+                      <td className="py-3.5 text-center text-[11px] text-muted-foreground opacity-60">#{p.id.slice(0, 8)}</td>
                       <td className="py-3.5 text-right font-bold text-foreground">{p.amount.toFixed(2)} {p.currency}</td>
                     </tr>
                   ))}
