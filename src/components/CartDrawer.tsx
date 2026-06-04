@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { X, Trash2, ArrowRight, ShoppingBag } from "lucide-react"
-import Link from "next/link"
+import { X, Trash2, ArrowRight, ShoppingBag, Loader2 } from "lucide-react"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
-// Временный интерфейс для демонстрации, потом привяжем к твоему Zustand/Context
 interface CartItem {
   id: string
   name: string
@@ -20,20 +19,92 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const [cartItems, setCartItems] = React.useState<CartItem[]>([
-    {
-      id: "1",
-      name: "[PRO] Bundle Chrome Effect",
-      price: 56.00,
-      category: "Actions & Effects",
-      previewImage: "/placeholder.png"
+  const { data: session } = useSession()
+  const [cartItems, setCartItems] = React.useState<CartItem[]>([])
+  const [isRedirecting, setIsRedirecting] = React.useState(false)
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCart = localStorage.getItem("bundleboard_cart")
+      if (savedCart) {
+        try {
+          setCartItems(JSON.parse(savedCart))
+        } catch (error) {
+          console.error("❌ Failed to parse cart data from localStorage:", error)
+        }
+      }
     }
-  ])
+  }, [isOpen])
 
   const total = cartItems.reduce((sum, item) => sum + item.price, 0)
 
   const removeItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id))
+    const updatedCart = cartItems.filter(item => item.id !== id)
+    setCartItems(updatedCart)
+    localStorage.setItem("bundleboard_cart", JSON.stringify(updatedCart))
+    window.dispatchEvent(new Event("cart_updated"))
+  }
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0 || isRedirecting) return
+    if (!session || !(session as any).accessToken) {
+      alert("Please sign in to proceed with your purchase.")
+      return
+    }
+
+    setIsRedirecting(true)
+    
+    try {
+      const currentSession = session as any;
+      
+      const input = {
+        userId: parseInt(currentSession.user?.id, 10),
+        currency: "USD",
+        collectionIds: cartItems.map(item => parseInt(item.id, 10))
+      }
+
+      const response = await fetch("http://localhost:8080/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${currentSession.accessToken}`
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CreateCheckoutSession($input: PaymentRequest!) {
+              createCheckoutSession(input: $input)
+            }
+          `,
+          variables: { input }
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.errors) {
+        console.error("❌ GraphQL validation error:", result.errors)
+        alert(`Checkout initialization failed: ${result.errors[0].message}`)
+        setIsRedirecting(false)
+        return
+      }
+
+      const stripeUrl = result.data?.createCheckoutSession
+
+      if (stripeUrl) {
+        setCartItems([]) 
+        localStorage.removeItem("bundleboard_cart")
+        window.dispatchEvent(new Event("cart_updated"))
+
+        window.location.href = stripeUrl
+      } else {
+        throw new Error("Stripe URL not found in response")
+      }
+
+    } catch (error) {
+      console.error("❌ Critical error during payment session initialization:", error)
+      alert("Unable to connect to the payment server. Please try again later.")
+      setIsRedirecting(false)
+    }
   }
 
   if (!isOpen) return null
@@ -58,7 +129,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
             <button 
               onClick={onClose}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-none"
+              disabled={isRedirecting}
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-none disabled:opacity-50"
             >
               <X size={16} />
             </button>
@@ -91,7 +163,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                   <button 
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-3 right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1"
+                    disabled={isRedirecting}
+                    className="absolute top-3 right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1 disabled:opacity-30"
                     aria-label="Remove item"
                   >
                     <Trash2 size={13} strokeWidth={1.8} />
@@ -118,16 +191,24 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             Taxation and license certificates will be generated automatically upon checkout initialization.
           </p>
 
-          <Link 
-            href="/checkout" 
-            onClick={onClose}
+          <button 
+            onClick={handleCheckout}
+            disabled={cartItems.length === 0 || isRedirecting}
             className={cn(
-              "w-full py-4 bg-primary text-primary-foreground font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 rounded-none shadow-sm transition-opacity hover:opacity-90",
-              cartItems.length === 0 && "opacity-30 cursor-not-allowed pointer-events-none"
+              "w-full py-4 bg-primary text-primary-foreground font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 rounded-none shadow-sm transition-all hover:opacity-90 active:scale-[0.99]",
+              (cartItems.length === 0 || isRedirecting) && "opacity-30 cursor-not-allowed pointer-events-none"
             )}
           >
-            Proceed to Checkout <ArrowRight size={13} />
-          </Link>
+            {isRedirecting ? (
+              <>
+                Connecting to Stripe... <Loader2 size={13} className="animate-spin" />
+              </>
+            ) : (
+              <>
+                Proceed to Checkout <ArrowRight size={13} />
+              </>
+            )}
+          </button>
         </div>
 
       </div>

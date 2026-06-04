@@ -1,16 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from 'react'
-import { HardDrive, Shield, Activity, Hash, ChevronLeft, ChevronRight, Images } from "lucide-react"
-
-interface GalleryImage {
-  id: string;
-  fileName: string;
-  filePath: string;
-  width: number;
-  height: number;
-  fileSize: number;
-}
+import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
 
 interface CollectionDetailsProps {
   collection: {
@@ -24,8 +15,12 @@ interface CollectionDetailsProps {
       mimeType: string;
       provider: string;
     };
-    galleryImages?: GalleryImage[];
-  }
+    previewImage?: {
+      filePath: string;
+    };
+  };
+  onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
+  isInCart?: boolean;
 }
 
 const formatBytes = (bytes: number) => {
@@ -36,22 +31,11 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export default function CollectionDetails({ collection }: CollectionDetailsProps) {
-  const { name, description, price, mediaResource, id, galleryImages = [] } = collection;
-  const [currentSlide, setCurrentSlide] = useState(0);
-  
+export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
+  if (!collection) return null;
+  const { name, description, price, mediaResource, id, previewImage } = collection;
   const [rotateY, setRotateY] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  const nextSlide = () => {
-    if (galleryImages.length === 0) return;
-    setCurrentSlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    if (galleryImages.length === 0) return;
-    setCurrentSlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
-  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -64,6 +48,17 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
 
   const handleMouseLeave = () => {
     setRotateY(0);
+  };
+
+  const handleAddToCartClick = () => {
+    if (isInCart) return;
+    onAddToCart({
+      id,
+      name,
+      price,
+      category: mediaResource.mimeType.split('/')[0] || "Asset",
+      previewImage: previewImage?.filePath || "/placeholder.png"
+    });
   };
 
   return (
@@ -87,8 +82,17 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
             <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Value</span>
             <div className="text-xl font-bold text-foreground">${price.toFixed(2)}</div>
           </div>
-          <button className="bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-[10px] tracking-widest transition-opacity py-3 px-5 rounded-none h-full">
-            Purchase Asset
+          <button 
+            onClick={handleAddToCartClick}
+            disabled={isInCart}
+            className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
+              isInCart 
+                ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
+                : 'bg-primary hover:opacity-90'
+            }`}
+          >
+            <ShoppingCart size={12} />
+            {isInCart ? "In Cart" : "Add to Cart"}
           </button>
         </div>
 
@@ -97,15 +101,14 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
         </div>
       </div>
 
-      {galleryImages.length > 0 && (
+      {previewImage?.filePath && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Images size={13} />
-            Visual Payload Manifest ({currentSlide + 1} of {galleryImages.length})
+            Visual Payload
           </div>
           
           <div className="max-w-2xl w-full perspective-[1000px]">
-            
             <div 
               ref={cardRef}
               onMouseMove={handleMouseMove}
@@ -117,55 +120,13 @@ export default function CollectionDetails({ collection }: CollectionDetailsProps
               className="relative border border-border/60 bg-card aspect-video w-full overflow-hidden rounded-none shadow-xl transition-transform duration-100 ease-out group"
             >
               <img 
-                src={galleryImages[currentSlide].filePath} 
-                alt={galleryImages[currentSlide].fileName} 
+                src={previewImage.filePath} 
+                alt={name} 
                 className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
                 style={{ transform: 'translateZ(20px)' }} 
               />
-              <div 
-                className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md text-foreground px-3 py-1.5 text-[9px] font-medium uppercase border border-border/40 max-w-[85%] truncate rounded-none tracking-wide"
-                style={{ transform: 'translateZ(40px)' }}
-              >
-                {galleryImages[currentSlide].fileName} • {formatBytes(galleryImages[currentSlide].fileSize)}
-              </div>
-
-              {galleryImages.length > 1 && (
-                <>
-                  <button 
-                    onClick={prevSlide}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm border border-border/60 p-2 text-foreground hover:bg-foreground hover:text-background transition-colors rounded-none z-10"
-                    style={{ transform: 'translateZ(50px)' }}
-                  >
-                    <ChevronLeft size={14} strokeWidth={2} />
-                  </button>
-                  <button 
-                    onClick={nextSlide}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm border border-border/60 p-2 text-foreground hover:bg-foreground hover:text-background transition-colors rounded-none z-10"
-                    style={{ transform: 'translateZ(50px)' }}
-                  >
-                    <ChevronRight size={14} strokeWidth={2} />
-                  </button>
-                </>
-              )}
             </div>
-
           </div>
-
-          {galleryImages.length > 1 && (
-            <div className="flex gap-1.5 justify-start pt-1">
-              {galleryImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`w-1.5 h-1.5 transition-all border rounded-none ${
-                    idx === currentSlide 
-                      ? 'bg-foreground border-foreground scale-110' 
-                      : 'bg-muted/30 border-border/60 hover:bg-muted'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
       )}
 
