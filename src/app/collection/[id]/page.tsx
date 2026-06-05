@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft } from "lucide-react"
 import CollectionDetails from '@/components/CollectionDetails'
 import AuthorSidebar from '@/components/AuthorSidebar'
 import { useSession } from 'next-auth/react'
+import CommentsSection from '@/components/CommentSection'
 
 export default function CollectionPage() {
   const { id } = useParams()
@@ -134,13 +135,6 @@ export default function CollectionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
         
         <div className="lg:col-span-8 space-y-12">
-          <div className="border border-border/40 bg-card shadow-md overflow-hidden rounded-none aspect-[16/10]">
-            <img 
-              src={collection.previewImage?.filePath} 
-              alt={collection.name} 
-              className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 block"
-            />
-          </div>
           <CollectionDetails 
             collection={collection} 
             onAddToCart={handleAddToCart}
@@ -150,10 +144,10 @@ export default function CollectionPage() {
 
         <div className="lg:col-span-4">
           <div className="sticky top-28 space-y-6">
-            
+             
              <AuthorSidebar author={collection.author} />
 
-             <div className="border border-border/40 p-5 bg-card/50 text-[11px] font-medium uppercase text-muted-foreground space-y-2 rounded-none tracking-wider">
+             <div className="border border-border/40 p-5 bg-card/50 text-[11px] font-medium uppercase text-muted-foreground space-y-2 rounded-none tracking-wider shadow-sm">
                <div className="flex justify-between border-b border-border/20 pb-1.5">
                  <span>Transmission Mode</span>
                  <span className="text-foreground font-semibold">Encrypted</span>
@@ -167,6 +161,7 @@ export default function CollectionPage() {
                  <span className="text-foreground font-semibold">Commercial 1.0</span>
                </div>
              </div>
+             <CommentsSection targetId={id as string} />
 
           </div>
         </div>
