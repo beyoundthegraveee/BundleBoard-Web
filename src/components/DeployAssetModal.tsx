@@ -1,14 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Loader2, X, Image as ImageIcon, FileArchive, Trash2 } from "lucide-react"
-import { createClient } from "@supabase/supabase-js"
+import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, GripHorizontal } from "lucide-react"
+import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 const CREATE_COLLECTION_MUTATION = `
   mutation CreateCollection($input: CreateNewCollectionInput!) {
@@ -35,6 +30,7 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 interface PreviewFileItem {
+  id: string; // Уникальный ID для ключей при перетаскивании
   file: File;
   previewUrl: string;
 }
@@ -54,6 +50,9 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  
+  // Состояние для Drag & Drop
+  const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
 
   useEffect(() => {
     return () => {
@@ -71,11 +70,21 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       setPreviewItems((prev) => {
         const currentTotal = prev.length + incomingFiles.length;
         if (currentTotal > 5) {
-          setValidationError("Maximum five gallery preview images are allowed for this deployment layout.")
-          return prev;
+          setValidationError("Maximum 5 gallery preview images are allowed. Please remove some files first.")
+          // Берем только то количество файлов, которое влезет в лимит (5)
+          const availableSlots = 5 - prev.length;
+          const allowedFiles = incomingFiles.slice(0, availableSlots);
+          
+          const newItems = allowedFiles.map(file => ({
+            id: Math.random().toString(36).substring(7),
+            file,
+            previewUrl: URL.createObjectURL(file)
+          }))
+          return [...prev, ...newItems];
         }
 
         const newItems = incomingFiles.map(file => ({
+          id: Math.random().toString(36).substring(7),
           file,
           previewUrl: URL.createObjectURL(file)
         }))
@@ -93,6 +102,32 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       URL.revokeObjectURL(prev[indexToRemove].previewUrl)
       return prev.filter((_, idx) => idx !== indexToRemove)
     })
+  }
+
+  // ==============================
+  // DRAG AND DROP HANDLERS
+  // ==============================
+  const handleDragStart = (index: number) => {
+    setDragItemIndex(index);
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Необходимо для разрешения drop
+  }
+
+  const handleDrop = (index: number) => {
+    if (dragItemIndex === null || dragItemIndex === index) return;
+
+    setPreviewItems((prev) => {
+      const newItems = [...prev];
+      const draggedItem = newItems[dragItemIndex];
+      // Удаляем перетаскиваемый элемент из старой позиции
+      newItems.splice(dragItemIndex, 1);
+      // Вставляем в новую позицию
+      newItems.splice(index, 0, draggedItem);
+      return newItems;
+    });
+    setDragItemIndex(null);
   }
 
   const handleDeployCollection = async (e: React.FormEvent) => {
@@ -121,6 +156,8 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       const timestamp = Date.now()
       const category = newAsset.category
       const folderId = `collection-${timestamp}`
+      
+      // Порядок в массиве previewItems определит порядок загрузки и маппинга в БД
       const uploadPreviewsPromises = previewItems.map(async (item, index) => {
         const webpBlob = await convertToWebP(item.file, 1200, 0.82)
         const { width, height } = await getImageDimensions(webpBlob)
@@ -297,15 +334,31 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
           </div>
 
           <div className="space-y-3">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Media Files</label>
+            <div className="flex justify-between items-end">
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Media Files</label>
+              <span className={`text-[9px] font-bold uppercase ${previewItems.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                {previewItems.length} / 5 Images
+              </span>
+            </div>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              <div className="border border-dashed border-border/80 p-5 bg-background hover:bg-accent/50 text-center flex flex-col items-center justify-center relative cursor-pointer group transition-colors rounded-none">
+              {/* 🟢 Блокируем кнопку загрузки, если файлов 5 */}
+              <div className={`border border-dashed p-5 text-center flex flex-col items-center justify-center relative transition-colors rounded-none ${previewItems.length >= 5 ? 'border-border/40 bg-muted/10 cursor-not-allowed opacity-50' : 'border-border/80 bg-background hover:bg-accent/50 cursor-pointer group'}`}>
                 <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
                 <span className="text-xs font-semibold text-foreground">Gallery Previews</span>
-                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{previewItems.length} files selected</span>
-                <input type="file" accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
+                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">
+                  {previewItems.length >= 5 ? 'Limit reached' : 'Select up to 5'}
+                </span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  disabled={previewItems.length >= 5}
+                  className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" 
+                  onChange={handleFileChange} 
+                />
               </div>
+
               <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
                 <FileArchive size={18} className={projectFile ? "text-primary mb-2 stroke-[1.5]" : "text-muted-foreground mb-2 stroke-[1.5]"} />
                 <span className="text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
@@ -313,23 +366,49 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
                 {!projectFile && <input type="file" accept=".zip,.rar,.7z,.grd,.asl,.atn" className="absolute inset-0 opacity-0 cursor-pointer" required onChange={e => { setValidationError(null); setProjectFile(e.target.files?.[0] || null); }} />}
                 {projectFile && <button type="button" onClick={() => setProjectFile(null)} className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-none transition-colors"><X size={12} /></button>}
               </div>
-
             </div>
 
+            {/* 🟢 Зона предпросмотра с Drag and Drop */}
             {previewItems.length > 0 && (
-              <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 max-h-32 overflow-y-auto rounded-none">
-                {previewItems.map((item, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-none bg-muted/40 overflow-hidden border border-border/40 group">
-                    <img src={item.previewUrl} alt="" className="w-full h-full object-cover opacity-80" />
-                    <button 
-                      type="button" 
-                      onClick={() => removePreviewFile(idx)} 
-                      className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none"
+              <div className="space-y-1.5">
+                <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Drag to reorder. First image is the cover.</span>
+                <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 rounded-none">
+                  {previewItems.map((item, idx) => (
+                    <div 
+                      key={item.id} 
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(idx)}
+                      className={`relative aspect-square rounded-none overflow-hidden border transition-all cursor-grab active:cursor-grabbing group
+                        ${dragItemIndex === idx ? 'opacity-40 border-primary scale-95' : 'border-border/40 hover:border-primary/50'}
+                        ${idx === 0 ? 'ring-1 ring-primary ring-offset-1 ring-offset-background' : ''}
+                      `}
                     >
-                      <Trash2 size={13} className="stroke-[1.8]" />
-                    </button>
-                  </div>
-                ))}
+                      {/* Метка COVER для первого элемента */}
+                      {idx === 0 && (
+                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
+                          Cover
+                        </div>
+                      )}
+
+                      <img 
+                        src={item.previewUrl} 
+                        alt="" 
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" 
+                      />
+                      
+                      {/* Кнопка удаления */}
+                      <button 
+                        type="button" 
+                        onClick={() => removePreviewFile(idx)} 
+                        className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none"
+                      >
+                        <Trash2 size={13} className="stroke-[1.8]" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

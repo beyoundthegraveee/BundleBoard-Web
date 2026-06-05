@@ -56,7 +56,7 @@ export default function CollectionPage() {
                     socialLinks { platform url }
                     avatarUrl
                   }
-                  previewImage { filePath }
+                  galleryImages { filePath } 
                   mediaResource { fileName fileSize mimeType provider }
                 }
               }
@@ -161,6 +161,7 @@ export default function CollectionPage() {
                  <span className="text-foreground font-semibold">Commercial 1.0</span>
                </div>
              </div>
+             
              <CommentsSection targetId={id as string} />
 
           </div>

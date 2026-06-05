@@ -18,7 +18,7 @@ const GET_COLLECTIONS_BY_TAG_QUERY = `
         author {
           username
         }
-        previewImage {
+        galleryImages {
           filePath
         }
       }
@@ -70,7 +70,14 @@ export default function BundleCategoryPage() {
 
       const data = result.data?.getCollectionsByTag;
       if (data) {
-        setCollections(data.collections || []);
+        const mappedCollections = (data.collections || []).map((col: any) => ({
+          ...col,
+          previewImage: col.galleryImages && col.galleryImages.length > 0 
+            ? { filePath: col.galleryImages[0].filePath } 
+            : null
+        }));
+
+        setCollections(mappedCollections);
         setTotalPages(data.totalPages || 1);
       }
     } catch (err: any) {

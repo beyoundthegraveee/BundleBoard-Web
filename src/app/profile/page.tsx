@@ -26,7 +26,7 @@ const GET_USER_PROFILE = `
         name
         price
         description
-        previewImage { filePath }
+        galleryImages { filePath }
       }
       purchases {
         id
@@ -40,7 +40,7 @@ const GET_USER_PROFILE = `
           asset {
             id
             name
-            previewImage { filePath fileName }
+            galleryImages { filePath fileName }
           }
         }
       }
@@ -66,7 +66,32 @@ export default function ProfilePage() {
         body: JSON.stringify({ query: GET_USER_PROFILE }),
       })
       const result = await response.json()
-      if (!result.errors) setUserData(result.data?.getUserProfile)
+      
+      if (!result.errors && result.data?.getUserProfile) {
+        const rawProfile = result.data.getUserProfile;
+
+        if (rawProfile.authoredCollections) {
+          rawProfile.authoredCollections = rawProfile.authoredCollections.map((col: any) => ({
+            ...col,
+            previewImage: col.galleryImages?.[0] || null
+          }));
+        }
+
+        if (rawProfile.purchases) {
+          rawProfile.purchases = rawProfile.purchases.map((purchase: any) => ({
+            ...purchase,
+            items: purchase.items?.map((item: any) => ({
+              ...item,
+              asset: {
+                ...item.asset,
+                previewImage: item.asset?.galleryImages?.[0] || null
+              }
+            }))
+          }));
+        }
+
+        setUserData(rawProfile)
+      }
     } catch (err) {
       console.error("PROFILE_FETCH_FAILURE:", err)
     } finally {
