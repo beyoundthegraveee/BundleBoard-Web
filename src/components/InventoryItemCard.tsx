@@ -13,11 +13,15 @@ const DELETE_COLLECTION_MUTATION = `
 `;
 
 const UPDATE_COLLECTION_MUTATION = `
-  mutation UpdateCollection($id: ID!, $input: UpdateCollectionInput!) {
+  mutation UpdateCollection($id: ID!, $input: UpdateCollectionRequest!) {
     updateCollection(id: $id, input: $input) {
+      id
       name
       price
       description
+      galleryImages {
+        filePath
+      }
     }
   }
 `;
@@ -27,9 +31,9 @@ export interface AuthoredCollection {
   name: string;
   price: number;
   description: string;
-  previewImage: {
+  galleryImages?: {
     filePath: string;
-  };
+  }[];
 }
 
 interface InventoryItemCardProps {
@@ -62,7 +66,7 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
   const processDelete = async () => {
     setIsLoading(true)
     try {
-      const folderPath = extractFolderPath(collection.previewImage?.filePath);
+      const folderPath = extractFolderPath(collection.galleryImages?.[0]?.filePath);
       const response = await fetch("http://localhost:8080/graphql", {
         method: "POST",
         headers: {
@@ -91,7 +95,7 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
     }
   }
 
-  const processUpdate = async (name: string, price: number, description: string) => {
+  const processUpdate = async (name: string, price: number, description: string, galleryImages: any[]) => {
     setIsLoading(true)
     try {
       const response = await fetch("http://localhost:8080/graphql", {
@@ -104,7 +108,7 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
           query: UPDATE_COLLECTION_MUTATION,
           variables: {
             id: collection.id,
-            input: { name, price, description }
+            input: { name, price, description, galleryImages }
           }
         })
       })
@@ -122,6 +126,8 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
     }
   }
 
+  const cardThumbnail = collection.galleryImages?.[0]?.filePath || "";
+
   return (
     <>
       <Link 
@@ -129,9 +135,9 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
         className="group border border-border/40 bg-background p-5 flex flex-col justify-between rounded-none hover:border-white/[0.15] transition-all duration-300 relative min-h-[160px] shadow-sm bg-[#0d0c0e]/40"
       >
         <div className="flex gap-4 items-start w-full">
-          <div className="w-16 h-16 border border-border/40 bg-muted flex-shrink-0 overflow-hidden select-none">
-            {collection.previewImage?.filePath && (
-              <img src={collection.previewImage.filePath} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="w-16 h-16 border border-border/40 bg-muted flex-shrink-0 overflow-hidden select-none relative">
+            {cardThumbnail && (
+              <img src={cardThumbnail} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
             )}
           </div>
           
@@ -151,9 +157,9 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
           <div className="flex gap-2">
             <button 
               onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsEditOpen(true)
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsEditOpen(true)
                 }
               }
               className="p-2 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
@@ -194,7 +200,7 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
           name: collection.name,
           price: collection.price,
           description: collection.description,
-          previewImage: collection.previewImage?.filePath
+          galleryImages: collection.galleryImages || []
         }}
       />
     </>

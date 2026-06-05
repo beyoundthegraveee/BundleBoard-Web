@@ -12,7 +12,6 @@ export default function CommentsSection({ targetId }: { targetId: string }) {
     e.preventDefault()
     if (!comment.trim()) return
 
-    // Добавляем локально (замените на fetch к вашему API)
     setComments(prev => [...prev, { 
       id: Date.now(), 
       author: "Current User", 
@@ -26,7 +25,7 @@ export default function CommentsSection({ targetId }: { targetId: string }) {
     <section className="border border-border/40 bg-card rounded-none shadow-sm flex flex-col">
       <div className="flex items-center gap-2 border-b border-border/40 p-4 bg-muted/20">
         <Terminal size={14} className="text-primary" />
-        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Transmission Logs</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Comments</h3>
       </div>
       
       <div className="p-4 space-y-4 max-h-64 overflow-y-auto font-mono text-[11px]">

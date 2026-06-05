@@ -1,22 +1,42 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Loader2, X, Upload, Trash2, Image as ImageIcon } from "lucide-react"
+import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
+import { convertToWebP } from '@/lib/imageProcessor'
+
+interface GalleryItem {
+  id: string;
+  filePath: string;
+  file: File | null;
+  isNew: boolean;
+}
 
 interface EditAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, price: number, description: string, previewImagePath?: string | null) => Promise<void>;
+  onSave: (name: string, price: number, description: string, galleryImages: any[]) => Promise<void>;
   isLoading: boolean;
   initialData: {
     id: string;
     name: string;
     price: number;
     description: string;
-    previewImage?: string;
+    galleryImages?: { filePath: string }[];
   };
 }
+
+const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => resolve({ width: 0, height: 0 });
+  });
+};
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
   const [form, setForm] = useState({
@@ -24,91 +44,177 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     price: "",
     description: ""
   })
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [isImageRemoved, setIsImageRemoved] = useState(false)
+  
+  const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
 
   useEffect(() => {
     if (isOpen) {
+      setValidationError(null)
       setForm({
         name: initialData.name || "",
-        price: initialData.price ? initialData.price.toString() : "0.00",
+        price: initialData.price ? initialData.price.toString() : "5.00",
         description: initialData.description || ""
       })
-      setPreviewUrl(initialData.previewImage || null)
-      setImageFile(null)
-      setIsImageRemoved(false)
+      if (initialData.galleryImages) {
+        setGallery(initialData.galleryImages.map(img => ({
+          id: Math.random().toString(36).substring(7),
+          filePath: img.filePath,
+          file: null,
+          isNew: false
+        })))
+      } else {
+        setGallery([])
+      }
     }
   }, [isOpen, initialData])
 
+  useEffect(() => {
+    return () => {
+      gallery.forEach(item => {
+        if (item.isNew && item.filePath.startsWith('blob:')) {
+          URL.revokeObjectURL(item.filePath)
+        }
+      })
+    }
+  }, [gallery])
+
   if (!isOpen) return null
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
-      setIsImageRemoved(false)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setValidationError(null)
+      const incomingFiles = Array.from(e.target.files)
+      
+      setGallery((prev) => {
+        const currentTotal = prev.length + incomingFiles.length;
+        if (currentTotal > 5) {
+          setValidationError("Maximum 5 gallery preview images are allowed.")
+          const availableSlots = 5 - prev.length;
+          const allowedFiles = incomingFiles.slice(0, availableSlots);
+          const newItems = allowedFiles.map(file => ({
+            id: Math.random().toString(36).substring(7),
+            file,
+            filePath: URL.createObjectURL(file),
+            isNew: true
+          }))
+          return [...prev, ...newItems];
+        }
+
+        const newItems = incomingFiles.map(file => ({
+          id: Math.random().toString(36).substring(7),
+          file,
+          filePath: URL.createObjectURL(file),
+          isNew: true
+        }))
+
+        return [...prev, ...newItems]
+      })
+      e.target.value = ""
     }
   }
 
-  const handleRemoveImage = () => {
-    setImageFile(null)
-    setPreviewUrl(null)
-    setIsImageRemoved(true)
+  const removeGalleryItem = (idToRemove: string) => {
+    setValidationError(null)
+    setGallery((prev) => {
+      const item = prev.find(i => i.id === idToRemove);
+      if (item && item.isNew && item.filePath.startsWith('blob:')) {
+        URL.revokeObjectURL(item.filePath);
+      }
+      return prev.filter((item) => item.id !== idToRemove)
+    })
+  }
+
+  const handleDragStart = (index: number) => { setDragItemIndex(index); }
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); }
+  const handleDrop = (index: number) => {
+    if (dragItemIndex === null || dragItemIndex === index) return;
+    setGallery((prev) => {
+      const newItems = [...prev];
+      const draggedItem = newItems[dragItemIndex];
+      newItems.splice(dragItemIndex, 1);
+      newItems.splice(index, 0, draggedItem);
+      return newItems;
+    });
+    setDragItemIndex(null);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setValidationError(null)
     const numericPrice = parseFloat(form.price)
     
     if (!form.name.trim() || isNaN(numericPrice) || numericPrice < 5.00) {
-      alert("Invalid configuration. Minimum price is 5.00 USD.")
+      setValidationError("Invalid configuration. Minimum price is 5.00 USD.")
       return
     }
 
     if (form.description.length < 100) {
-      alert("Description requires minimum 100 characters.")
+      setValidationError(`Description too short (${form.description.length}/100 min).`)
       return
     }
 
-    let finalImagePath: string | null | undefined = undefined;
-
-    if (isImageRemoved) {
-      finalImagePath = null;
-    } else if (imageFile) {
-      setIsUploading(true)
-      try {
-        const fileName = `collections/${initialData.id}-${Date.now()}.webp`
-        const { error: uploadError } = await supabase.storage
-          .from("previews")
-          .upload(fileName, imageFile, { upsert: true })
-
-        if (uploadError) throw uploadError
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("previews")
-          .getPublicUrl(fileName)
-
-        finalImagePath = publicUrl
-      } catch (err) {
-        console.error("Image upload failed:", err)
-        alert("Failed to sync visual payload to storage.")
-        setIsUploading(false)
-        return
-      }
-      setIsUploading(false)
+    if (gallery.length === 0) {
+      setValidationError("Visual payload incomplete. At least 1 image required.")
+      return
     }
 
-    await onSave(form.name, numericPrice, form.description, finalImagePath)
+    setIsUploading(true)
+    const timestamp = Date.now()
+    
+    try {
+      const finalGalleryPromises = gallery.map(async (item, index) => {
+        if (!item.isNew && !item.file) {
+          return { filePath: item.filePath };
+        }
+
+        if (item.isNew && item.file) {
+          const webpBlob = await convertToWebP(item.file, 1200, 0.82)
+          const { width, height } = await getImageDimensions(webpBlob)
+          
+          const previewFileName = `collections/update-${initialData.id}-${timestamp}-${index}.webp`
+          
+          const { error: uploadError } = await supabase.storage
+            .from("previews")
+            .upload(previewFileName, webpBlob, { upsert: true })
+
+          if (uploadError) throw uploadError
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("previews")
+            .getPublicUrl(previewFileName)
+
+          return {
+            fileName: previewFileName,
+            filePath: publicUrl,
+            mimeType: "webp",
+            width: width,
+            height: height,
+            fileSize: webpBlob.size
+          }
+        }
+        
+        throw new Error("Invalid gallery item state.");
+      });
+
+      const finalGalleryImages = await Promise.all(finalGalleryPromises)
+      
+      await onSave(form.name, numericPrice, form.description, finalGalleryImages)
+    } catch (err: any) {
+      console.error("Update failed:", err)
+      setValidationError(err.message || "Failed to update asset.")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const isWorking = isLoading || isUploading
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[110] flex items-center justify-center p-4 font-sans animate-in fade-in duration-150">
-      <div className="bg-card border border-border/60 w-full max-w-md p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border/60 w-full max-w-lg p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         
         <div className="mb-4 border-b border-border/40 pb-3 flex justify-between items-center sticky top-0 bg-card z-10">
           <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Asset Manifest</h3>
@@ -121,31 +227,69 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
             <X size={14}/>
           </button>
         </div>
+
+        {validationError && (
+          <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 text-destructive text-[10px] font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
+            [ERROR]: {validationError}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          <div className="grid gap-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Preview)</label>
-            <div className="border border-border/40 bg-muted/10 p-1">
-              {previewUrl ? (
-                <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden group">
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
-                     <label className="cursor-pointer bg-primary text-primary-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider hover:opacity-90 transition-opacity">
-                        Change
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} disabled={isWorking} />
-                     </label>
-                     <button type="button" onClick={handleRemoveImage} disabled={isWorking} className="bg-destructive text-destructive-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center gap-1.5">
-                        <Trash2 size={10} /> Remove
-                     </button>
-                  </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 5)</label>
+              <span className={`text-[9px] font-bold uppercase ${gallery.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                {gallery.length} / 5 Images
+              </span>
+            </div>
+            
+            <div className="border border-border/40 bg-muted/10 p-2">
+              {gallery.length > 0 && (
+                <div className="grid grid-cols-5 gap-2 mb-2">
+                  {gallery.map((item, idx) => (
+                    <div 
+                      key={item.id} 
+                      draggable={!isWorking}
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(idx)}
+                      className={`relative aspect-square bg-muted overflow-hidden border group transition-all
+                        ${isWorking ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:border-primary/50'}
+                        ${dragItemIndex === idx ? 'opacity-40 border-primary scale-95' : 'border-border/40'}
+                        ${idx === 0 ? 'ring-1 ring-primary ring-offset-1 ring-offset-background' : ''}
+                      `}
+                    >
+                      {idx === 0 && (
+                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
+                          Cover
+                        </div>
+                      )}
+                      <img src={item.filePath} alt="" className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      
+                      <button 
+                        type="button" 
+                        onClick={() => removeGalleryItem(item.id)} 
+                        disabled={isWorking}
+                        className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-destructive rounded-none disabled:opacity-0"
+                      >
+                        <Trash2 size={14} className="stroke-[1.8]" />
+                      </button>
+                      
+                      {!isWorking && (
+                        <GripHorizontal size={14} className="absolute bottom-1 right-1 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center py-6 cursor-pointer hover:bg-accent/50 transition-colors border border-dashed border-border/60 m-1">
-                  <ImageIcon size={20} className="text-muted-foreground/60 mb-2" strokeWidth={1.5} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Select Image Node</span>
-                  <span className="text-[9px] text-muted-foreground mt-0.5 uppercase tracking-widest opacity-60">JPG, PNG, WEBP</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} disabled={isWorking} />
+              )}
+
+              {gallery.length < 5 && (
+                <label className={`flex flex-col items-center justify-center py-4 cursor-pointer transition-colors border border-dashed m-1 ${isWorking ? 'opacity-50 cursor-not-allowed border-border/40' : 'hover:bg-accent/50 border-border/60'}`}>
+                  <ImageIcon size={18} className="text-muted-foreground/60 mb-1" strokeWidth={1.5} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Add Images</span>
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest opacity-60">Drag to reorder</span>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} disabled={isWorking} />
                 </label>
               )}
             </div>
@@ -205,7 +349,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
             </button>
             <button 
               type="submit"
-              disabled={isWorking}
+              disabled={isWorking || gallery.length === 0}
               className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 transition-opacity disabled:opacity-50"
             >
               {isWorking ? <Loader2 className="animate-spin h-3 w-3" /> : <Upload className="h-3 w-3" />}
