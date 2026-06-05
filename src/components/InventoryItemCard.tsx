@@ -7,15 +7,14 @@ import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { EditAssetModal } from './EditAssetModal'
 
 const DELETE_COLLECTION_MUTATION = `
-  mutation DeleteCollection($id: ID!) {
-    deleteCollection(id: $id)
+  mutation DeleteCollection($id: ID!, $folderPath: String) {
+    deleteCollection(id: $id, folderPath: $folderPath)
   }
 `;
 
 const UPDATE_COLLECTION_MUTATION = `
   mutation UpdateCollection($id: ID!, $input: UpdateCollectionInput!) {
     updateCollection(id: $id, input: $input) {
-      id
       name
       price
       description
@@ -39,6 +38,22 @@ interface InventoryItemCardProps {
   onRefreshNeeded: () => void;
 }
 
+const extractFolderPath = (fileUrl: string | undefined): string | null => {
+  if (!fileUrl) return null;
+  try {
+    const url = new URL(fileUrl);
+    const pathAfterBucket = url.pathname.split('previews/')[1];
+    if (!pathAfterBucket) return null;
+    const parts = pathAfterBucket.split('/');
+    if (parts.length >= 2) {
+      return `${parts[0]}/${parts[1]}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: InventoryItemCardProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -47,6 +62,7 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
   const processDelete = async () => {
     setIsLoading(true)
     try {
+      const folderPath = extractFolderPath(collection.previewImage?.filePath);
       const response = await fetch("http://localhost:8080/graphql", {
         method: "POST",
         headers: {
@@ -55,7 +71,10 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
         },
         body: JSON.stringify({
           query: DELETE_COLLECTION_MUTATION,
-          variables: { id: collection.id }
+          variables: { 
+            id: collection.id,
+            folderPath: folderPath
+          }
         })
       })
 
@@ -171,9 +190,11 @@ export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: 
         onSave={processUpdate}
         isLoading={isLoading}
         initialData={{
+          id: collection.id,
           name: collection.name,
           price: collection.price,
-          description: collection.description
+          description: collection.description,
+          previewImage: collection.previewImage?.filePath
         }}
       />
     </>

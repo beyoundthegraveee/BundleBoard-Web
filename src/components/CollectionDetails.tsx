@@ -4,6 +4,54 @@ import React, { useState, useRef, useEffect } from 'react'
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
 import LikeButton from '@/components/LikeButton'
 
+const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
+const PLACEHOLDER_IMG = "https://placehold.co/600x400/111013/333333?text=No+Image";
+
+const getFullImageUrl = (path: string | undefined) => {
+  if (!path) return PLACEHOLDER_IMG;
+  if (path.startsWith('http')) return path;
+  return `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(path)}`;
+};
+
+const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
+  const [rotateY, setRotateY] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const box = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - box.left; 
+    const centerX = box.width / 2;
+    const angleY = ((x - centerX) / centerX) * 15; 
+    setRotateY(angleY);
+  };
+
+  const handleMouseLeave = () => {
+    setRotateY(0);
+  };
+
+  return (
+    <div 
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transform: `rotateY(${rotateY}deg)`,
+        transformStyle: 'preserve-3d',
+      }}
+      className="relative border border-border/60 bg-card aspect-video w-full overflow-hidden rounded-none shadow-xl transition-transform duration-100 ease-out group"
+    >
+      <img 
+        src={src} 
+        alt={alt} 
+        className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
+        style={{ transform: 'translateZ(20px)' }} 
+        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }} // Защита от битых ссылок
+      />
+    </div>
+  );
+};
+
 interface CollectionDetailsProps {
   collection: {
     id: string;
@@ -16,9 +64,9 @@ interface CollectionDetailsProps {
       mimeType: string;
       provider: string;
     };
-    previewImage?: {
+    galleryImages?: {
       filePath: string;
-    };
+    }[];
   };
   onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
   isInCart?: boolean;
@@ -34,27 +82,12 @@ const formatBytes = (bytes: number) => {
 
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
   if (!collection) return null;
-  const { name, description, price, mediaResource, id, previewImage } = collection;
-  
-  const [rotateY, setRotateY] = useState(0);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const { name, description, price, mediaResource, id, galleryImages } = collection;
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
+  
   useEffect(() => {
     setLocalIsInCart(isInCart);
   }, [isInCart]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const box = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - box.left; 
-    const centerX = box.width / 2;
-    const angleY = ((x - centerX) / centerX) * 15; 
-    setRotateY(angleY);
-  };
-
-  const handleMouseLeave = () => {
-    setRotateY(0);
-  };
 
   const handleAddToCartClick = () => {
     if (localIsInCart) return;
@@ -63,7 +96,8 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       name,
       price,
       category: mediaResource.mimeType.split('/')[0] || "Asset",
-      previewImage: previewImage?.filePath || "/placeholder.png"
+      // 🟢 Используем правильную функцию для картинки в корзине
+      previewImage: getFullImageUrl(galleryImages?.[0]?.filePath)
     });
     setLocalIsInCart(true);
   };
@@ -132,30 +166,23 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         </div>
       </div>
 
-      {previewImage?.filePath && (
+      {galleryImages && galleryImages.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Images size={13} />
-            Visual Payload
+            Visual Payload ({galleryImages.length})
           </div>
           
-          <div className="max-w-2xl w-full perspective-[1000px]">
-            <div 
-              ref={cardRef}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              style={{
-                transform: `rotateY(${rotateY}deg)`,
-                transformStyle: 'preserve-3d',
-              }}
-              className="relative border border-border/60 bg-card aspect-video w-full overflow-hidden rounded-none shadow-xl transition-transform duration-100 ease-out group"
-            >
-              <img 
-                src={previewImage.filePath} 
-                alt={name} 
-                className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
-                style={{ transform: 'translateZ(20px)' }} 
-              />
+          <div className="w-full perspective-[1000px]">
+            <div className={`grid gap-6 ${galleryImages.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 max-w-2xl'}`}>
+              {galleryImages.map((img, index) => (
+                <TiltCard 
+                  key={index} 
+                  // 🟢 Применяем правильный маппинг URL
+                  src={getFullImageUrl(img.filePath)} 
+                  alt={`${name} - preview ${index + 1}`} 
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -167,13 +194,14 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           Manifest Description
         </div>
         <div className="bg-muted/10 p-6 border-l-2 border-foreground rounded-none">
-          <p className="text-[14px] md:text-[15px] leading-relaxed font-normal text-foreground">
+          <p className="text-[14px] md:text-[15px] leading-relaxed font-normal text-foreground whitespace-pre-line">
             {description}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        {/* ... (Блок с данными файла остается без изменений) ... */}
         <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
           <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Filename</div>
           <div className="text-xs font-medium text-foreground truncate">{mediaResource.fileName}</div>

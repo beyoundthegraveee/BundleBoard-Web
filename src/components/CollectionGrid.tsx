@@ -17,9 +17,9 @@ interface Collection {
     username: string;
     totalSales: number;
   };
-  previewImage: {
+  galleryImages: {
     filePath: string;
-  };
+  }[];
 }
 
 export function CollectionGrid() {
@@ -76,7 +76,8 @@ export function CollectionGrid() {
                     username
                     totalSales
                   }
-                  previewImage {
+                  # 🟢 Изменено: запрашиваем галерею
+                  galleryImages {
                     filePath
                   }
                 }
@@ -166,10 +167,10 @@ export function CollectionGrid() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
         {collections.map((item) => {
-          const fileName = item.previewImage?.filePath || "";
+          const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
             ? fileName 
-            : `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}`;
+            : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
           return (
             <Link 
