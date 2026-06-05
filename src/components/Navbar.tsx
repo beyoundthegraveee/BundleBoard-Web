@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
 import { useAuthActions } from "@/lib/useAuthActions"
@@ -150,6 +150,16 @@ export function Navbar() {
             >
               <Search className="h-4 w-4 stroke-[1.8]" />
             </button>
+            {status === "authenticated" && (
+              <Link 
+                href="/favorites" 
+                className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
+                aria-label="View favorite collections"
+              >
+                <Heart className="h-4 w-4 stroke-[1.8]" />
+              </Link>
+            )}
+
             <button 
               onClick={() => setIsCartOpen(true)}
               className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
@@ -183,6 +193,9 @@ export function Navbar() {
                       <Link href="/profile">Account Node</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                      <Link href="/favorites">Favorites Vault</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
                       <Link href="/settings">Configuration</Link>
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
@@ -214,7 +227,7 @@ export function Navbar() {
       />
       <CartDrawer 
         isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
+        onClose={() => setIsCartOpen(false)}  
       />
     </>
   )

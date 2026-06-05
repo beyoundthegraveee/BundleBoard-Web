@@ -1,7 +1,8 @@
 "use client"
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
+import LikeButton from '@/components/LikeButton'
 
 interface CollectionDetailsProps {
   collection: {
@@ -34,8 +35,13 @@ const formatBytes = (bytes: number) => {
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
   if (!collection) return null;
   const { name, description, price, mediaResource, id, previewImage } = collection;
+  
   const [rotateY, setRotateY] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [localIsInCart, setLocalIsInCart] = useState(isInCart);
+  useEffect(() => {
+    setLocalIsInCart(isInCart);
+  }, [isInCart]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -51,7 +57,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
   };
 
   const handleAddToCartClick = () => {
-    if (isInCart) return;
+    if (localIsInCart) return;
     onAddToCart({
       id,
       name,
@@ -59,7 +65,28 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       category: mediaResource.mimeType.split('/')[0] || "Asset",
       previewImage: previewImage?.filePath || "/placeholder.png"
     });
+    setLocalIsInCart(true);
   };
+
+  useEffect(() => {
+    const checkCartStatus = () => {
+      if (typeof window !== 'undefined') {
+        const savedCart = localStorage.getItem('bundleboard_cart')
+        if (savedCart) {
+          const items = JSON.parse(savedCart)
+          setLocalIsInCart(items.some((item: any) => item.id === id))
+        } else {
+          setLocalIsInCart(false)
+        }
+      }
+    }
+
+    checkCartStatus()
+    window.addEventListener('cartUpdate', checkCartStatus)
+    return () => {
+      window.removeEventListener('cartUpdate', checkCartStatus)
+    }
+  }, [id])
 
   return (
     <div className="font-sans text-foreground space-y-10">
@@ -82,18 +109,22 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Value</span>
             <div className="text-xl font-bold text-foreground">${price.toFixed(2)}</div>
           </div>
-          <button 
+          <div className="flex items-center gap-2 h-full w-full md:w-auto">
+            <LikeButton collectionId={id} />
+            <button 
             onClick={handleAddToCartClick}
-            disabled={isInCart}
+            disabled={localIsInCart}
             className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
-              isInCart 
+              localIsInCart
                 ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
                 : 'bg-primary hover:opacity-90'
             }`}
-          >
+            >
             <ShoppingCart size={12} />
-            {isInCart ? "In Cart" : "Add to Cart"}
+            {localIsInCart ? "In Cart" : "Add to Cart"}
+            <span className="md:hidden ml-auto">${price.toFixed(2)}</span>
           </button>
+          </div>
         </div>
 
         <div className="absolute -top-3 right-0 opacity-20 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground hidden md:block">
