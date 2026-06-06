@@ -47,6 +47,8 @@ export default function CollectionPage() {
                   name
                   description
                   price
+                  likesCount
+                  isLiked
                   videoTutorialUrl
                   author {
                     username
