@@ -5,7 +5,7 @@ import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-
 import LikeButton from '@/components/LikeButton'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
-const PLACEHOLDER_IMG = "https://placehold.co/600x400/111013/333333?text=No+Image";
+const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";
 
 const getFullImageUrl = (path: string | undefined) => {
   if (!path) return PLACEHOLDER_IMG;
@@ -46,7 +46,7 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
         alt={alt} 
         className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
         style={{ transform: 'translateZ(20px)' }} 
-        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }} // Защита от битых ссылок
+        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
       />
     </div>
   );
@@ -58,6 +58,8 @@ interface CollectionDetailsProps {
     name: string;
     description: string;
     price: number;
+    likesCount?: number;
+    isLiked?: boolean;
     mediaResource: {
       fileName: string;
       fileSize: number;
@@ -82,8 +84,9 @@ const formatBytes = (bytes: number) => {
 
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
   if (!collection) return null;
-  const { name, description, price, mediaResource, id, galleryImages } = collection;
+  const { name, description, price, mediaResource, id, galleryImages, likesCount = 0, isLiked = false } = collection;
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
+  const [localLikesCount, setLocalLikesCount] = useState(likesCount);
   
   useEffect(() => {
     setLocalIsInCart(isInCart);
@@ -96,10 +99,13 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       name,
       price,
       category: mediaResource.mimeType.split('/')[0] || "Asset",
-      // 🟢 Используем правильную функцию для картинки в корзине
       previewImage: getFullImageUrl(galleryImages?.[0]?.filePath)
     });
     setLocalIsInCart(true);
+  };
+
+  const handleLikeToggle = (newIsLiked: boolean) => {
+    setLocalLikesCount(prev => newIsLiked ? prev + 1 : Math.max(0, prev - 1));
   };
 
   useEffect(() => {
@@ -144,7 +150,16 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             <div className="text-xl font-bold text-foreground">${price.toFixed(2)}</div>
           </div>
           <div className="flex items-center gap-2 h-full w-full md:w-auto">
-            <LikeButton collectionId={id} />
+            <div className="flex items-center h-full">
+              <LikeButton 
+                collectionId={id} 
+                initialLiked={isLiked} 
+                onToggle={handleLikeToggle} 
+              />
+              <div className="flex items-center justify-center h-11 px-3 border border-l-0 border-border/60 bg-muted/5 text-xs font-bold text-foreground min-w-[3rem]">
+                {localLikesCount}
+              </div>
+            </div>
             <button 
             onClick={handleAddToCartClick}
             disabled={localIsInCart}
