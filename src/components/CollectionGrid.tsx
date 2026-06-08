@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { FALLBACK_IMAGE } from '@/lib/constants'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 9;
@@ -76,7 +77,6 @@ export function CollectionGrid() {
                     username
                     totalSales
                   }
-                  # 🟢 Изменено: запрашиваем галерею
                   galleryImages {
                     filePath
                   }
@@ -180,7 +180,7 @@ export function CollectionGrid() {
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <img 
-                  src={imageUrl || "/placeholder.png"} 
+                  src={imageUrl || FALLBACK_IMAGE} 
                   alt={item.name}
                   className="object-cover w-full h-full opacity-75 group-hover:opacity-100 transition-all duration-500 block"
                 />
