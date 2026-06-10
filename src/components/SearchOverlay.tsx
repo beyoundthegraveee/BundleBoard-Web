@@ -1,21 +1,11 @@
 "use client"
-
 import * as React from "react"
 import { motion, AnimatePresence, Variants } from "framer-motion"
 import { Search, X, ArrowRight, TrendingUp, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
-
-const SEARCH_COLLECTIONS_QUERY = `
-  query SearchCollections($query: String!, $page: Int!, $size: Int!) {
-    searchCollections(query: $query, page: $page, size: $size) {
-      id
-      name
-      price
-      galleryImages { filePath }
-    }
-  }
-`;
+import { useLazyQuery } from "@apollo/client/react" 
+import { SearchCollectionsDocument } from "@/graphql/generated" 
 
 interface SearchOverlayProps {
   isOpen: boolean
@@ -37,9 +27,8 @@ const QUICK_LINKS = ["New Arrivals", "Best Sellers", "Free Assets", "Premium Bun
 export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [isSearching, setIsSearching] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [executeSearch, { loading: isSearching, data, error }] = useLazyQuery(SearchCollectionsDocument);
 
   useEffect(() => {
     if (isOpen) {
@@ -48,7 +37,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     } else {
       document.body.style.overflow = "auto"
       setQuery("")
-      setSearchResults([])
     }
   }, [isOpen])
 
@@ -60,40 +48,18 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   }, [query])
 
   useEffect(() => {
-    const fetchResults = async () => {
-      if (debouncedQuery.trim().length < 2) {
-        setSearchResults([])
-        return
-      }
-
-      setIsSearching(true)
-      try {
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: SEARCH_COLLECTIONS_QUERY,
-            variables: { 
-              query: debouncedQuery,
-              page: 0,
-              size: 5
-            }
-          })
-        })
-        const result = await response.json()
-        
-        if (result.data?.searchCollections) {
-          setSearchResults(result.data.searchCollections)
+    if (debouncedQuery.trim().length >= 2) {
+      executeSearch({
+        variables: {
+          query: debouncedQuery,
+          page: 0,
+          size: 5
         }
-      } catch (err) {
-        console.error("SEARCH_FETCH_FAILURE:", err)
-      } finally {
-        setIsSearching(false)
-      }
+      });
     }
+  }, [debouncedQuery, executeSearch])
 
-    fetchResults()
-  }, [debouncedQuery])
+  const searchResults = data?.searchCollections ?? [];
 
   const listVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
@@ -172,7 +138,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         
                         {searchResults.length > 0 ? (
                           <div className="flex flex-col gap-3">
-                            {searchResults.map((item) => (
+                            {searchResults.map((item: any) => (
                               <Link
                                 key={item.id}
                                 href={`/collection/${item.id}`}
@@ -282,7 +248,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     )}
                   </AnimatePresence>
                 </div>
-
               </div>
             </div>
           </motion.div>

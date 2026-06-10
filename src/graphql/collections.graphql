@@ -1,0 +1,118 @@
+query SearchCollections($query: String!, $page: Int!, $size: Int!) {
+  searchCollections(query: $query, page: $page, size: $size) {
+    id
+    name
+    price
+    galleryImages { 
+      filePath 
+    }
+  }
+}
+
+mutation CreateCollection($input: CreateNewCollectionInput!) {
+  createCollection(input: $input) {
+    id
+    name
+    success
+  }
+}
+
+mutation DeleteCollection($id: ID!, $folderPath: String) {
+  deleteCollection(id: $id, folderPath: $folderPath)
+}
+
+mutation UpdateCollection($id: ID!, $input: UpdateCollectionRequest!) {
+  updateCollection(id: $id, input: $input) {
+    id
+    name
+    price
+    description
+    galleryImages {
+      filePath
+    }
+  }
+}
+
+query GetCollectionsPaged($page: Int!, $size: Int!) {
+  getAllCollections(page: $page, size: $size) {
+    id
+    name
+    description
+    price
+    author {
+      username
+      totalSales
+    }
+    galleryImages {
+      filePath
+    }
+  }
+}
+
+query GetCollection($id: ID!) {
+  getCollectionById(id: $id) {
+    id
+    name
+    description
+    price
+    likesCount
+    isLiked
+    videoTutorialUrl
+    author {
+      username
+      bio
+      rating
+      totalSales
+      socialLinks { 
+        platform 
+        url 
+      }
+      avatarUrl
+    }
+    galleryImages { 
+      filePath 
+    } 
+    mediaResource { 
+      fileName 
+      fileSize 
+      mimeType 
+      provider 
+    }
+  }
+}
+
+query GetLikedCollections {
+  getLikedCollections {
+    id
+    name
+    description
+    price
+    author {
+      username
+    }
+    galleryImages {
+      filePath
+    }
+    likesCount
+    isLiked
+  }
+}
+
+query GetCollectionsByTag($input: CollectionFilterInput!) {
+  getCollectionsByTag(input: $input) {
+    collections {
+      id
+      name
+      description
+      price
+      author {
+        username
+      }
+      galleryImages {
+        filePath
+      }
+    }
+    totalPages
+    totalElements
+  }
+}

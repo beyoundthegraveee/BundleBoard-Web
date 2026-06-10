@@ -21,14 +21,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Checkbox } from "@/components/ui/checkbox"
 
+interface LoginFormData {
+  username: string;
+  password: string;
+  rememberMe: boolean;
+}
+
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callBackUrl = searchParams.get("callbackUrl") || "/"
+  
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-
-  const { register, handleSubmit, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
       username: "",
       password: "",
@@ -36,9 +42,10 @@ export function LoginForm() {
     }
   })
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setServerError(null)
+    
     try {
       const result = await signIn("credentials", {
         username: data.username,
@@ -49,7 +56,7 @@ export function LoginForm() {
       })
 
       if (result?.error) {
-        if(result.error === "CredentialsSignin") {
+        if (result.error === "CredentialsSignin") {
           setServerError("Invalid username or password")
         } else {
           setServerError(result.error)
@@ -71,7 +78,6 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
-      
       <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
         <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground">
           Sign In
@@ -88,6 +94,7 @@ export function LoginForm() {
             className="border border-border/80 rounded-none font-semibold uppercase text-[11px] tracking-wider py-5 bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => handleSocialLogin('google')} 
             disabled={isLoading}
+            type="button"
           >
             <FaGoogle className="mr-2 h-3.5 w-3.5 opacity-70" />
             Continue with Google
@@ -127,7 +134,7 @@ export function LoginForm() {
             />
             {errors.username && (
               <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
-                // {errors.username.message as string}
+                {errors.username.message}
               </p>
             )}
           </div>
@@ -152,7 +159,7 @@ export function LoginForm() {
             />
             {errors.password && (
               <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
-                // {errors.password.message as string}
+                {errors.password.message}
               </p>
             )}
           </div>

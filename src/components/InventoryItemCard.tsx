@@ -5,26 +5,11 @@ import { Edit3, Trash2 } from "lucide-react"
 import Link from 'next/link'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { EditAssetModal } from './EditAssetModal'
-
-const DELETE_COLLECTION_MUTATION = `
-  mutation DeleteCollection($id: ID!, $folderPath: String) {
-    deleteCollection(id: $id, folderPath: $folderPath)
-  }
-`;
-
-const UPDATE_COLLECTION_MUTATION = `
-  mutation UpdateCollection($id: ID!, $input: UpdateCollectionRequest!) {
-    updateCollection(id: $id, input: $input) {
-      id
-      name
-      price
-      description
-      galleryImages {
-        filePath
-      }
-    }
-  }
-`;
+import { useMutation } from '@apollo/client/react'
+import { 
+  DeleteCollectionDocument, 
+  UpdateCollectionDocument 
+} from '@/graphql/generated'
 
 export interface AuthoredCollection {
   id: string;
@@ -38,7 +23,6 @@ export interface AuthoredCollection {
 
 interface InventoryItemCardProps {
   collection: AuthoredCollection;
-  accessToken: string;
   onRefreshNeeded: () => void;
 }
 
@@ -58,71 +42,48 @@ const extractFolderPath = (fileUrl: string | undefined): string | null => {
   }
 }
 
-export function InventoryItemCard({ collection, accessToken, onRefreshNeeded }: InventoryItemCardProps) {
+export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItemCardProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [executeDelete, { loading: isDeleting }] = useMutation(DeleteCollectionDocument)
+  const [executeUpdate, { loading: isUpdating }] = useMutation(UpdateCollectionDocument)
+
+  const isLoading = isDeleting || isUpdating;
 
   const processDelete = async () => {
-    setIsLoading(true)
     try {
       const folderPath = extractFolderPath(collection.galleryImages?.[0]?.filePath);
-      const response = await fetch("http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          query: DELETE_COLLECTION_MUTATION,
-          variables: { 
-            id: collection.id,
-            folderPath: folderPath
-          }
-        })
+      
+      await executeDelete({
+        variables: { 
+          id: collection.id,
+          folderPath: folderPath
+        }
       })
-
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
 
       setIsDeleteOpen(false)
       onRefreshNeeded()
     } catch (err: any) {
       console.error("COLLECTION_DELETE_FAILURE:", err)
       alert(err.message || "Failed to delete asset node.")
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const processUpdate = async (name: string, price: number, description: string, galleryImages: any[]) => {
-    setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          query: UPDATE_COLLECTION_MUTATION,
-          variables: {
-            id: collection.id,
-            input: { name, price, description, galleryImages }
-          }
-        })
+      // 3. АНАЛОГИЧНО ДЛЯ ОБНОВЛЕНИЯ
+      await executeUpdate({
+        variables: {
+          id: collection.id,
+          input: { name, price, description, galleryImages }
+        }
       })
-
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
 
       setIsEditOpen(false)
       onRefreshNeeded()
     } catch (err: any) {
       console.error("COLLECTION_UPDATE_FAILURE:", err)
       alert(err.message || "Failed to update asset manifest.")
-    } finally {
-      setIsLoading(false)
     }
   }
 

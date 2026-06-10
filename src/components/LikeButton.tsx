@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import { Heart } from "lucide-react"
 import { useSession } from "next-auth/react"
+import { useMutation } from "@apollo/client/react"
+import { ToggleFavoriteDocument } from "@/graphql/generated"
 
 interface LikeButtonProps {
   collectionId: string;
@@ -14,16 +16,16 @@ export default function LikeButton({ collectionId, initialLiked = false, onToggl
   const { data: session } = useSession()
   const [isLiked, setIsLiked] = useState(initialLiked)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [executeToggleFavorite] = useMutation(ToggleFavoriteDocument)
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault(); 
     e.stopPropagation();
 
-    if (!session || !(session as any).accessToken) {
+    if (!session) {
       alert("System Notice: Authentication required to save to favorites.")
       return
     }
-
     const newLikedState = !isLiked;
     setIsLiked(newLikedState)
     setIsAnimating(true)
@@ -34,24 +36,9 @@ export default function LikeButton({ collectionId, initialLiked = false, onToggl
     }
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${(session as any).accessToken}`
-        },
-        body: JSON.stringify({
-          query: `
-            mutation ToggleFavorite($collectionId: ID!) {
-              toggleFavorite(collectionId: $collectionId)
-            }
-          `,
-          variables: { collectionId }
-        })
+      await executeToggleFavorite({
+        variables: { collectionId }
       })
-      
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
       
     } catch (error) {
       setIsLiked(!newLikedState)

@@ -3,24 +3,25 @@
 import React from 'react'
 import { User, Star, ShoppingCart, Share2, ExternalLink } from "lucide-react"
 
-interface SocialLink {
-  platform: string;
-  url: string;
-}
+// 1. ИМПОРТИРУЕМ ТИП ЗАПРОСА ВМЕСТО СХЕМЫ
+import { GetCollectionQuery } from '@/graphql/generated'
+
+// 2. ВЫТАСКИВАЕМ ТИП АВТОРА ИЗ СТРУКТУРЫ ОТВЕТА
+type AuthorData = GetCollectionQuery['getCollectionById']['author'];
 
 interface AuthorSidebarProps {
-  author: {
-    username: string;
-    bio: string;
-    rating: number;
-    totalSales: number;
-    avatarUrl?: string;
-    socialLinks: SocialLink[];
-  }
+  author: AuthorData; 
 }
 
 export default function AuthorSidebar({ author }: AuthorSidebarProps) {
-  const { username, bio, rating, totalSales, avatarUrl, socialLinks } = author;
+  const { 
+    username, 
+    bio, 
+    rating = 0, 
+    totalSales = 0, 
+    avatarUrl, 
+    socialLinks 
+  } = author;
 
   return (
     <div className="border border-border/60 bg-card text-foreground rounded-none shadow-xl font-sans overflow-hidden">
@@ -71,7 +72,7 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
               <Star size={13} className="text-primary fill-primary/20 stroke-[1.5]" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Rating</span>
             </div>
-            <div className="text-lg font-bold tracking-tight text-foreground">{rating.toFixed(1)}</div>
+            <div className="text-lg font-bold tracking-tight text-foreground">{rating?.toFixed(1) || "N/A"}</div>
           </div>
           
           <div className="p-3 text-center">
@@ -79,7 +80,7 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
               <ShoppingCart size={13} className="stroke-[1.5]" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Sales</span>
             </div>
-            <div className="text-lg font-bold tracking-tight text-foreground">{totalSales}</div>
+            <div className="text-lg font-bold tracking-tight text-foreground">{totalSales?.toString() || "N/A"}</div>
           </div>
         </div>
 
@@ -94,13 +95,13 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
               socialLinks.map((link, idx) => (
                 <a 
                   key={idx} 
-                  href={link.url} 
+                  href={link?.url || "#"} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="group flex justify-between items-center border border-border/60 p-3 bg-background hover:bg-accent text-foreground transition-all rounded-none"
                 >
                   <span className="text-xs font-medium uppercase tracking-wider">
-                    {link.platform}
+                    {link?.platform}
                   </span>
                   <ExternalLink size={13} className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-px transition-all stroke-[1.5]" />
                 </a>

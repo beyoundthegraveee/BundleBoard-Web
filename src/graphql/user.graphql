@@ -1,0 +1,54 @@
+mutation UpdateUserRole($input: UpdateUserRoleInput!) {
+  updateUserRole(input: $input) { 
+    success 
+    message
+    accessToken
+    refreshToken
+  }
+}
+
+mutation UpdateAvatar($input: UpdateAvatarRequest!) {
+  updateAvatar(input: $input) {
+    id
+    avatarUrl
+  }
+}
+
+query GetUserProfile {
+  getUserProfile {
+    id
+    username
+    email
+    avatarUrl
+    status
+    roles
+    authoredCollections {
+      id
+      name
+      price
+      description
+      galleryImages { 
+        filePath 
+      }
+    }
+    purchases {
+      id
+      amount
+      currency
+      status
+      createdAt
+      items {
+        id
+        snapshotPrice
+        asset {
+          id
+          name
+          galleryImages { 
+            filePath 
+            fileName 
+          }
+        }
+      }
+    }
+  }
+}

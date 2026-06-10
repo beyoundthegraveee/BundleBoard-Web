@@ -52,7 +52,6 @@ function SelectRolePageContent() {
       </div>
       
       <div className="p-8">
-        {/* КРИТИЧЕСКИЙ ФИКС: Монтируем компонент только тогда, когда строка email существует и она не пустая */}
         {userEmail ? (
           <RoleSelection email={userEmail} />
         ) : (

@@ -2,8 +2,11 @@
 
 import { CollectionGrid } from "@/components/CollectionGrid";
 import { ArrowRight, Activity, Grid3X3, ExternalLink } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
+  const { status } = useSession();
+
   return (
     <main className="min-h-screen bg-background text-foreground antialiased font-sans">
 
@@ -63,12 +66,15 @@ export default function Home() {
                   <span className="text-xs font-bold uppercase tracking-wide">EU CLUSTER</span>
                 </div>
                 
-                <div className="pt-6">
-                  <button className="group w-full h-12 bg-foreground text-background hover:bg-primary hover:text-white flex items-center justify-center gap-2 font-semibold transition-all duration-200 text-xs uppercase tracking-widest rounded-none">
-                    Initialize Registry 
-                    <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                </div>
+                {/* 3. СКРЫВАЕМ КНОПКУ, ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ АВТОРИЗОВАН */}
+                {status !== "authenticated" && (
+                  <div className="pt-6">
+                    <button className="group w-full h-12 bg-foreground text-background hover:bg-primary hover:text-white flex items-center justify-center gap-2 font-semibold transition-all duration-200 text-xs uppercase tracking-widest rounded-none">
+                      Initialize Registry 
+                      <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div className="mt-12 lg:mt-auto pt-6 border-t border-dashed border-border/60">

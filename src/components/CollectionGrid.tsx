@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react'
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { FALLBACK_IMAGE } from '@/lib/constants'
+import { useLazyQuery } from '@apollo/client/react'
+import { GetCollectionsPagedDocument } from '@/graphql/generated'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 9;
@@ -24,7 +26,7 @@ interface Collection {
 }
 
 export function CollectionGrid() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const [collections, setCollections] = useState<Collection[]>([])
   const [page, setPage] = useState(0)
   
@@ -35,6 +37,7 @@ export function CollectionGrid() {
   const [hasMore, setHasMore] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [fetchCollections] = useLazyQuery(GetCollectionsPagedDocument)
 
   const handleReset = () => {
     setCollections([])
@@ -47,8 +50,7 @@ export function CollectionGrid() {
     if (status === "loading") return;
     if (!hasMore && page !== 0) return;
 
-    const controller = new AbortController();
-    const { signal } = controller;
+    let isMounted = true;
 
     const fetchPage = async () => {
       if (page === 0) setInitialLoading(true);
@@ -56,62 +58,36 @@ export function CollectionGrid() {
       setError(null);
 
       try {
-        const headers: HeadersInit = { "Content-Type": "application/json" };
-        if ((session as any)?.accessToken) {
-          headers["Authorization"] = `Bearer ${(session as any).accessToken}`;
-        }
-
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-          method: "POST",
-          headers: headers,
-          signal: signal,
-          body: JSON.stringify({
-            query: `
-              query GetCollectionsPaged($page: Int!, $size: Int!) {
-                getAllCollections(page: $page, size: $size) {
-                  id
-                  name
-                  description
-                  price
-                  author {
-                    username
-                    totalSales
-                  }
-                  galleryImages {
-                    filePath
-                  }
-                }
-              }
-            `,
-            variables: {
-              page: page,
-              size: PAGE_SIZE
-            }
-          }),
+        const { data, error: apolloError } = await fetchCollections({
+          variables: {
+            page: page,
+            size: PAGE_SIZE
+          },
         });
 
-        const result = await response.json();
-        
-        if (result.errors) {
-          throw new Error(result.errors[0].message || "INTERNAL_SERVER_ERROR");
+        if (apolloError) {
+          throw new Error(apolloError.message || "INTERNAL_SERVER_ERROR");
         }
 
-        const newItems: Collection[] = result.data?.getAllCollections || [];
+        const newItems = (data?.getAllCollections || []) as Collection[];
 
-        if (!signal.aborted) {
-          if (newItems.length < PAGE_SIZE) {
+        if (isMounted) {
+          const validItems = newItems.filter(Boolean);
+
+          if (validItems.length < PAGE_SIZE) {
             setHasMore(false);
           }
 
           setCollections((prev) => {
-            return page === 0 ? newItems : [...prev, ...newItems];
+            return page === 0 ? validItems : [...prev, ...validItems];
           });
         }
       } catch (err: any) {
-        if (err.name === 'AbortError') return;
-        setError(err.message || "FAILED_TO_STREAM_DATA");
+        if (isMounted) {
+          setError(err.message || "FAILED_TO_STREAM_DATA");
+        }
       } finally {
-        if (!signal.aborted) {
+        if (isMounted) {
           setLoading(false);
           setInitialLoading(false);
         }
@@ -121,9 +97,9 @@ export function CollectionGrid() {
     fetchPage();
 
     return () => {
-      controller.abort();
+      isMounted = false;
     };
-  }, [session, status, page, refreshTrigger]);
+  }, [status, page, refreshTrigger, fetchCollections, hasMore]);
 
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading || initialLoading) return;
@@ -164,7 +140,6 @@ export function CollectionGrid() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-24">
-
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
         {collections.map((item) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";

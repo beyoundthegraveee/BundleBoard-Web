@@ -1,62 +1,57 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+import { print } from 'graphql'; 
 
+import {
+  LoginMutation,
+  LoginMutationVariables,
+  SocialLoginMutation,
+  SocialLoginMutationVariables,
+  RefreshTokenMutation,
+  RefreshTokenMutationVariables,
+  LogoutMutation,
+  LogoutMutationVariables,
+  LoginDocument,
+  SocialLoginDocument,
+  RefreshTokenDocument,
+  LogoutDocument
+} from '@/graphql/generated';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
 const ACCESS_TOKEN_EXPIRY_MS = parseInt(process.env.JWT_ACCESS_EXPIRY_MS || "900000", 10);
 
-const SOCIAL_LOGIN_MUTATION = `
-  mutation SocialLogin($input: SocialLoginRequest!) {
-    socialLogin(input: $input) {
-      accessToken
-      refreshToken
-      isNew
-      error
-      user { id username email roles }
-    }
+async function gqlRequest<T, V>(queryDocument: any, variables: V, accessToken?: string): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
-`;
+  const queryString = typeof queryDocument === 'string' 
+    ? queryDocument 
+    : print(queryDocument);
 
-const LOGIN_MUTATION = `
-  mutation Login($input: AuthRequest!) {
-    login(input: $input) {
-      accessToken
-      refreshToken
-      error
-      user { id username email roles }
-      isNew
-    }
-  }
-`;
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query: queryString, variables }),
+  });
 
-const REFRESH_TOKEN_MUTATION = `
-  mutation RefreshToken($input: RefreshTokenRequest!) {
-    refreshToken(input: $input) {
-      accessToken
-      refreshToken
-    }
-  }
-`;
+  const result = await response.json();
 
-const LOGOUT_MUTATION = `
-  mutation Logout($input: RefreshTokenRequest!) {
-    logout(input: $input)
+  if (result.errors && result.errors.length > 0) {
+    throw new Error(result.errors[0].message);
   }
-`;
+
+  return result.data as T;
+}
 
 export async function performLogout(refreshToken: string, accessToken: string) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
-    await fetch(apiUrl, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}` 
-      },
-      body: JSON.stringify({
-        query: LOGOUT_MUTATION,
-        variables: { input: { refreshToken } }
-      })
-    });
+    await gqlRequest<LogoutMutation, LogoutMutationVariables>(
+      LogoutDocument,
+      { input: { refreshToken } },
+      accessToken
+    );
   } catch (err) {
     console.error("LOGOUT_SERVER_ERROR:", err);
   }
@@ -64,28 +59,19 @@ export async function performLogout(refreshToken: string, accessToken: string) {
 
 async function refreshAccessToken(token: any) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: REFRESH_TOKEN_MUTATION,
-        variables: { input: { refreshToken: token.refreshToken } },
-      }),
-    });
+    const data = await gqlRequest<RefreshTokenMutation, RefreshTokenMutationVariables>(
+      RefreshTokenDocument,
+      { input: { refreshToken: token.refreshToken } }
+    );
 
-    const refreshedTokens = await response.json();
-
-    if (refreshedTokens.errors) {
-      throw new Error(refreshedTokens.errors[0].message || "Failed to refresh token");
+    if (!data?.refreshToken) {
+      throw new Error("Failed to refresh token: No data returned");
     }
-
-    const { accessToken, refreshToken } = refreshedTokens.data?.refreshToken || {};
 
     return {
       ...token,
-      accessToken: accessToken,
-      refreshToken: refreshToken ?? token.refreshToken,
+      accessToken: data.refreshToken.accessToken,
+      refreshToken: data.refreshToken.refreshToken ?? token.refreshToken,
       accessTokenExpires: Date.now() + ACCESS_TOKEN_EXPIRY_MS,
     };
   } catch (error) {
@@ -110,81 +96,50 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
-        const res = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: LOGIN_MUTATION,
-            variables: {
-              input: {
-                username: credentials?.username,
-                password: credentials?.password,
-              },
-            },
-          }),
-        })
+        const data = await gqlRequest<LoginMutation, LoginMutationVariables>(
+          LoginDocument,
+          { 
+            input: { 
+              username: credentials?.username || "", 
+              password: credentials?.password || "" 
+            } 
+          }
+        );
 
-        const result = await res.json()
-
-        if (result.errors) {
-          throw new Error(result.errors[0].message || "Server error")
-        }
-
-        const authData = result.data?.login
+        const authData = data?.login;
 
         if (!authData || authData.error) {
-          throw new Error(authData?.error || "Invalid credentials")
+          throw new Error(authData?.error || "Invalid credentials");
         }
 
         return {
-          id: authData.user?.id,
+          id: authData.user.id,
           name: credentials?.username as string,
-          email: authData.user?.email,
+          email: authData.user.email,
           accessToken: authData.accessToken,
           refreshToken: authData.refreshToken,
           isNewUser: authData.isNew,
-          roles: authData.user?.roles || []
-        }
+          roles: authData.user.roles || []
+        } as any;
       }
     })
   ],
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
         try {
-          const res = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              query: SOCIAL_LOGIN_MUTATION,
-              variables: {
-                input: {
-                  email: user.email,
-                  username: user.name || user.email?.split("@")[0],
-                  provider: account.provider
-                }
+          const data = await gqlRequest<SocialLoginMutation, SocialLoginMutationVariables>(
+            SocialLoginDocument,
+            {
+              input: {
+                email: user.email || "",
+                username: user.name || user.email?.split("@")[0] || "",
+                provider: account.provider
               }
-            })
-          });
-
-          const result = await res.json();
-
-          if (result.errors && result.errors.length > 0) {
-            const errMsg = result.errors[0].message;
-
-            if (errMsg === "User not found") {
-              const email = encodeURIComponent(user.email || '');
-              const username = encodeURIComponent(user.name || user.email?.split("@")[0] || '');
-              return `/register?mode=social-setup&email=${email}&username=${username}`;
             }
+          );
 
-            console.error("GraphQL Signin Error:", result.errors);
-            return false;
-          }
-
-          const socialData = result.data?.socialLogin;
+          const socialData = data?.socialLogin;
 
           if (socialData?.accessToken) {
             const u = user as any;
@@ -196,7 +151,14 @@ export const authOptions: NextAuthOptions = {
             return true;
           }
           return false;
-        } catch (error) {
+
+        } catch (error: any) {
+          if (error.message === "User not found") {
+            const email = encodeURIComponent(user.email || '');
+            const username = encodeURIComponent(user.name || user.email?.split("@")[0] || '');
+            return `/register?mode=social-setup&email=${email}&username=${username}`;
+          }
+
           console.error("Error during social login:", error);
           return false;
         }
@@ -215,12 +177,8 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (trigger === "update" && session) {
-        if (session.isNewUser !== undefined) {
-          token.isNewUser = session.isNewUser;
-        }
-        if (session.roles) {
-          token.roles = session.roles;
-        }
+        if (session.isNewUser !== undefined) token.isNewUser = session.isNewUser;
+        if (session.roles) token.roles = session.roles;
       }
 
       if (Date.now() < (token.accessTokenExpires as number) - 60 * 1000) {

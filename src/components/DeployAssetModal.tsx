@@ -5,16 +5,13 @@ import { Loader2, X, Image as ImageIcon, FileArchive, Trash2 } from "lucide-reac
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
-
-const CREATE_COLLECTION_MUTATION = `
-  mutation CreateCollection($input: CreateNewCollectionInput!) {
-    createCollection(input: $input) {
-      id
-      name
-      success
-    }
-  }
-`;
+import { useMutation } from "@apollo/client/react"
+import { CreateCollectionDocument } from '@/graphql/generated'
+import type { 
+  MimeType, 
+  Provider, 
+  ImageShortInput 
+} from '@/graphql/generated'
 
 const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
@@ -35,22 +32,20 @@ interface PreviewFileItem {
   file: File;
   previewUrl: string;
 }
-
 interface DeployAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: string;
-  accessToken: string;
   onSuccess: () => void;
 }
 
-export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSuccess }: DeployAssetModalProps) {
+export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
   const [newAsset, setNewAsset] = useState({ name: "", description: "", price: "", category: "gradients" })
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
+  const [executeCreate] = useMutation(CreateCollectionDocument)
 
   useEffect(() => {
     return () => {
@@ -66,7 +61,6 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       const incomingFiles = Array.from(e.target.files)
       const hasOversizedFiles = incomingFiles.some(file => file.size > MAX_FILE_SIZE_BYTES);
       const oversized = incomingFiles.find(f => f.size > MAX_IMAGE_SIZE_BYTES);
-
 
       if (oversized) {
         setValidationError(`Preview images must be under ${process.env.NEXT_PUBLIC_MAX_IMAGE_SIZE_MB} MB.`);
@@ -162,7 +156,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       const timestamp = Date.now()
       const category = newAsset.category
       const folderId = `collection-${timestamp}`
-      const uploadPreviewsPromises = previewItems.map(async (item, index) => {
+      const uploadPreviewsPromises = previewItems.map(async (item, index): Promise<ImageShortInput> => {
         const webpBlob = await convertToWebP(item.file, 1200, 0.82)
         const { width, height } = await getImageDimensions(webpBlob)
         
@@ -185,7 +179,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
         return {
           fileName: previewFileName,
           filePath: publicUrl,
-          mimeType: "webp",
+          mimeType: "webp", // Используем строку
           width: width,
           height: height,
           fileSize: webpBlob.size
@@ -200,44 +194,31 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
         .upload(archivePath, projectFile)
         
       if (vError) throw vError
-
-      let calculatedMime = "zip"
+      
+      // Используем строковые литералы для типов
+      let calculatedMime: MimeType = "zip" 
       if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
-      if (projectFile.name.endsWith(".7z")) calculatedMime = "sevenz"
-
-      const response = await fetch("http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          query: CREATE_COLLECTION_MUTATION,
-          variables: {
-            input: {
-              name: newAsset.name,
-              description: newAsset.description,
-              price: numericPrice,
-              videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
-              tagIds: [1, 2],
-              mediaResource: {
-                fileName: projectFile.name,
-                filePath: archivePath,
-                mimeType: calculatedMime,
-                provider: "local",
-                fileSize: projectFile.size
-              },
-              galleryImages: uploadedImages
-            }
+      
+      // 4. ВЫЗЫВАЕМ МУТАЦИЮ БЕЗ ПРОВЕРКИ ERRORS
+      await executeCreate({
+        variables: {
+          input: {
+            name: newAsset.name,
+            description: newAsset.description,
+            price: numericPrice,
+            videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
+            tagIds: ["1", "2"], 
+            mediaResource: {
+              fileName: projectFile.name,
+              filePath: archivePath,
+              mimeType: calculatedMime,
+              provider: "local", // Используем строку вместо Provider.Local
+              fileSize: projectFile.size
+            },
+            galleryImages: uploadedImages
           }
-        })
+        }
       })
-
-      const mutationResult = await response.json()
-    
-      if (mutationResult.errors) {
-        throw new Error(mutationResult.errors[0].message || "GraphQL Mutation Internal Error")
-      }
 
       setNewAsset({ name: "", description: "", price: "", category: "gradients" })
       setPreviewItems([])
@@ -246,6 +227,7 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
       onClose()
     } catch (err: any) {
       console.error("CATALOG_DEPLOYMENT_FAILURE:", err)
+      // Apollo заботливо положит сообщение с бэкенда в err.message
       setValidationError(err.message || "An unexpected system variation occurred during asset compilation.")
     } finally {
       setIsCreatingAsset(false)
@@ -368,7 +350,8 @@ export function DeployAssetModal({ isOpen, onClose, userId, accessToken, onSucce
                 {!projectFile && (
                   <input 
                     type="file" 
-                    accept=".zip,.rar,.7z,.grd,.asl,.atn" 
+                    // Убрали .7z из интерфейса, так как бэкенд поддерживает только zip и rar
+                    accept=".zip,.rar,.grd,.asl,.atn" 
                     className="absolute inset-0 opacity-0 cursor-pointer" 
                     required 
                     onChange={e => { 

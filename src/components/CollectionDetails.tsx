@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
 import LikeButton from '@/components/LikeButton'
+import { GetCollectionQuery } from '@/graphql/generated'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";
@@ -53,23 +54,7 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
 };
 
 interface CollectionDetailsProps {
-  collection: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    likesCount?: number;
-    isLiked?: boolean;
-    mediaResource: {
-      fileName: string;
-      fileSize: number;
-      mimeType: string;
-      provider: string;
-    };
-    galleryImages?: {
-      filePath: string;
-    }[];
-  };
+  collection: GetCollectionQuery['getCollectionById'];
   onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
   isInCart?: boolean;
 }
@@ -98,7 +83,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       id,
       name,
       price,
-      category: mediaResource.mimeType.split('/')[0] || "Asset",
+      category: String(mediaResource.mimeType).split('/')[0] || "Asset",
       previewImage: getFullImageUrl(galleryImages?.[0]?.filePath)
     });
     setLocalIsInCart(true);
@@ -193,8 +178,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
               {galleryImages.map((img, index) => (
                 <TiltCard 
                   key={index} 
-                  // 🟢 Применяем правильный маппинг URL
-                  src={getFullImageUrl(img.filePath)} 
+                  src={getFullImageUrl(img?.filePath)} 
                   alt={`${name} - preview ${index + 1}`} 
                 />
               ))}
@@ -216,7 +200,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-        {/* ... (Блок с данными файла остается без изменений) ... */}
         <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
           <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Filename</div>
           <div className="text-xs font-medium text-foreground truncate">{mediaResource.fileName}</div>
@@ -232,14 +215,14 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
 
         <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
           <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Mime Type</div>
-          <div className="text-xs font-semibold text-foreground">{mediaResource.mimeType.toUpperCase()}</div>
+          <div className="text-xs font-semibold text-foreground">{String(mediaResource.mimeType).toUpperCase()}</div>
         </div>
 
         <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
           <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Provider Protocol</div>
           <div className="flex items-center gap-2">
             <Shield size={13} className="text-muted-foreground stroke-[1.5]" />
-            <div className="text-xs font-semibold text-foreground">{mediaResource.provider.toUpperCase()}</div>
+            <div className="text-xs font-semibold text-foreground">{String(mediaResource.provider).toUpperCase()}</div>
           </div>
         </div>
       </div>

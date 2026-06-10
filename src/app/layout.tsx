@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/provider/ThemeProvider";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Navbar } from "@/components/Navbar";
 import { SplashProvider } from "@/components/SplashProvider";
+import { ApolloWrapper } from "@/lib/apolloWrapper";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -37,20 +38,22 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
         <AuthSessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            <SplashProvider>
-              <Navbar />
-              <main className="flex-1 w-full relative">
-                {children}
-              </main>
-              <CookieBanner />
-            </SplashProvider>
-          </ThemeProvider>
+          <ApolloWrapper>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+              <SplashProvider>
+                <Navbar />
+                <main className="flex-1 w-full relative">
+                  {children}
+                </main>
+                <CookieBanner />
+              </SplashProvider>
+            </ThemeProvider>
+          </ApolloWrapper>
         </AuthSessionProvider>
       </body>
     </html>

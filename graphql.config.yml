@@ -1,0 +1,2 @@
+schema: "../bundleboard-api/src/main/resources/graphql/**/*.graphqls"
+documents: "src/graphql/**/*.graphql"

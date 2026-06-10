@@ -1,0 +1,3 @@
+mutation CreateCheckoutSession($input: PaymentRequest!) {
+  createCheckoutSession(input: $input)
+}
