@@ -1,22 +1,27 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { useMutation } from '@apollo/client/react'
-import { Loader2, ArrowLeft, User, Mail, Lock, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { Loader2, ArrowLeft, User, Mail, Lock, ShieldCheck, ShieldAlert, AlertTriangle } from 'lucide-react'
+
 import { 
-  UpdateMeDocument,
+  UpdateMeDocument, 
   RequestEmailChangeDocument,
   RequestPasswordChangeDocument,
-  ConfirmPasswordChangeDocument
+  ConfirmPasswordChangeDocument,
+  GetMeDocument
 } from '@/graphql/generated'
 
 export default function SettingsPage() {
   const { data: session, status, update: updateSession } = useSession()
   const router = useRouter()
-  const [username, setUsername] = useState(session?.user?.name || "")
+  
+  const isGoogleAccount = (session as any)?.provider === "google" || (session as any)?.user?.image !== undefined;
+  
+  const [username, setUsername] = useState("")
   const [newEmail, setNewEmail] = useState("")
   
   const [passwordStep, setPasswordStep] = useState<'input' | 'verify'>('input')
@@ -27,43 +32,56 @@ export default function SettingsPage() {
   const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  const { data: meData, loading: isMeLoading } = useQuery(GetMeDocument, {
+    skip: status !== "authenticated",
+    fetchPolicy: 'cache-and-network'
+  });
+
   const [updateMe, { loading: isUsernameLoading }] = useMutation(UpdateMeDocument)
   const [requestEmailChange, { loading: isEmailLoading }] = useMutation(RequestEmailChangeDocument)
   const [requestPasswordChange, { loading: isPasswordRequestLoading }] = useMutation(RequestPasswordChangeDocument)
   const [confirmPasswordChange, { loading: isPasswordConfirmLoading }] = useMutation(ConfirmPasswordChangeDocument)
+  useEffect(() => {
+    if (meData?.me?.username) {
+      setUsername(meData.me.username)
+    } else if (session?.user?.name && !username) {
+      setUsername(session.user.name)
+    }
+  }, [meData, session])
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
     e.preventDefault()
     setUsernameStatus(null)
     
     const userId = (session as any)?.user?.id;
-    if (!username.trim() || username === session?.user?.name || !userId) return
+    if (!username.trim() || username === meData?.me?.username || !userId) return
 
     try {
       const { data } = await updateMe({ 
         variables: { 
-          input: {
-            id: userId,
-            username: username.trim()
-          }
+          input: { id: userId, username: username.trim() }
         } 
       })
 
       if (data?.updateMe?.username) {
         setUsernameStatus({ type: 'success', text: "Identity index updated successfully." })
         await updateSession({ ...session, user: { ...session?.user, name: data.updateMe.username } })
-      } else {
-        setUsernameStatus({ type: 'error', text: "Execution error: Failed to update username node." })
       }
     } catch (err: any) {
-      setUsernameStatus({ type: 'error', text: err.message || "Pipeline failure." })
+      const graphQLError = err.graphQLErrors?.[0];
+      const backendMessage = graphQLError?.message || err.message || "Pipeline failure.";
+
+      setUsernameStatus({ 
+        type: 'error', 
+        text: backendMessage 
+      })
     }
   }
 
   const handleRequestEmailChange = async (e: React.FormEvent) => {
     e.preventDefault()
     setEmailStatus(null)
-    if (!newEmail.trim()) return
+    if (!newEmail.trim() || isGoogleAccount) return
 
     try {
       const { data } = await requestEmailChange({ variables: { newEmail: newEmail.trim() } })
@@ -73,16 +91,23 @@ export default function SettingsPage() {
         setEmailStatus({ type: 'success', text: `[TRANSMISSION_SUCCESS]: ${result.message}` })
         setNewEmail("")
       } else {
-        setEmailStatus({ type: 'error', text: `${result?.message} (Attempts left: ${result?.attemptsLeft ?? 'N/A'})` })
+        setEmailStatus({ type: 'error', text: result?.message || "Rejected." })
       }
     } catch (err: any) {
-      setEmailStatus({ type: 'error', text: err.message || "Transmission interrupted." })
+      const graphQLError = err.graphQLErrors?.[0];
+      const backendMessage = graphQLError?.message || err.message || "Transmission interrupted.";
+
+      setEmailStatus({ 
+        type: 'error', 
+        text: backendMessage 
+      })
     }
   }
 
   const handleRequestPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordStatus(null)
+    if (isGoogleAccount) return
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordStatus({ type: 'error', text: "Validation failed: new ciphers do not match." })
@@ -115,7 +140,7 @@ export default function SettingsPage() {
   const handleConfirmPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordStatus(null)
-    if (!verificationCode.trim()) return
+    if (!verificationCode.trim() || isGoogleAccount) return
 
     try {
       const { data } = await confirmPasswordChange({
@@ -124,7 +149,7 @@ export default function SettingsPage() {
 
       const result = data?.confirmPasswordChange
       if (result?.success) {
-        setPasswordStatus({ type: 'success', text: "Cryptographic key patch applied successfully. New password active." })
+        setPasswordStatus({ type: 'success', text: "Cryptographic key patch applied successfully." })
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" })
         setVerificationCode("")
         setPasswordStep('input')
@@ -139,7 +164,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (status === "loading") {
+  if (status === "loading" || isMeLoading) {
     return (
       <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <Loader2 className="animate-spin h-5 w-5 text-primary stroke-[1.5]" />
@@ -163,8 +188,16 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-6 md:p-12 font-sans animate-in fade-in duration-300">
-      <div className="max-w-3xl mx-auto space-y-10">
+    <main className="min-h-screen bg-background text-foreground p-6 md:p-10 lg:p-12 font-sans relative overflow-hidden">
+      <div 
+        className="absolute inset-0 z-0 opacity-[0.025] pointer-events-none" 
+        style={{ 
+          backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`, 
+          backgroundSize: '24px 24px' 
+        }} 
+      />
+
+      <div className="max-w-3xl mx-auto space-y-10 relative z-10">
         
         <nav className="flex justify-between items-center pb-6 border-b border-white/[0.06]">
           <button 
@@ -180,7 +213,7 @@ export default function SettingsPage() {
 
         <header>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase font-display">
-            Node Configuration
+            Configuration
           </h1>
           <p className="text-xs text-muted-foreground mt-2 uppercase tracking-wider">
             Modify core preferences, communication channels, and encryption keys.
@@ -189,19 +222,21 @@ export default function SettingsPage() {
 
         <div className="space-y-8">
           
-          <section className="border border-border/60 bg-card p-6 rounded-none shadow-sm space-y-4">
+          <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <User size={14} className="text-primary" /> Identity Parameters
             </div>
+            
             {usernameStatus && (
-              <div className={`p-3 text-[10px] font-semibold uppercase tracking-wide border rounded-none ${
-                usernameStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/20 bg-destructive/5 text-destructive'
+              <div className={`p-3 text-[10px] font-mono font-semibold uppercase tracking-wide border rounded-none ${
+                usernameStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
               }`}>
                 {usernameStatus.text}
               </div>
             )}
-            <form onSubmit={handleUpdateUsername} className="flex gap-3 flex-col sm:flex-row items-end sm:items-center">
-              <div className="grid gap-1 flex-1 w-full">
+            
+            <form onSubmit={handleUpdateUsername} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+              <div className="grid gap-1 sm:col-span-3 w-full">
                 <label className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Public Username</label>
                 <input 
                   type="text" 
@@ -214,8 +249,8 @@ export default function SettingsPage() {
               </div>
               <button 
                 type="submit"
-                disabled={isUsernameLoading || username === session?.user?.name}
-                className="w-full sm:w-auto h-10 px-5 bg-foreground text-background disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors shrink-0"
+                disabled={isUsernameLoading || username === meData?.me?.username}
+                className="w-full h-10 px-5 bg-foreground text-background disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors sm:col-span-1"
               >
                 {isUsernameLoading && <Loader2 className="animate-spin h-3 w-3" />}
                 Commit Name
@@ -223,58 +258,82 @@ export default function SettingsPage() {
             </form>
           </section>
 
-          <section className="border border-border/60 bg-card p-6 rounded-none shadow-sm space-y-4">
+          <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <Mail size={14} className="text-primary" /> Communication Channel
             </div>
             {emailStatus && (
               <div className={`p-3 text-[10px] font-semibold uppercase tracking-wide border rounded-none ${
-                emailStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/20 bg-destructive/5 text-destructive'
+                emailStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
               }`}>
                 {emailStatus.text}
               </div>
             )}
             <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground flex justify-between bg-muted/20 p-2 border border-border/20 font-mono">
               <span>Current Route:</span>
-              <span className="text-foreground">{session?.user?.email}</span>
+              <span className="text-foreground">{meData?.me?.email || session?.user?.email}</span>
             </div>
-            <form onSubmit={handleRequestEmailChange} className="flex gap-3 flex-col sm:flex-row items-end sm:items-center">
-              <div className="grid gap-1 flex-1 w-full">
-                <label className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">New Email Destination</label>
-                <input 
-                  type="email" 
-                  required
-                  disabled={isEmailLoading}
-                  placeholder="enter new email..."
-                  className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground outline-none font-mono rounded-none focus:border-primary transition-colors placeholder:opacity-30 disabled:opacity-50"
-                  value={newEmail}
-                  onChange={e => setNewEmail(e.target.value)}
-                />
+            
+            {isGoogleAccount ? (
+              <div className="border border-dashed border-primary/30 bg-primary/[0.02] p-5 text-center space-y-2 animate-in fade-in duration-300">
+                <AlertTriangle size={20} className="text-primary/70 mx-auto" />
+                <div className="text-[11px] font-bold uppercase tracking-wider text-foreground">
+                  Email Routing Anchored
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide max-w-md mx-auto leading-relaxed">
+                  Your primary communication link is managed by <span className="text-primary font-bold">Google Auth</span>. Email migration is restricted to preserve secure platform Handshake pipelines.
+                </p>
               </div>
-              <button 
-                type="submit"
-                disabled={isEmailLoading || !newEmail.trim()}
-                className="w-full sm:w-auto h-10 px-5 bg-foreground text-background disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors shrink-0"
-              >
-                {isEmailLoading && <Loader2 className="animate-spin h-3 w-3" />}
-                Request Migration
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={handleRequestEmailChange} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div className="grid gap-1 sm:col-span-3 w-full">
+                  <label className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">New Email Destination</label>
+                  <input 
+                    type="email" 
+                    required
+                    disabled={isEmailLoading}
+                    placeholder="enter new email..."
+                    className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground outline-none font-mono rounded-none focus:border-primary transition-colors placeholder:opacity-30 disabled:opacity-50"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isEmailLoading || !newEmail.trim()}
+                  className="w-full h-10 px-5 bg-foreground text-background disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors sm:col-span-1"
+                >
+                  {isEmailLoading && <Loader2 className="animate-spin h-3 w-3" />}
+                  Request Migration
+                </button>
+              </form>
+            )}
           </section>
 
-          <section className="border border-border/60 bg-card p-6 rounded-none shadow-sm space-y-4">
+          <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <Lock size={14} className="text-primary" /> Cryptographic Keys
             </div>
+            
             {passwordStatus && (
               <div className={`p-3 text-[10px] font-semibold uppercase tracking-wide border rounded-none ${
-                passwordStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/20 bg-destructive/5 text-destructive'
+                passwordStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
               }`}>
                 {passwordStatus.text}
               </div>
             )}
 
-            {passwordStep === 'input' ? (
+            {isGoogleAccount ? (
+              <div className="border border-dashed border-primary/30 bg-primary/[0.02] p-5 text-center space-y-2 animate-in fade-in duration-300">
+                <AlertTriangle size={20} className="text-primary/70 mx-auto" />
+                <div className="text-[11px] font-bold uppercase tracking-wider text-foreground">
+                  OAuth Provider Active
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide max-w-md mx-auto leading-relaxed">
+                  Your profile is bound to the <span className="text-primary font-bold">Google Identity Protocol</span>. Cryptographic password alterations are disabled since management is handled entirely via Google Ecosystem.
+                </p>
+              </div>
+            ) : passwordStep === 'input' ? (
               <form onSubmit={handleRequestPasswordChange} className="space-y-4 animate-in fade-in duration-200">
                 <div className="grid gap-4">
                   <div className="grid gap-1">
@@ -313,7 +372,8 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end">
+                
+                <div className="flex justify-end pt-2">
                   <button 
                     type="submit"
                     disabled={isPasswordRequestLoading || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}

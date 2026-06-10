@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState } from 'react'
 import { Loader2, User, Upload } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
@@ -20,8 +21,8 @@ const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
       img.src = event.target?.result as string
       img.onload = () => {
         const canvas = document.createElement("canvas")
-        canvas.width = 200
-        canvas.height = 200
+        canvas.width = 500
+        canvas.height = 500
         const ctx = canvas.getContext("2d")
         if (!ctx) return reject(new Error("Canvas failure"))
 
@@ -29,7 +30,7 @@ const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
         const xIdx = (img.width - size) / 2
         const yIdx = (img.height - size) / 2
 
-        ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 200, 200)
+        ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 500, 500)
         canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Error")), "image/webp", 0.85)
       }
     }
@@ -58,8 +59,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
 
       const { data: { publicUrl } } = supabase.storage.from("previews").getPublicUrl(fileName)
       
-
-       await executeUpdateAvatar({
+      await executeUpdateAvatar({
         variables: { 
           input: { 
             id: userData.id, 
@@ -74,27 +74,26 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
     } finally {
       setIsUploading(false)
     }
-    }
-
+  }
 
   return (
-    <div className="flex items-center gap-5 mb-6 pt-2">
-      <div className="relative h-16 w-16 border border-border/80 rounded-none bg-muted shrink-0 overflow-hidden">
+    <div className="flex flex-col items-start gap-4 mb-6 pt-2">
+      
+      <div className="relative h-36 w-36 border border-border/80 rounded-none bg-muted shrink-0 overflow-hidden shadow-sm">
         {userData?.avatarUrl ? (
           <img src={userData.avatarUrl} alt="avatar" className="w-full h-full object-cover opacity-90" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
-            <User size={24} strokeWidth={1.5} />
+            <User size={48} strokeWidth={1.2} />
           </div>
         )}
         {isUploading && (
           <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center z-10">
-            <Loader2 className="animate-spin text-primary" size={16} />
+            <Loader2 className="animate-spin text-primary" size={24} />
           </div>
         )}
       </div>
-
-      <label className="flex items-center justify-center gap-2 border border-border/80 bg-background text-foreground p-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none">
+      <label className="flex items-center justify-center gap-2 border border-border/80 bg-background text-foreground w-36 py-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none shadow-sm">
         <Upload size={12} className="stroke-[1.8]" /> 
         {isUploading ? "Syncing..." : "Update Photo"}
         <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploading} />

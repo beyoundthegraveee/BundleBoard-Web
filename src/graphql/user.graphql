@@ -23,6 +23,17 @@ mutation UpdateMe($input: UpdateUserRequest!) {
   }
 }
 
+query GetMe {
+  me {
+    id
+    username
+    email
+    avatarUrl
+    roles
+    status
+  }
+}
+
 query GetUserProfile {
   getUserProfile {
     id

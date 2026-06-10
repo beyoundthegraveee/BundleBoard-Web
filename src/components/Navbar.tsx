@@ -9,6 +9,8 @@ import { useTheme } from "next-themes"
 import { SearchOverlay } from "./SearchOverlay"
 import { CartDrawer } from "./CartDrawer"
 import { cn } from "@/lib/utils"
+import { useQuery } from "@apollo/client/react"
+import { GetMeDocument } from "@/graphql/generated"
 
 import {
   DropdownMenu,
@@ -49,6 +51,14 @@ export function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [mounted, setMounted] = useState(false);
+
+  const { data: meData } = useQuery(GetMeDocument, {
+    skip: status !== "authenticated",
+    fetchPolicy: 'cache-first'
+  });
+
+  const currentUsername = meData?.me?.username || session?.user?.name || "User Node";
+  const currentEmail = meData?.me?.email || session?.user?.email || "";
 
   useEffect(() => {
     setMounted(true);
@@ -184,8 +194,8 @@ export function Navbar() {
                   <DropdownMenuLabel className="p-3 bg-muted/50 mb-1 border-b border-border/40">
                     <div className="flex flex-col space-y-0.5">
                       <p className="text-[9px] font-bold uppercase text-primary tracking-widest">Active Session</p>
-                      <p className="text-xs font-semibold text-foreground truncate uppercase">{session.user?.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate font-normal">{session.user?.email}</p>
+                      <p className="text-xs font-semibold text-foreground truncate uppercase">{currentUsername}</p>
+                      <p className="text-[10px] text-muted-foreground truncate font-normal">{currentEmail}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuGroup>
