@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
+import { ImageShortInput } from '@/graphql/generated'
 
 interface GalleryItem {
   id: string;
@@ -15,7 +16,7 @@ interface GalleryItem {
 interface EditAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, price: number, description: string, galleryImages: any[]) => Promise<void>;
+  onSave: (name: string, price: number, description: string, galleryImages: ImageShortInput[]) => Promise<void>;
   isLoading: boolean;
   initialData: {
     id: string;
@@ -165,11 +166,21 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     const timestamp = Date.now()
     
     try {
-      const finalGalleryPromises = gallery.map(async (item, index) => {
+      // Явно типизируем обещание как Promise<ImageShortInput>
+      const finalGalleryPromises = gallery.map(async (item, index): Promise<ImageShortInput> => {
+        // Логика для старых (неизмененных) изображений
         if (!item.isNew && !item.file) {
-          return { filePath: item.filePath };
+          return { 
+            filePath: item.filePath,
+            fileName: undefined,
+            mimeType: undefined,
+            width: undefined,
+            height: undefined,
+            fileSize: undefined
+          };
         }
 
+        // Исправленная логика для новых загружаемых изображений
         if (item.isNew && item.file) {
           const webpBlob = await convertToWebP(item.file, 1200, 0.82)
           const { width, height } = await getImageDimensions(webpBlob)
@@ -188,8 +199,8 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
           return {
             fileName: previewFileName,
-            filePath: publicUrl,
-            mimeType: "webp",
+            filePath: publicUrl, // Теперь сохраняется вечная ссылка из хранилища Supabase!
+            mimeType: "webp" as any, 
             width: width,
             height: height,
             fileSize: webpBlob.size

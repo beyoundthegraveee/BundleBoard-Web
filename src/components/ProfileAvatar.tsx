@@ -1,94 +1,81 @@
 "use client"
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Loader2, User, Upload } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 
-const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = (event) => {
-        const img = new Image()
-        img.src = event.target?.result as string
-        img.onload = () => {
-          const canvas = document.createElement("canvas")
-          canvas.width = 200
-          canvas.height = 200
-          const ctx = canvas.getContext("2d")
-          if (!ctx) return reject(new Error("Canvas failure"))
+import { useMutation } from "@apollo/client/react"
+import { UpdateAvatarDocument, GetUserProfileQuery } from "@/graphql/generated"
 
-          const size = Math.min(img.width, img.height)
-          const xIdx = (img.width - size) / 2
-          const yIdx = (img.height - size) / 2
-
-          ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 200, 200)
-
-          canvas.toBlob(
-            (blob) => blob ? resolve(blob) : reject(new Error("Serialization error")),
-            "image/webp",
-            0.85
-          )
-        }
-      }
-      reader.onerror = (err) => reject(err)
-    })
+interface ProfileAvatarProps {
+  userData?: GetUserProfileQuery['getUserProfile'] | null; 
+  onUpdate: () => void;
 }
 
-const UPDATE_AVATAR_MUTATION = `
-  mutation UpdateAvatar($input: UpdateAvatarRequest!) {
-    updateAvatar(input: $input) {
-      id
-      avatarUrl
-      updatedAt
-    }
-  }
-`;
+const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = 200
+        canvas.height = 200
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return reject(new Error("Canvas failure"))
 
-export function ProfileAvatar({ userData, accessToken, onUpdate }: { userData: any, accessToken: string, onUpdate: () => void }) {
+        const size = Math.min(img.width, img.height)
+        const xIdx = (img.width - size) / 2
+        const yIdx = (img.height - size) / 2
+
+        ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 200, 200)
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Error")), "image/webp", 0.85)
+      }
+    }
+    reader.onerror = (err) => reject(err)
+  })
+}
+
+export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
   const [isUploading, setIsUploading] = useState(false)
+  const [executeUpdateAvatar] = useMutation(UpdateAvatarDocument)
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !userData?.id) return
 
     setIsUploading(true)
-
     try {
       const processedBlob = await resizeAndConvertToWebP(file)
       const fileName = `avatars/${userData.id}-${Date.now()}.webp`
+
       const { error: uploadError } = await supabase.storage
         .from("previews")
         .upload(fileName, processedBlob, { contentType: "image/webp", upsert: true })
 
       if (uploadError) throw uploadError
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("previews")
-        .getPublicUrl(fileName)
-
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          query: UPDATE_AVATAR_MUTATION,
-          variables: { input: { id: userData.id, avatarUrl: publicUrl } }
-        })
-      })
-
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
-      onUpdate()
+      const { data: { publicUrl } } = supabase.storage.from("previews").getPublicUrl(fileName)
       
-    } catch (err) {
-      console.error("AVATAR_UPLOAD_FAILURE:", err)
-      alert("Failed to update avatar")
+
+       await executeUpdateAvatar({
+        variables: { 
+          input: { 
+            id: userData.id, 
+            avatarUrl: publicUrl 
+          } 
+        }
+      })
+      
+      onUpdate()
+    } catch (err: any) {
+      console.error("AVATAR_UPLOAD_FAILURE:", err.message || err)
     } finally {
       setIsUploading(false)
     }
-  }
+    }
+
 
   return (
     <div className="flex items-center gap-5 mb-6 pt-2">
@@ -101,14 +88,14 @@ export function ProfileAvatar({ userData, accessToken, onUpdate }: { userData: a
           </div>
         )}
         {isUploading && (
-          <div className="absolute inset-0 bg-background/90 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center z-10">
             <Loader2 className="animate-spin text-primary" size={16} />
           </div>
         )}
       </div>
-      
-      <label className="cursor-pointer border border-border/80 p-2.5 hover:bg-accent text-[10px] uppercase tracking-wider transition-colors">
-        <Upload size={12} className="inline mr-2" />
+
+      <label className="flex items-center justify-center gap-2 border border-border/80 bg-background text-foreground p-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none">
+        <Upload size={12} className="stroke-[1.8]" /> 
         {isUploading ? "Syncing..." : "Update Photo"}
         <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploading} />
       </label>

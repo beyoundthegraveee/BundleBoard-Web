@@ -12,35 +12,19 @@ import { FaGoogle } from "react-icons/fa"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signIn } from "next-auth/react"
-
-const REGISTER_MUTATION = `
-  mutation Register($input: RegisterRequest!) {
-    register(input: $input) {
-      accessToken
-      refreshToken
-      error
-    }
-  }
-`;
-
-const SOCIAL_REGISTER_MUTATION = `
-  mutation SocialRegister($input: SocialRegisterRequest!) {
-    socialRegister(input: $input) {
-      accessToken
-      refreshToken
-      error
-    }
-  }
-`;
+import { useMutation } from "@apollo/client/react"
+import { RegisterDocument, SocialRegisterDocument } from "@/graphql/generated"
 
 const generateRandomPassword = () => Math.random().toString(36).slice(-10) + "A1!";
 
 function RegisterFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [executeSocialRegister, { loading: isSocialLoading }] = useMutation(SocialRegisterDocument)
+  const [executeRegister, { loading: isRegisterLoading }] = useMutation(RegisterDocument)
+  
+  const isLoading = isSocialLoading || isRegisterLoading;
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -53,7 +37,6 @@ function RegisterFormContent() {
 
   const password = watch("password");
 
-  // Перехват Google OAuth: сначала создаем юзера в БД, затем шлем на апдейт роли
   useEffect(() => {
     const mode = searchParams.get("mode")
     const email = searchParams.get("email")
@@ -61,83 +44,57 @@ function RegisterFormContent() {
 
     if (mode === "social-setup" && email && username) {
       const executeSocialRegistration = async () => {
-        setIsLoading(true)
         setServerError(null)
         try {
-          const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              query: SOCIAL_REGISTER_MUTATION,
-              variables: {
-                input: {
-                  username,
-                  email,
-                  password: generateRandomPassword(),
-                  role: "client"
-                }
+          const { data } = await executeSocialRegister({
+            variables: {
+              input: {
+                username,
+                email,
+                password: generateRandomPassword(),
+                role: "client"
               }
-            })
+            }
           })
 
-          const result = await response.json()
-          if (result.errors) throw new Error(result.errors[0].message)
+          if (data?.socialRegister?.error) {
+            throw new Error(data.socialRegister.error)
+          }
           
-          const regData = result.data?.socialRegister
-          if (regData?.error) throw new Error(regData.error)
-
-          // Юзер успешно создан бэкендом. Перенаправляем на общую страницу апдейта роли
           router.push(`/select-role?email=${encodeURIComponent(email)}`)
         } catch (error: any) {
           setServerError(error.message || "Failed to initialize social record")
-        } finally {
-          setIsLoading(false)
         }
       }
 
       executeSocialRegistration()
     }
-  }, [searchParams, router])
+  }, [searchParams, router, executeSocialRegister])
 
-  // Обычная регистрация по форме Email
-  const onEmailSubmit = async (data: any) => {
-    setIsLoading(true)
+  const onEmailSubmit = async (formData: any) => {
     setServerError(null)
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: REGISTER_MUTATION,
-          variables: {
-            input: {
-              username: data.username,
-              email: data.email,
-              password: data.password,
-              role: "client",
-            },
-          },
-        }),
+      const { data } = await executeRegister({
+        variables: {
+          input: {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            role: "client",
+          }
+        }
       })
 
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
-      
-      const regData = result.data?.register
-      if (regData?.error) {
-        setServerError(regData.error)
+      if (data?.register?.error) {
+        setServerError(data.register.error)
       } else {
-        // Юзер создан. Перенаправляем на ту же самую страницу апдейта роли
-        router.push(`/select-role?email=${encodeURIComponent(data.email)}`)
+        router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
     } catch (error: any) {
-      setServerError(error.message)
-    } finally {
-      setIsLoading(false)
+      setServerError(error.message || "An unexpected error occurred.")
     }
   }
 
-  // Экран ожидания, пока в фоне идет создание записи для Google-пользователя
   if (searchParams.get("mode") === "social-setup" && !serverError) {
     return (
       <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center p-12">

@@ -1,26 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-const VERIFY_EMAIL_MUTATION = `
-  mutation VerifyEmail($token: String!) {
-    verifyEmail(token: $token) {
-      success
-      message
-    }
-  }
-`;
+import { useMutation } from "@apollo/client/react"
+import { VerifyEmailDocument } from "@/graphql/generated"
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get("token")
+  
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState("")
+  const hasVerified = useRef(false)
+  const [executeVerify] = useMutation(VerifyEmailDocument)
 
   useEffect(() => {
     if (!token) {
@@ -29,32 +25,29 @@ export default function VerifyEmailPage() {
       return
     }
 
+    if (hasVerified.current) return;
+    hasVerified.current = true;
+
     const verify = async () => {
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: VERIFY_EMAIL_MUTATION,
-            variables: { token }
-          })
+        const { data } = await executeVerify({
+          variables: { token }
         })
-        const result = await res.json()
-        
-        if (result.data?.verifyEmail?.success) {
+
+        if (data?.verifyEmail?.success) {
           setStatus('success')
         } else {
           setStatus('error')
-          setErrorMsg(result.data?.verifyEmail?.message || "Verification process failed")
+          setErrorMsg(data?.verifyEmail?.message || "Verification process failed")
         }
-      } catch (e) {
+      } catch (e: any) {
         setStatus('error')
-        setErrorMsg("Secure connection terminated")
+        setErrorMsg(e.message || "Secure connection terminated")
       }
     }
 
     verify()
-  }, [token])
+  }, [token, executeVerify])
 
   return (
     <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-background px-4 py-12 font-sans text-foreground relative overflow-hidden">

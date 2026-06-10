@@ -4,6 +4,8 @@ import * as React from "react"
 import { X, Trash2, ArrowRight, ShoppingBag, Loader2 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { useMutation } from "@apollo/client/react"
+import { CreateCheckoutSessionDocument } from "@/graphql/generated"
 
 interface CartItem {
   id: string
@@ -21,19 +23,26 @@ interface CartDrawerProps {
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { data: session } = useSession()
   const [cartItems, setCartItems] = React.useState<CartItem[]>([])
-  const [isRedirecting, setIsRedirecting] = React.useState(false)
+  const [executeCreateCheckout, { loading: isRedirecting }] = useMutation(CreateCheckoutSessionDocument)
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
+    const loadCart = () => {
       const savedCart = localStorage.getItem("bundleboard_cart")
       if (savedCart) {
         try {
           setCartItems(JSON.parse(savedCart))
         } catch (error) {
-          console.error("❌ Failed to parse cart data from localStorage:", error)
+          console.error("❌ Failed to parse cart data:", error)
         }
+      } else {
+        setCartItems([])
       }
     }
+
+    loadCart()
+
+    window.addEventListener("cartUpdate", loadCart)
+    return () => window.removeEventListener("cartUpdate", loadCart)
   }, [isOpen])
 
   const total = cartItems.reduce((sum, item) => sum + item.price, 0)
@@ -42,68 +51,48 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const updatedCart = cartItems.filter(item => item.id !== id)
     setCartItems(updatedCart)
     localStorage.setItem("bundleboard_cart", JSON.stringify(updatedCart))
-    window.dispatchEvent(new Event("cart_updated"))
+    window.dispatchEvent(new Event("cartUpdate")) 
   }
 
   const handleCheckout = async () => {
     if (cartItems.length === 0 || isRedirecting) return
-    if (!session || !(session as any).accessToken) {
+    
+    if (!session) {
       alert("Please sign in to proceed with your purchase.")
       return
     }
 
-    setIsRedirecting(true)
-    
     try {
       const currentSession = session as any;
       
-      const input = {
-        userId: parseInt(currentSession.user?.id, 10),
-        currency: "USD",
-        collectionIds: cartItems.map(item => parseInt(item.id, 10))
-      }
-
-      const response = await fetch("http://localhost:8080/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${currentSession.accessToken}`
-        },
-        body: JSON.stringify({
-          query: `
-            mutation CreateCheckoutSession($input: PaymentRequest!) {
-              createCheckoutSession(input: $input)
-            }
-          `,
-          variables: { input }
-        })
+      // 3. ВЫПОЛНЯЕМ МУТАЦИЮ БЕЗ РУЧНОЙ ПРОВЕРКИ ERRORS
+      const { data } = await executeCreateCheckout({
+        variables: {
+          input: {
+            userId: String(currentSession.user?.id), 
+            currency: "USD",
+            collectionIds: cartItems.map(item => String(item.id)) 
+          }
+        }
       })
 
-      const result = await response.json()
-      
-      if (result.errors) {
-        console.error("❌ GraphQL validation error:", result.errors)
-        alert(`Checkout initialization failed: ${result.errors[0].message}`)
-        setIsRedirecting(false)
-        return
-      }
-
-      const stripeUrl = result.data?.createCheckoutSession
+      const stripeUrl = data?.createCheckoutSession
 
       if (stripeUrl) {
         setCartItems([]) 
         localStorage.removeItem("bundleboard_cart")
-        window.dispatchEvent(new Event("cart_updated"))
+        window.dispatchEvent(new Event("cartUpdate"))
 
+        // Редирект на Stripe Checkout
         window.location.href = stripeUrl
       } else {
         throw new Error("Stripe URL not found in response")
       }
 
-    } catch (error) {
+    } catch (error: any) {
+      // Любые GraphQL и сетевые ошибки отловятся здесь автоматически!
       console.error("❌ Critical error during payment session initialization:", error)
-      alert("Unable to connect to the payment server. Please try again later.")
-      setIsRedirecting(false)
+      alert(error.message || "Unable to connect to the payment server. Please try again later.")
     }
   }
 

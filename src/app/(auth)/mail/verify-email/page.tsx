@@ -7,20 +7,16 @@ import Link from "next/link"
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 
-const RESEND_VERIFICATION_MUTATION = `
-  mutation ResendVerification($email: String!) {
-    resendVerificationEmail(email: $email) {
-       success
-       message
-    }
-  }
-`;
+// Импортируем хук Apollo
+import { useResendVerificationMutation } from "@/graphql/generated"
 
 export default function VerifyRequestPage() {
-  const [isResending, setIsResending] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
+
+  // Инициализируем мутацию
+  const [executeResend, { loading: isResending }] = useResendVerificationMutation()
 
   const handleResendEmail = async () => {
     if (!email) {
@@ -28,36 +24,27 @@ export default function VerifyRequestPage() {
       return
     }
 
-    setIsResending(true)
     setMessage(null)
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: RESEND_VERIFICATION_MUTATION,
-          variables: { email: email }
-        }),
+      // Выполняем мутацию
+      const { data, errors } = await executeResend({
+        variables: { email: email }
       });
 
-      const result = await response.json()
-
-      if (result.errors){
-        throw new Error(result.errors[0].message)
+      if (errors) {
+        throw new Error(errors[0].message)
       }
 
-      const data = result.data?.resendVerificationEmail
+      const resultData = data?.resendVerificationEmail
 
-      if (data?.success) {
-        setMessage({ type: 'success', text: data.message || "Verification email resent successfully. Please check your inbox." })
+      if (resultData?.success) {
+        setMessage({ type: 'success', text: resultData.message || "Verification email resent successfully. Please check your inbox." })
       } else {
-        setMessage({ type: 'error', text: data?.message || "Failed to resend email. Please try again later." })
+        setMessage({ type: 'error', text: resultData?.message || "Failed to resend email. Please try again later." })
       }
-    } catch (e) {
-      setMessage({ type: 'error', text: "Failed to resend email. Please try again later." })
-    } finally {
-      setIsResending(false)
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message || "Failed to resend email. Please try again later." })
     }
   }
 

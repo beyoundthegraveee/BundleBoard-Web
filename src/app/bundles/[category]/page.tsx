@@ -1,103 +1,38 @@
-'use client';
+"use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { CategoryCollectionGrid, CollectionNode } from '@/components/CategoryCollectionGrid';
-
-const GET_COLLECTIONS_BY_TAG_QUERY = `
-  query GetCollectionsByTag($input: CollectionFilterInput!) {
-    getCollectionsByTag(input: $input) {
-      collections {
-        id
-        name
-        description
-        price
-        author {
-          username
-        }
-        galleryImages {
-          filePath
-        }
-      }
-      totalPages
-      totalElements
-    }
-  }
-`;
+import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid';
+import { useQuery } from '@apollo/client/react';
+import { GetCollectionsByTagDocument } from '@/graphql/generated';
 
 const PAGE_SIZE = 12;
 
 export default function BundleCategoryPage() {
   const params = useParams();
-  const { data: session, status } = useSession();
   const categorySlug = (params?.category as string) || '';
-
-  const [collections, setCollections] = useState<CollectionNode[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchCollections = useCallback(async (page: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
-      
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...((session as any)?.accessToken && { "Authorization": `Bearer ${(session as any).accessToken}` })
-        },
-        body: JSON.stringify({
-          query: GET_COLLECTIONS_BY_TAG_QUERY,
-          variables: {
-            input: {
-              tagName: categorySlug, 
-              page: page,
-              size: PAGE_SIZE
-            }
-          }
-        })
-      });
-
-      const result = await response.json();
-      if (result.errors) throw new Error(result.errors[0].message || "Query stream execution failure.");
-
-      const data = result.data?.getCollectionsByTag;
-      if (data) {
-        const mappedCollections = (data.collections || []).map((col: any) => ({
-          ...col,
-          previewImage: col.galleryImages && col.galleryImages.length > 0 
-            ? { filePath: col.galleryImages[0].filePath } 
-            : null
-        }));
-
-        setCollections(mappedCollections);
-        setTotalPages(data.totalPages || 1);
+  const { data, loading, error } = useQuery(GetCollectionsByTagDocument, {
+    variables: {
+      input: {
+        tagName: categorySlug,
+        page: currentPage,
+        size: PAGE_SIZE
       }
-    } catch (err: any) {
-      console.error("CATEGORY_FETCH_ERROR:", err);
-      setError(err.message || "Failed to stream directory data.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [categorySlug, session]);
+    },
+    skip: !categorySlug,
+    fetchPolicy: 'cache-first' 
+  });
 
-  useEffect(() => {
-    if (status === "loading") return;
-    setCurrentPage(0);
-    fetchCollections(0);
-  }, [categorySlug, status]); 
+  const collections = data?.getCollectionsByTag?.collections || [];
+  const totalPages = data?.getCollectionsByTag?.totalPages || 1;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
-      fetchCollections(newPage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -124,11 +59,11 @@ export default function BundleCategoryPage() {
 
         {error && (
           <div className="p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none">
-            [PIPELINE_ERROR]: {error}
+            [PIPELINE_ERROR]: {error.message}
           </div>
         )}
 
-        {isLoading ? (
+        {loading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
             <Loader2 className="animate-spin h-5 w-5 text-primary stroke-[1.5]" />
             <span className="text-[10px] font-bold uppercase tracking-widest">Querying database sequence...</span>

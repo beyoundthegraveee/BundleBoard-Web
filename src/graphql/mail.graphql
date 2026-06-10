@@ -1,0 +1,13 @@
+mutation ResendVerification($email: String!) {
+  resendVerificationEmail(email: $email) {
+    success
+    message
+  }
+}
+
+mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
+    success
+    message
+  }
+}

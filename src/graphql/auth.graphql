@@ -1,0 +1,56 @@
+mutation Register($input: RegisterRequest!) {
+  register(input: $input) {
+    accessToken
+    refreshToken
+    error
+  }
+}
+
+mutation SocialRegister($input: SocialRegisterRequest!) {
+  socialRegister(input: $input) {
+    accessToken
+    refreshToken
+    error
+  }
+}
+
+mutation SocialLogin($input: SocialLoginRequest!) {
+  socialLogin(input: $input) {
+    accessToken
+    refreshToken
+    isNew
+    error
+    user {
+      id
+      username
+      email
+      roles
+    }
+  }
+}
+
+mutation Login($input: AuthRequest!) {
+  login(input: $input) {
+    accessToken
+    refreshToken
+    error
+    user {
+      id
+      username
+      email
+      roles
+    }
+    isNew
+  }
+}
+
+mutation RefreshToken($input: RefreshTokenRequest!) {
+  refreshToken(input: $input) {
+    accessToken
+    refreshToken
+  }
+}
+
+mutation Logout($input: RefreshTokenRequest!) {
+  logout(input: $input)
+}

@@ -7,17 +7,8 @@ import { useSession } from "next-auth/react"
 import { User, PenTool, Loader2, Check, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-
-const UPDATE_USER_ROLE_MUTATION = `
-  mutation UpdateUserRole($input: UpdateUserRoleInput!) {
-    updateUserRole(input: $input) { 
-      success 
-      message
-      accessToken
-      refreshToken
-    }
-  }
-`;
+import { useMutation } from "@apollo/client/react"
+import { UpdateUserRoleDocument } from "@/graphql/generated"
 
 interface RoleSelectionProps {
   email: string;
@@ -26,10 +17,9 @@ interface RoleSelectionProps {
 export function RoleSelection({ email }: RoleSelectionProps) {
   const router = useRouter()
   const { data: session, update: updateSession } = useSession()
-  
   const [selected, setSelected] = useState<"client" | "author" | null>(null);
-  const [isLoading, setIsLoading] = useState(false)
   const [errorProtocol, setErrorProtocol] = useState<string | null>(null)
+  const [executeUpdateRole, { loading: isLoading }] = useMutation(UpdateUserRoleDocument)
 
   const roles = [
     {
@@ -52,49 +42,33 @@ export function RoleSelection({ email }: RoleSelectionProps) {
       return
     }
 
-    setIsLoading(true)
     setErrorProtocol(null)
     
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...((session as any)?.accessToken ? { "Authorization": `Bearer ${(session as any).accessToken}` } : {})
-        },
-        body: JSON.stringify({
-          query: UPDATE_USER_ROLE_MUTATION,
-          variables: {
-            input: { email, role }
-          }
-        }),
+      const { data } = await executeUpdateRole({
+        variables: {
+          input: { email, role }
+        }
       })
 
-      const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message || "Internal server error occurred")
+      const responseData = data?.updateUserRole
 
-      const data = result.data?.updateUserRole
-
-      if (data?.success) {
+      if (responseData?.success) {
         if (session) {
           await updateSession({ 
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
+            accessToken: responseData.accessToken,
+            refreshToken: responseData.refreshToken,
             roles: role === "author" ? ["client", "author"] : ["client"],
             isNewUser: false 
           })
         }
-
-        // Прямой редирект на страницу ожидания подтверждения почты
         router.push(`/mail/verify-email?email=${encodeURIComponent(email)}`)
       } else {
-        setErrorProtocol(data?.message || "Role configuration mutation failed")
+        setErrorProtocol(responseData?.message || "Role configuration mutation failed")
       }
     } catch (error: any) {
       console.error("Role update failure:", error)
       setErrorProtocol(error.message || "Critical connection failure")
-    } finally {
-      setIsLoading(false)
     }
   }
 

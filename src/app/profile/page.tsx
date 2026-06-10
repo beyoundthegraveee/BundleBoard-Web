@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useSession } from "next-auth/react"
 import { Loader2, Settings, LogOut, Terminal, Plus, BarChart3 } from "lucide-react"
 import Link from 'next/link'
@@ -11,112 +11,48 @@ import { BillingLedger } from '@/components/BillingLedger'
 import CommentsSection from '@/components/CommentSection'
 import { DeployAssetModal } from '@/components/DeployAssetModal'
 import { InventoryItemCard } from '@/components/InventoryItemCard'
-
-const GET_USER_PROFILE = `
-  query GetUserProfile {
-    getUserProfile {
-      id
-      username
-      email
-      avatarUrl
-      status
-      roles
-      authoredCollections {
-        id
-        name
-        price
-        description
-        galleryImages { filePath }
-      }
-      purchases {
-        id
-        amount
-        currency
-        status
-        createdAt
-        items {
-          id
-          snapshotPrice
-          asset {
-            id
-            name
-            galleryImages { filePath fileName }
-          }
-        }
-      }
-    }
-  }
-`;
+import { useQuery } from '@apollo/client/react'
+import { GetUserProfileDocument } from '@/graphql/generated'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
-  const [userData, setUserData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const { terminateSession } = useAuthActions()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data, loading: isProfileLoading, error, refetch } = useQuery(GetUserProfileDocument, {
+    skip: status !== "authenticated",
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const fetchUser = async () => {
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${(session as any)?.accessToken}` 
-        },
-        body: JSON.stringify({ query: GET_USER_PROFILE }),
-      })
-      const result = await response.json()
-      
-      if (!result.errors && result.data?.getUserProfile) {
-        const rawProfile = result.data.getUserProfile;
+  const userData = data?.getUserProfile;
 
-        if (rawProfile.authoredCollections) {
-          rawProfile.authoredCollections = rawProfile.authoredCollections.map((col: any) => ({
-            ...col,
-            previewImage: col.galleryImages?.[0] || null
-          }));
-        }
-
-        if (rawProfile.purchases) {
-          rawProfile.purchases = rawProfile.purchases.map((purchase: any) => ({
-            ...purchase,
-            items: purchase.items?.map((item: any) => ({
-              ...item,
-              asset: {
-                ...item.asset,
-                previewImage: item.asset?.galleryImages?.[0] || null
-              }
-            }))
-          }));
-        }
-
-        setUserData(rawProfile)
-      }
-    } catch (err) {
-      console.error("PROFILE_FETCH_FAILURE:", err)
-    } finally {
-      setLoading(false)
-    }
+  if (status === "loading" || isProfileLoading) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans">
+        <Loader2 className="animate-spin text-primary mb-4 stroke-[1.5]" size={36} />
+        <span className="font-medium uppercase tracking-[0.2em] text-[11px] text-muted-foreground">Verifying access rights...</span>
+      </div>
+    )
   }
 
-  useEffect(() => {
-    if (status === "authenticated") fetchUser()
-  }, [session, status])
-
-  if (loading || status === "loading") return (
-    <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans">
-      <Loader2 className="animate-spin text-primary mb-4 stroke-[1.5]" size={36} />
-      <span className="font-medium uppercase tracking-[0.2em] text-[11px] text-muted-foreground">Verifying access rights...</span>
-    </div>
-  )
+  if (error) {
+    return (
+       <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans text-destructive">
+         <p>Critical System Error: {error.message}</p>
+       </div>
+    )
+  }
 
   const isAuthor = userData?.roles?.includes("author")
-  const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr.amount), 0).toFixed(2) || "0.00"
-  const totalAssetsCount = userData?.purchases?.reduce((acc: number, curr: any) => acc + (curr.items?.length || 0), 0) || 0
+  const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
+  let totalAssetsCount = 0;
+  if (userData?.purchases) {
+    userData.purchases.forEach((purchase: any) => {
+      totalAssetsCount += purchase?.items?.length || 0;
+    });
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-12 relative">
-      
       <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5 text-primary">
@@ -133,11 +69,9 @@ export default function ProfilePage() {
         
         <div className="lg:col-span-4 space-y-6">
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
-            
             <ProfileAvatar 
-              userData={userData} 
-              accessToken={(session as any)?.accessToken} 
-              onUpdate={fetchUser} 
+              userData={userData || null}
+              onUpdate={() => refetch()} 
             />
             
             <div className="space-y-1 overflow-hidden mb-6">
@@ -164,10 +98,10 @@ export default function ProfilePage() {
               <div className="flex justify-between"><span>Authority:</span> <span className="text-foreground">{isAuthor ? "Platform Partner" : "Standard Client"}</span></div>
             </div>
           </div>
-        </div>
-
-        <div className="lg:col-span-8 space-y-10">
           
+          {userData?.id && <CommentsSection targetId={userData.id} />}
+        </div>
+        <div className="lg:col-span-8 space-y-10">
           {isAuthor && (
             <section className="border border-border/60 p-6 bg-card rounded-none shadow-md">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4">
@@ -196,7 +130,13 @@ export default function ProfilePage() {
                 {userData?.authoredCollections && userData.authoredCollections.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {userData.authoredCollections.map((col: any) => (
-                      <InventoryItemCard key={col.id} collection={col} accessToken={(session as any)?.accessToken || ""} onRefreshNeeded={fetchUser} />
+                      col ? (
+                        <InventoryItemCard 
+                          key={col.id} 
+                          collection={col} 
+                          onRefreshNeeded={() => refetch()} 
+                        />
+                      ) : null
                     ))}
                   </div>
                 ) : (
@@ -207,13 +147,9 @@ export default function ProfilePage() {
               </div>
             </section>
           )}
-
-          <PurchasedVault purchases={userData?.purchases} totalAssetsCount={totalAssetsCount} />
+          <PurchasedVault purchases={userData?.purchases as any} totalAssetsCount={totalAssetsCount} />
           
-          <BillingLedger purchases={userData?.purchases} totalSpent={totalSpent} />
-          
-          <CommentsSection targetId={userData?.id} />
-
+          <BillingLedger purchases={userData?.purchases as any} totalSpent={totalSpent} />
         </div>
       </div>
 
@@ -221,9 +157,7 @@ export default function ProfilePage() {
         <DeployAssetModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          userId={userData?.id || ""}
-          accessToken={(session as any)?.accessToken || ""}
-          onSuccess={fetchUser} 
+          onSuccess={() => refetch()} 
         />
       )}
     </main>

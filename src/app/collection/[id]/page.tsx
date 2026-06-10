@@ -5,83 +5,33 @@ import { useParams, useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft } from "lucide-react"
 import CollectionDetails from '@/components/CollectionDetails'
 import AuthorSidebar from '@/components/AuthorSidebar'
-import { useSession } from 'next-auth/react'
 import CommentsSection from '@/components/CommentSection'
+import { useQuery } from '@apollo/client/react'
+import { GetCollectionDocument } from '@/graphql/generated'
 
 export default function CollectionPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: session } = useSession()
-  const [collection, setCollection] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [errorLog, setErrorLog] = useState<string | null>(null)
+  const collectionId = Array.isArray(id) ? id[0] : id || "";
   const [isInCart, setIsInCart] = useState(false)
+  
+  const { data, loading, error } = useQuery(GetCollectionDocument, {
+    variables: { id: collectionId },
+    skip: !collectionId,
+    fetchPolicy: 'cache-and-network'
+  });
+
+  const collection = data?.getCollectionById;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && collectionId) {
       const savedCart = localStorage.getItem('bundleboard_cart')
       if (savedCart) {
         const items = JSON.parse(savedCart)
-        setIsInCart(items.some((item: any) => item.id === id))
+        setIsInCart(items.some((item: any) => item.id === collectionId))
       }
     }
-  }, [id])
-
-  useEffect(() => {
-    const fetchCollection = async () => {
-      try {
-        setErrorLog(null)
-        const headers: HeadersInit = { "Content-Type": "application/json" }
-        if ((session as any)?.accessToken) {
-          headers["Authorization"] = `Bearer ${(session as any).accessToken}`
-        }
-
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql", {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify({
-            query: `
-              query GetCollection($id: ID!) {
-                getCollectionById(id: $id) {
-                  id
-                  name
-                  description
-                  price
-                  likesCount
-                  isLiked
-                  videoTutorialUrl
-                  author {
-                    username
-                    bio
-                    rating
-                    totalSales
-                    socialLinks { platform url }
-                    avatarUrl
-                  }
-                  galleryImages { filePath } 
-                  mediaResource { fileName fileSize mimeType provider }
-                }
-              }
-            `,
-            variables: { id }
-          }),
-        })
-        const result = await response.json()
-        
-        if (result.errors) {
-          throw new Error(result.errors[0].message || "Failed to fetch collection data")
-        }
-
-        setCollection(result.data?.getCollectionById)
-      } catch (err: any) {
-        console.error("Catalog fetch failure:", err)
-        setErrorLog(err.message || "Stream disconnected")
-      } finally {
-        if (id) setLoading(false)
-      }
-    }
-    if (id) fetchCollection()
-  }, [id, session])
+  }, [collectionId])
 
   const handleAddToCart = (item: { id: string; name: string; price: number; category: string; previewImage: string }) => {
     if (typeof window !== 'undefined') {
@@ -104,9 +54,9 @@ export default function CollectionPage() {
     </div>
   )
 
-  if (!collection) return (
+  if (error || !collection) return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center font-sans font-semibold uppercase text-xs tracking-widest text-destructive bg-background">
-      Error: Asset catalog node not found {errorLog && `// ${errorLog}`}
+      Error: Asset catalog node not found {error && `// ${error.message}`}
     </div>
   )
 
@@ -130,12 +80,11 @@ export default function CollectionPage() {
           Back to catalog
         </button>
         <div className="text-[10px] font-medium opacity-40 uppercase tracking-widest text-muted-foreground">
-          Catalog Item Reference // {id}
+          Catalog Item Reference // {collectionId}
         </div>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
-        
         <div className="lg:col-span-8 space-y-12">
           <CollectionDetails 
             collection={collection} 
@@ -146,29 +95,13 @@ export default function CollectionPage() {
 
         <div className="lg:col-span-4">
           <div className="sticky top-28 space-y-6">
-             
              <AuthorSidebar author={collection.author} />
-
-             <div className="border border-border/40 p-5 bg-card/50 text-[11px] font-medium uppercase text-muted-foreground space-y-2 rounded-none tracking-wider shadow-sm">
-               <div className="flex justify-between border-b border-border/20 pb-1.5">
-                 <span>Transmission Mode</span>
-                 <span className="text-foreground font-semibold">Encrypted</span>
-               </div>
-               <div className="flex justify-between border-b border-border/20 pb-1.5">
-                 <span>Format Verification</span>
-                 <span className="text-foreground font-semibold">Passed</span>
-               </div>
-               <div className="flex justify-between">
-                 <span>License Standard</span>
-                 <span className="text-foreground font-semibold">Commercial 1.0</span>
-               </div>
-             </div>
-             
-             <CommentsSection targetId={id as string} />
-
+             <CommentsSection 
+               targetId={collectionId} 
+               authorUsername={collection.author?.username} 
+             />
           </div>
         </div>
-
       </div>
     </main>
   )

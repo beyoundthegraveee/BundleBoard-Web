@@ -3,21 +3,11 @@
 import React from 'react'
 import Link from 'next/link'
 import { Layers } from "lucide-react"
+import { FALLBACK_IMAGE } from '@/lib/constants'
+import { GetCollectionsByTagQuery } from '@/graphql/generated'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
-
-export interface CollectionNode {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  author: {
-    username: string;
-  };
-  previewImage: {
-    filePath: string;
-  };
-}
+type CollectionNode = GetCollectionsByTagQuery['getCollectionsByTag']['collections'][number];
 
 interface CategoryCollectionGridProps {
   collections: CollectionNode[];
@@ -39,10 +29,10 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 font-sans animate-in fade-in duration-300">
       {collections.map((item) => {
-        const fileName = item.previewImage?.filePath || "";
+        const fileName = item.galleryImages?.[0]?.filePath || "";
         const imageUrl = fileName.startsWith('http') 
           ? fileName 
-          : `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}`;
+          : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
         return (
           <Link 
@@ -52,7 +42,7 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
           >
             <div className="aspect-video relative overflow-hidden bg-[#111013] border border-white/[0.02]">
               <img 
-                src={imageUrl || "/placeholder.png"} 
+                src={imageUrl || FALLBACK_IMAGE} 
                 alt={item.name}
                 className="object-cover w-full h-full opacity-70 group-hover:opacity-100 transition-all duration-500 block"
                 loading="lazy"
