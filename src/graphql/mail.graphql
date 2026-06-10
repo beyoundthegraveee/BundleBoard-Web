@@ -11,3 +11,11 @@ mutation VerifyEmail($token: String!) {
     message
   }
 }
+
+mutation RequestEmailChange($newEmail: String!) {
+  requestEmailChange(newEmail: $newEmail) {
+    success
+    message
+    attemptsLeft
+  }
+}
