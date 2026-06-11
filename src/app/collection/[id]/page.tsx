@@ -8,6 +8,7 @@ import AuthorSidebar from '@/components/AuthorSidebar'
 import CommentsSection from '@/components/CommentSection'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
+import { AuroraBackground } from '@/components/ui/aurora-background'
 
 export default function CollectionPage() {
   const { id } = useParams()
@@ -61,16 +62,12 @@ export default function CollectionPage() {
   )
 
   return (
-    <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-16 relative">
+    /* Добавили "justify-start items-stretch", чтобы контент прижался к верху 
+      и развивался вниз естественным образом, не залезая под фиксированный Header
+    */
+    <AuroraBackground className="text-foreground font-sans p-6 md:p-10 lg:p-16 justify-start items-stretch">
       
-      <div 
-        className="absolute inset-0 z-0 opacity-[0.015] pointer-events-none" 
-        style={{ 
-          backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`, 
-          backgroundSize: '32px 32px' 
-        }} 
-      />
-
+      {/* Навигационная панель */}
       <nav className="mb-14 border-b border-border/40 pb-5 flex justify-between items-center relative z-10">
         <button 
           onClick={() => router.back()}
@@ -84,6 +81,7 @@ export default function CollectionPage() {
         </div>
       </nav>
 
+      {/* Основной контент страницы */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
         <div className="lg:col-span-8 space-y-12">
           <CollectionDetails 
@@ -103,6 +101,7 @@ export default function CollectionPage() {
           </div>
         </div>
       </div>
-    </main>
+      
+    </AuroraBackground>
   )
 }

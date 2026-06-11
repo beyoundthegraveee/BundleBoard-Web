@@ -3,6 +3,8 @@
 import { CollectionGrid } from "@/components/CollectionGrid";
 import { ArrowRight, Activity, Grid3X3, ExternalLink } from "lucide-react";
 import { useSession } from "next-auth/react";
+// Импортируем наши стилизованные коробки
+import { Boxes } from "@/components/ui/background-boxes";
 
 export default function Home() {
   const { status } = useSession();
@@ -10,6 +12,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground antialiased font-sans">
 
+      {/* Глобальная статическая сетка (оставляем для структуры нижних блоков) */}
       <div 
         className="absolute inset-0 z-0 opacity-[0.025] pointer-events-none" 
         style={{ 
@@ -18,6 +21,7 @@ export default function Home() {
         }} 
       />
 
+      {/* Верхний статус-бар */}
       <div className="w-full bg-foreground text-background py-2.5 border-b border-border/10 relative z-10 text-[11px] font-medium uppercase tracking-wider">
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -31,8 +35,14 @@ export default function Home() {
         </div>
       </div>
 
-      <section className="relative border-b border-border/60 pt-28 pb-24 bg-background/50 backdrop-blur-sm onyx-glow">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 relative">
+      {/* HERO СЕКЦИЯ: Добавили overflow-hidden, чтобы сетка не ломала верстку */}
+      <section className="relative border-b border-border/60 pt-28 pb-24 bg-background/50 backdrop-blur-sm onyx-glow overflow-hidden">
+        
+        {/* Вставляем интерактивные коробки на задний план секции */}
+        <Boxes />
+
+        {/* Контент-контейнер: Добавили z-10, чтобы текст был поверх коробок и оставался читаемым */}
+        <div className="max-w-7xl mx-auto px-6 md:px-8 relative z-10">
           
           <div className="absolute -top-4 -left-1 w-1.5 h-1.5 bg-foreground" />
           <div className="absolute -top-4 -right-1 w-1.5 h-1.5 bg-foreground" />
@@ -66,7 +76,6 @@ export default function Home() {
                   <span className="text-xs font-bold uppercase tracking-wide">EU CLUSTER</span>
                 </div>
                 
-                {/* 3. СКРЫВАЕМ КНОПКУ, ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ АВТОРИЗОВАН */}
                 {status !== "authenticated" && (
                   <div className="pt-6">
                     <button className="group w-full h-12 bg-foreground text-background hover:bg-primary hover:text-white flex items-center justify-center gap-2 font-semibold transition-all duration-200 text-xs uppercase tracking-widest rounded-none">
@@ -88,6 +97,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Секция инвентаря */}
       <section className="relative py-20 border-t border-white/5 z-10">
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-16 flex items-center justify-between relative">
           <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-foreground" />
@@ -103,6 +113,7 @@ export default function Home() {
         <CollectionGrid />
       </section>
 
+      {/* Футер сайта */}
       <footer className="bg-foreground text-background pt-20 pb-12 relative z-20 border-t border-border/10">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
