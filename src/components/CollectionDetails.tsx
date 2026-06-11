@@ -1,9 +1,10 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
 import LikeButton from '@/components/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";
@@ -15,41 +16,26 @@ const getFullImageUrl = (path: string | undefined) => {
 };
 
 const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
-  const [rotateY, setRotateY] = useState(0);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const box = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - box.left; 
-    const centerX = box.width / 2;
-    const angleY = ((x - centerX) / centerX) * 15; 
-    setRotateY(angleY);
-  };
-
-  const handleMouseLeave = () => {
-    setRotateY(0);
-  };
-
   return (
-    <div 
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        transform: `rotateY(${rotateY}deg)`,
-        transformStyle: 'preserve-3d',
-      }}
-      className="relative border border-border/60 bg-card aspect-video w-full overflow-hidden rounded-none shadow-xl transition-transform duration-100 ease-out group"
+    <CardContainer 
+      containerClassName="py-0 w-full" 
+      className="w-full"
     >
-      <img 
-        src={src} 
-        alt={alt} 
-        className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
-        style={{ transform: 'translateZ(20px)' }} 
-        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
-      />
-    </div>
+      <CardBody className="relative border border-border/60 bg-card aspect-video w-full h-auto overflow-hidden rounded-none shadow-xl group/card">
+        {/* Картинка, которая "вылетает" вперед на 40px при наведении */}
+        <CardItem 
+          translateZ="40" 
+          className="w-full h-full"
+        >
+          <img 
+            src={src} 
+            alt={alt} 
+            className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
+            onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
+          />
+        </CardItem>
+      </CardBody>
+    </CardContainer>
   );
 };
 
@@ -146,18 +132,18 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
               </div>
             </div>
             <button 
-            onClick={handleAddToCartClick}
-            disabled={localIsInCart}
-            className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
-              localIsInCart
-                ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
-                : 'bg-primary hover:opacity-90'
-            }`}
+              onClick={handleAddToCartClick}
+              disabled={localIsInCart}
+              className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
+                localIsInCart
+                  ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
+                  : 'bg-primary hover:opacity-90'
+              }`}
             >
-            <ShoppingCart size={12} />
-            {localIsInCart ? "In Cart" : "Add to Cart"}
-            <span className="md:hidden ml-auto">${price.toFixed(2)}</span>
-          </button>
+              <ShoppingCart size={12} />
+              {localIsInCart ? "In Cart" : "Add to Cart"}
+              <span className="md:hidden ml-auto">${price.toFixed(2)}</span>
+            </button>
           </div>
         </div>
 
@@ -173,7 +159,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             Visual Payload ({galleryImages.length})
           </div>
           
-          <div className="w-full perspective-[1000px]">
+          <div className="w-full">
             <div className={`grid gap-6 ${galleryImages.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 max-w-2xl'}`}>
               {galleryImages.map((img, index) => (
                 <TiltCard 

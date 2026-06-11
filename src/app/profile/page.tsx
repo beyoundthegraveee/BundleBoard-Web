@@ -13,6 +13,7 @@ import { DeployAssetModal } from '@/components/DeployAssetModal'
 import { InventoryItemCard } from '@/components/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
+import { AuroraBackground } from '@/components/ui/aurora-background'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
@@ -52,10 +53,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-12 relative">
-      
-      {/* 🛠️ ОБНОВЛЕННАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ С ШРИФТОМ SYNCCOPATE ДЛЯ USER PROFILE */}
-      <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+    <AuroraBackground className="p-6 md:p-10 lg:p-12 relative justify-start items-stretch">
+      <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative z-10">
         <div>
           <div className="flex items-center gap-2 mb-2 text-primary">
             <span className="h-1.5 w-1.5 bg-primary rounded-none animate-pulse" />
@@ -69,9 +68,8 @@ export default function ProfilePage() {
         </div>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
         
-        {/* ЛЕВАЯ КОЛОНКА (Сайдбар профиля) */}
         <div className="lg:col-span-4 space-y-6">
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
             <ProfileAvatar 
@@ -94,7 +92,7 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <div className="border border-border/40 bg-muted/20 p-4 rounded-none text-[11px] tracking-wide text-muted-foreground uppercase">
+          <div className="border border-border/40 bg-muted/20 p-4 rounded-none text-[11px] tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground border-b border-border/30 pb-2 mb-2">
               <Terminal size={12} /> System Registry
             </div>
@@ -173,6 +171,6 @@ export default function ProfilePage() {
           onSuccess={() => refetch()} 
         />
       )}
-    </main>
+    </AuroraBackground>
   )
 }
