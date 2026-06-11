@@ -20,6 +20,8 @@ mutation UpdateMe($input: UpdateUserRequest!) {
     username
     avatarUrl
     updatedAt
+    accessToken
+    refreshToken
   }
 }
 
