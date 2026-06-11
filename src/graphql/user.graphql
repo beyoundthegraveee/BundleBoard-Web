@@ -14,6 +14,28 @@ mutation UpdateAvatar($input: UpdateAvatarRequest!) {
   }
 }
 
+mutation UpdateMe($input: UpdateUserRequest!) {
+  updateMe(input: $input) {
+    id
+    username
+    avatarUrl
+    updatedAt
+    accessToken
+    refreshToken
+  }
+}
+
+query GetMe {
+  me {
+    id
+    username
+    email
+    avatarUrl
+    roles
+    status
+  }
+}
+
 query GetUserProfile {
   getUserProfile {
     id

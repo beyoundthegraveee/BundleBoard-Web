@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Terminal, Plus, BarChart3 } from "lucide-react"
+import { Loader2, Settings, LogOut, Terminal, Plus, BarChart3, Cpu } from "lucide-react"
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
@@ -53,20 +53,25 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-10 lg:p-12 relative">
+      
+      {/* 🛠️ ОБНОВЛЕННАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ С ШРИФТОМ SYNCCOPATE ДЛЯ USER PROFILE */}
       <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5 text-primary">
-            <span className="h-2 w-2 bg-primary rounded-none" />
+          <div className="flex items-center gap-2 mb-2 text-primary">
+            <span className="h-1.5 w-1.5 bg-primary rounded-none animate-pulse" />
             <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Access Scope: {isAuthor ? "Partner Privileges Enabled" : "Standard Client Account"}
             </span>
           </div>
-          <h1 className="text-3xl font-bold uppercase tracking-tight text-foreground">Node Control</h1>
+          <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight font-display text-foreground">
+            User Profile
+          </h1>
         </div>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
+        {/* ЛЕВАЯ КОЛОНКА (Сайдбар профиля) */}
         <div className="lg:col-span-4 space-y-6">
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
             <ProfileAvatar 
@@ -99,15 +104,21 @@ export default function ProfilePage() {
             </div>
           </div>
           
+          {/* Блок комментариев */}
           {userData?.id && <CommentsSection targetId={userData.id} />}
         </div>
+
+        {/* ПРАВАЯ КОЛОНКА (Контентные модули) */}
         <div className="lg:col-span-8 space-y-10">
           {isAuthor && (
             <section className="border border-border/60 p-6 bg-card rounded-none shadow-md">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4">
-                <div>
-                  <h3 className="text-xl font-bold uppercase tracking-wider text-foreground">Author Station</h3>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mt-0.5">Deploy and monitor studio assets</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Cpu size={18} className="text-primary stroke-[1.8]" />
+                    <h3 className="text-xl font-bold uppercase tracking-wider font-display text-foreground">Author Station</h3>
+                  </div>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground">Deploy and monitor studio assets</p>
                 </div>
                 <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 font-semibold text-xs uppercase hover:opacity-90 transition-opacity rounded-none tracking-wider">
                   <Plus size={14} /> Deploy Asset
@@ -147,10 +158,12 @@ export default function ProfilePage() {
               </div>
             </section>
           )}
+
           <PurchasedVault purchases={userData?.purchases as any} totalAssetsCount={totalAssetsCount} />
           
           <BillingLedger purchases={userData?.purchases as any} totalSpent={totalSpent} />
         </div>
+
       </div>
 
       {isAuthor && (

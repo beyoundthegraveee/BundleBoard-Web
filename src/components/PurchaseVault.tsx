@@ -19,36 +19,41 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
   }, [purchases])
 
   return (
-    <section className="border border-border/60 bg-card p-4 rounded-none shadow-md space-y-4 font-sans text-foreground">
-      <div className="flex items-center justify-between border-b border-border/30 pb-2.5">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-foreground">
-          <FolderLock size={12} className="text-primary" /> Core Vault Directory
+    <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-6 font-sans text-foreground">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
+        <div className="flex items-center gap-2.5">
+          <FolderLock size={18} className="text-primary stroke-[1.8]" />
+          <h3 className="text-xl font-bold uppercase tracking-wider font-display text-foreground">
+            Core Vault Directory
+          </h3>
         </div>
-        <span className="text-[9px] font-bold bg-muted px-1.5 py-0.5 border border-border/40 text-muted-foreground font-mono">
+        <span className="text-[10px] font-bold bg-muted px-2 py-0.5 border border-border/40 text-muted-foreground font-mono rounded-none tracking-wider">
           {totalAssetsCount} NODES
         </span>
       </div>
 
       {totalAssetsCount > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {/* Компактный список-превью высокой плотности */}
           <div className="divide-y divide-border/20 border-b border-border/20">
             {previewItems.map((item: any, idx: number) => {
               if (!item.asset) {
                 return (
-                  <div key={item.id || idx} className="py-2.5 flex items-center gap-3 opacity-60">
-                    <div className="w-8 h-8 bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
-                      <AlertTriangle size={12} className="text-destructive" />
+                  <div key={item.id || idx} className="py-3 flex items-center gap-4 opacity-60">
+                    <div className="w-10 h-10 bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
+                      <AlertTriangle size={14} className="text-destructive" />
                     </div>
-                    <div className="min-w-0 flex-1 text-[11px] font-medium text-destructive uppercase tracking-tight">Offline Node</div>
+                    <div className="min-w-0 flex-1 text-xs font-bold text-destructive uppercase tracking-wider">
+                      Offline Node
+                    </div>
                   </div>
                 )
               }
 
               return (
-                <div key={item.id || idx} className="py-2.5 flex items-center justify-between gap-3 group">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 bg-background border border-border/40 shrink-0 overflow-hidden">
+                <div key={item.id || idx} className="py-3 flex items-center justify-between gap-4 group">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 bg-background border border-border/40 shrink-0 overflow-hidden">
                       <img 
                         src={item.asset.previewImage?.filePath || FALLBACK_IMAGE} 
                         alt="" 
@@ -78,7 +83,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
           </Link>
         </div>
       ) : (
-        <div className="text-center py-6 border border-dashed border-border/40 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
+        <div className="text-center py-8 border border-dashed border-border/40 bg-background text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
           No allocated vault assets.
         </div>
       )}
