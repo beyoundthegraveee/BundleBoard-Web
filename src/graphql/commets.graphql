@@ -11,6 +11,18 @@ query GetCommentsByCollectionId($collectionId: ID!) {
   }
 }
 
+query GetCommentsByUserId($userId: ID!) {
+  getCommentsByUserId(userId: $userId) {
+    id
+    content
+    createdAt
+    collection {
+      id
+      name
+    }
+  }
+}
+
 mutation AddComment($input: AddCommentRequest!) {
   addComment(input: $input) {
     success
@@ -27,6 +39,8 @@ mutation AddComment($input: AddCommentRequest!) {
     }
   }
 }
+
+
 
 mutation DeleteComment($id: ID!) {
   deleteComment(id: $id)

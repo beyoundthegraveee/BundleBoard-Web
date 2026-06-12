@@ -8,7 +8,7 @@ import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { PurchasedVault } from '@/components/PurchaseVault'
 import { BillingLedger } from '@/components/BillingLedger'
-import CommentsSection from '@/components/CommentSection'
+import UserCommentsLog from '@/components/UserCommentsLog'
 import { DeployAssetModal } from '@/components/DeployAssetModal'
 import { InventoryItemCard } from '@/components/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
@@ -101,12 +101,10 @@ export default function ProfilePage() {
               <div className="flex justify-between"><span>Authority:</span> <span className="text-foreground">{isAuthor ? "Platform Partner" : "Standard Client"}</span></div>
             </div>
           </div>
-          
-          {/* Блок комментариев */}
-          {userData?.id && <CommentsSection targetId={userData.id} />}
+
+          {userData?.id && <UserCommentsLog userId={userData.id} />}
         </div>
 
-        {/* ПРАВАЯ КОЛОНКА (Контентные модули) */}
         <div className="lg:col-span-8 space-y-10">
           {isAuthor && (
             <section className="border border-border/60 p-6 bg-card rounded-none shadow-md">
