@@ -53,7 +53,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <AuroraBackground className="p-6 md:p-10 lg:p-12 relative justify-start items-stretch">
+    // 💡 ИЗМЕНЕНИЯ ЗДЕСЬ: добавлено min-h-[calc(100vh-5rem)], h-full и pb-24
+    <AuroraBackground className="p-6 md:p-10 lg:p-12 pb-24 min-h-[calc(100vh-5rem)] h-full relative justify-start items-stretch">
       <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative z-10">
         <div>
           <div className="flex items-center gap-2 mb-2 text-primary">
@@ -76,11 +77,6 @@ export default function ProfilePage() {
               userData={userData || null}
               onUpdate={() => refetch()} 
             />
-            
-            <div className="space-y-1 overflow-hidden mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-tight text-foreground truncate">{userData?.username || "Guest Node"}</h2>
-              <p className="text-[11px] font-normal text-muted-foreground truncate lowercase">{userData?.email}</p>
-            </div>
 
             <div className="space-y-2 border-t border-border/30 pt-4">
               <Link href="/settings" className="flex items-center justify-between w-full border border-border/60 bg-background text-foreground p-3 hover:bg-accent text-xs font-semibold uppercase tracking-wider transition-colors rounded-none group">
@@ -91,16 +87,6 @@ export default function ProfilePage() {
               </button>
             </div>
           </section>
-
-          <div className="border border-border/40 bg-muted/20 p-4 rounded-none text-[11px] tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground border-b border-border/30 pb-2 mb-2">
-              <Terminal size={12} /> System Registry
-            </div>
-            <div className="space-y-1.5 font-medium">
-              <div className="flex justify-between"><span>Status:</span> <span className="text-foreground">{userData?.status}</span></div>
-              <div className="flex justify-between"><span>Authority:</span> <span className="text-foreground">{isAuthor ? "Platform Partner" : "Standard Client"}</span></div>
-            </div>
-          </div>
 
           {userData?.id && <UserCommentsLog userId={userData.id} />}
         </div>

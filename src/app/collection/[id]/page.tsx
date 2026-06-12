@@ -62,12 +62,8 @@ export default function CollectionPage() {
   )
 
   return (
-    /* Добавили "justify-start items-stretch", чтобы контент прижался к верху 
-      и развивался вниз естественным образом, не залезая под фиксированный Header
-    */
-    <AuroraBackground className="text-foreground font-sans p-6 md:p-10 lg:p-16 justify-start items-stretch">
-      
-      {/* Навигационная панель */}
+    // 💡 ИЗМЕНЕНИЯ ЗДЕСЬ: добавлены min-h-[calc(100vh-5rem)], h-full и увеличен pb-24 для правильного скроллинга
+    <AuroraBackground className="text-foreground font-sans p-6 md:p-10 lg:p-16 pb-24 min-h-[calc(100vh-5rem)] h-full justify-start items-stretch">
       <nav className="mb-14 border-b border-border/40 pb-5 flex justify-between items-center relative z-10">
         <button 
           onClick={() => router.back()}
@@ -81,7 +77,6 @@ export default function CollectionPage() {
         </div>
       </nav>
 
-      {/* Основной контент страницы */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
         <div className="lg:col-span-8 space-y-12">
           <CollectionDetails 
