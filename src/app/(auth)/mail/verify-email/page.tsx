@@ -1,22 +1,19 @@
 "use client"
 
+import React, { useState } from 'react'
 import { MailCheck, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-
-// Импортируем хук Apollo
-import { useResendVerificationMutation } from "@/graphql/generated"
+import { useMutation } from "@apollo/client/react"
+import { ResendVerificationDocument } from "@/graphql/generated"
 
 export default function VerifyRequestPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
-
-  // Инициализируем мутацию
-  const [executeResend, { loading: isResending }] = useResendVerificationMutation()
+  const [executeResend, { loading: isResending }] = useMutation(ResendVerificationDocument)
 
   const handleResendEmail = async () => {
     if (!email) {
@@ -27,14 +24,9 @@ export default function VerifyRequestPage() {
     setMessage(null)
 
     try {
-      // Выполняем мутацию
-      const { data, errors } = await executeResend({
+      const { data } = await executeResend({
         variables: { email: email }
       });
-
-      if (errors) {
-        throw new Error(errors[0].message)
-      }
 
       const resultData = data?.resendVerificationEmail
 

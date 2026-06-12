@@ -8,6 +8,7 @@ import { ApolloProvider } from "@apollo/client/react";
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
+  
   const cache = useMemo(() => new InMemoryCache({
     typePolicies: {
       AuthorShortResponse: {
@@ -30,12 +31,43 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
-    const authLink = new SetContextLink((prevContext) => {
+    // Передаем два аргумента: дескриптор операции и объект предыдущего контекста
+    const authLink = new SetContextLink((operation: any, prevContext: any) => {
+      const prevHeaders = prevContext.headers || {};
+
+      // 1. Автоматическая проверка: отключаем заголовки для публичных страниц
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        
+        const isPublicPath = [
+          "/login",
+          "/register",
+          "/mail/verify-email",
+          "/mail/verify",
+          "/forgot-password",
+          "/select-role"
+        ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
+
+        if (isPublicPath) {
+          return {
+            headers: prevHeaders,
+          };
+        }
+      }
+
+      // 2. Ручная проверка: если у мутации/квери выставлен контекст context: { skipAuth: true }
+      if (prevContext.skipAuth) {
+        return {
+          headers: prevHeaders,
+        };
+      }
+
+      // Если страница приватная — подставляем JWT токен из сессии NextAuth
       const token = (session as any)?.accessToken;
       
       return {
         headers: {
-          ...prevContext.headers,
+          ...prevHeaders,
           authorization: token ? `Bearer ${token}` : "",
         },
       };

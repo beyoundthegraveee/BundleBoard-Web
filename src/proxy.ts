@@ -18,6 +18,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!register|login|mail/verify-email|mail/verify|select-role|api/auth|_next/static|_next/image|favicon.ico).*)'
+    '/((?!register|login|mail/verify-email|mail/verify|forgot-password|password/reset-password/*|select-role|api/auth|_next/static|_next/image|favicon.ico).*)'
   ],
 };
