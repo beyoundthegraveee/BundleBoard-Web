@@ -2,31 +2,59 @@
 
 import React, { useState } from 'react'
 import { Terminal, Send, User } from "lucide-react"
+import { useSession } from 'next-auth/react'
+import { useQuery, useMutation } from '@apollo/client/react'
+import { GetCommentsByCollectionIdDocument, AddCommentDocument } from '@/graphql/generated' 
 
 interface CommentsSectionProps {
   targetId: string;
   authorUsername?: string; 
 }
 
+const formatTime = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 export default function CommentsSection({ targetId, authorUsername }: CommentsSectionProps) {
   const [comment, setComment] = useState("")
-  const [comments, setComments] = useState([
-    { id: 1, author: "System", text: "Node initialized. Awaiting transmissions.", time: "System Log" },
-    { id: 2, author: "Kiryl Kurzau", text: "Welcome to the asset node pack. Drop a log entry below.", time: "2 hours ago" }
-  ])
+  const { data: session } = useSession()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { data, loading, refetch } = useQuery(GetCommentsByCollectionIdDocument, {
+    variables: { collectionId: targetId },
+    fetchPolicy: "cache-and-network" 
+  });
+
+  const [addComment, { loading: isSubmitting }] = useMutation(AddCommentDocument, {
+    onCompleted: () => {
+      setComment(""); 
+      refetch();      
+    },
+    onError: (err) => {
+      console.error("Error adding comment:", err.message);
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!comment.trim()) return
+    if (!comment.trim() || isSubmitting || !session) return
 
-    setComments(prev => [...prev, { 
-      id: Date.now(), 
-      author: "Current User", 
-      text: comment, 
-      time: "Just now" 
-    }])
-    setComment("")
+    await addComment({
+      variables: {
+        input: {
+          collectionId: targetId,
+          content: comment
+        }
+      }
+    });
   }
+
+  const commentsList = data?.getCommentsByCollectionId || [];
 
   return (
     <section className="border border-border/60 bg-card p-6 rounded-none shadow-md flex flex-col w-full space-y-6 text-foreground">
@@ -40,8 +68,14 @@ export default function CommentsSection({ targetId, authorUsername }: CommentsSe
       </div>
       
       <div className="space-y-4 max-h-64 overflow-y-auto font-mono text-[11px] pr-2">
-        {comments.map((c) => {
-          const isCollectionAuthor = authorUsername && c.author.toLowerCase() === authorUsername.toLowerCase();
+        {loading && <div className="text-muted-foreground opacity-70">Loading logs...</div>}
+        
+        {!loading && commentsList.length === 0 && (
+          <div className="text-muted-foreground opacity-70">No entries yet. Be the first to drop a log.</div>
+        )}
+
+        {commentsList.map((c) => {
+          const isCollectionAuthor = authorUsername && c.user.username.toLowerCase() === authorUsername.toLowerCase();
 
           return (
             <div key={c.id} className="flex gap-3 border-l-2 border-border/40 pl-3 py-0.5">
@@ -50,41 +84,42 @@ export default function CommentsSection({ targetId, authorUsername }: CommentsSe
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex gap-2 items-center mb-1 flex-wrap">
-                  <span className="font-bold text-foreground">@{c.author}</span>
+                  <span className="text-[9px] text-muted-foreground uppercase opacity-60 font-sans font-medium">
+                    {formatTime(c.createdAt)}
+                  </span>
+    
+                  <span className="font-bold text-foreground">{c.user.username}</span>
                   
                   {isCollectionAuthor && (
                     <span className="text-[8px] bg-primary/10 border border-primary/40 px-1.5 py-0.5 text-primary font-extrabold tracking-widest uppercase font-mono scale-95 origin-left">
                       Author
                     </span>
                   )}
-                  
-                  <span className="text-[9px] text-muted-foreground uppercase opacity-60 font-sans font-medium">
-                    {c.time}
-                  </span>
                 </div>
-                <p className="text-muted-foreground/90 leading-relaxed break-words">{c.text}</p>
+                <p className="text-muted-foreground/90 leading-relaxed break-words">{c.content}</p>
               </div>
             </div>
           );
         })}
       </div>
+
       <form onSubmit={handleSubmit} className="pt-2 flex gap-2 bg-transparent">
         <input 
           type="text" 
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Enter log entry..." 
-          className="flex-1 bg-background border border-border/60 p-2.5 text-xs font-mono focus:outline-none focus:border-primary transition-colors text-foreground rounded-none"
+          placeholder={session ? "Enter log entry..." : "Sign in to drop a log..."} 
+          disabled={isSubmitting || !session}
+          className="flex-1 bg-background border border-border/60 p-2.5 text-xs font-mono focus:outline-none focus:border-primary transition-colors text-foreground rounded-none disabled:opacity-50"
         />
         <button 
           type="submit"
-          disabled={!comment.trim()}
+          disabled={!comment.trim() || isSubmitting || !session}
           className="bg-primary text-primary-foreground px-4.5 py-2.5 flex items-center justify-center hover:opacity-95 transition-opacity rounded-none disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
         >
           <Send size={13} className="stroke-[1.8]" />
         </button>
       </form>
-
     </section>
   )
 }

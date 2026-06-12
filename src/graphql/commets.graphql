@@ -1,0 +1,33 @@
+query GetCommentsByCollectionId($collectionId: ID!) {
+  getCommentsByCollectionId(collectionId: $collectionId) {
+    id
+    content
+    createdAt
+    user {
+      id
+      username
+      avatarUrl
+    }
+  }
+}
+
+mutation AddComment($input: AddCommentRequest!) {
+  addComment(input: $input) {
+    success
+    message
+    comment {
+      id
+      content
+      createdAt
+      user {
+        id
+        username
+        avatarUrl
+      }
+    }
+  }
+}
+
+mutation DeleteComment($id: ID!) {
+  deleteComment(id: $id)
+}
