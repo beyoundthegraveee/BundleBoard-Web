@@ -5,9 +5,11 @@ import { SetContextLink } from "@apollo/client/link/context";
 import { useSession } from "next-auth/react";
 import { useMemo } from "react";
 import { ApolloProvider } from "@apollo/client/react";
+import { headers } from "next/headers";
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
+  
   const cache = useMemo(() => new InMemoryCache({
     typePolicies: {
       AuthorShortResponse: {
@@ -30,12 +32,37 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
-    const authLink = new SetContextLink((prevContext) => {
+    const authLink = new SetContextLink((operation) => {
+      const currentContext = operation.getContext() || {};
+      const prevHeaders = currentContext.headers || {};
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        
+        const isPublicPath = [
+          "/login",
+          "/register",
+          "/mail/verify-email",
+          "/mail/verify",
+          "/forgot-password",
+          "/select-role"
+        ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
+
+        if (isPublicPath) {
+          return {
+            headers: prevHeaders,
+          };
+        }
+      }
+      if (currentContext.skipAuth) {
+        return {
+          headers: prevHeaders,
+        };
+      }
       const token = (session as any)?.accessToken;
       
       return {
         headers: {
-          ...prevContext.headers,
+          ...prevHeaders,
           authorization: token ? `Bearer ${token}` : "",
         },
       };
