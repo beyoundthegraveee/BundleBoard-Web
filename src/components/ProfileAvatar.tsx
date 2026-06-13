@@ -1,46 +1,65 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Loader2, User, Upload, Shield, Zap, Hash } from "lucide-react"
+import { Loader2, User, Upload, Edit2, Check, X, Plus, Trash2, Link as LinkIcon } from "lucide-react"
+import { toast } from "sonner"
 import { supabase } from '@/lib/supabaseClient'
-
 import { useMutation } from "@apollo/client/react"
-import { UpdateAvatarDocument, GetUserProfileQuery } from "@/graphql/generated"
+import { UpdateAvatarDocument, UpdateProfileDetailsDocument, GetUserProfileQuery } from "@/graphql/generated"
+import { convertToWebP } from '@/lib/imageProcessor' 
+import { ALLOWED_PLATFORMS, validateSocialUrl } from '@/lib/socialLinks'
 
 interface ProfileAvatarProps {
   userData?: GetUserProfileQuery['getUserProfile'] | null; 
   onUpdate: () => void;
 }
 
-const resizeAndConvertToWebP = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (event) => {
-      const img = new Image()
-      img.src = event.target?.result as string
-      img.onload = () => {
-        const canvas = document.createElement("canvas")
-        canvas.width = 500
-        canvas.height = 500
-        const ctx = canvas.getContext("2d")
-        if (!ctx) return reject(new Error("Canvas failure"))
-
-        const size = Math.min(img.width, img.height)
-        const xIdx = (img.width - size) / 2
-        const yIdx = (img.height - size) / 2
-
-        ctx.drawImage(img, xIdx, yIdx, size, size, 0, 0, 500, 500)
-        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Error")), "image/webp", 0.85)
-      }
-    }
-    reader.onerror = (err) => reject(err)
-  })
-}
-
 export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [executeUpdateAvatar] = useMutation(UpdateAvatarDocument)
+  
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [bio, setBio] = useState(userData?.bio || "")
+  const [socialLinks, setSocialLinks] = useState<{platform: string, url: string}[]>(
+    userData?.socialLinks?.map(link => ({ platform: link.platform, url: link.url })) || []
+  )
+  const [linkErrors, setLinkErrors] = useState<boolean[]>(new Array(socialLinks.length).fill(false))
+  const [executeUpdateProfile] = useMutation(UpdateProfileDetailsDocument)
+
+  const handleSaveProfile = async () => {
+    const platformIds = socialLinks.map(link => link.platform);
+    const hasDuplicates = new Set(platformIds).size !== platformIds.length;
+    const newErrors = socialLinks.map(link => !validateSocialUrl(link.platform, link.url));
+    setLinkErrors(newErrors);
+
+    if (hasDuplicates) {
+      toast.error("You cannot add the same platform more than once");
+      return;
+    }
+
+    if (newErrors.some(err => err)) {
+      toast.error("Please check the link format");
+      return;
+    }
+
+    setIsSaving(true)
+    try {
+      await executeUpdateProfile({
+        variables: {
+          bio: bio,
+          socialLinks: socialLinks.map(link => ({ platform: link.platform, url: link.url }))
+        }
+      })
+      setIsEditing(false)
+      onUpdate()
+    } catch (err: any) {
+      console.error("PROFILE_UPDATE_FAILURE:", err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -48,7 +67,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
 
     setIsUploading(true)
     try {
-      const processedBlob = await resizeAndConvertToWebP(file)
+      const processedBlob = await convertToWebP(file, 500, 0.85)
       const fileName = `avatars/${userData.id}-${Date.now()}.webp`
 
       const { error: uploadError } = await supabase.storage
@@ -76,12 +95,26 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
     }
   }
 
-  const isAuthor = userData?.roles?.includes("author")
+  const addSocialLink = () => {
+    if (socialLinks.length >= ALLOWED_PLATFORMS.length) return 
+    setSocialLinks([...socialLinks, { platform: ALLOWED_PLATFORMS[0].id, url: "" }])
+  }
+
+  const updateSocialLink = (index: number, key: 'platform' | 'url', value: string) => {
+    const newLinks = [...socialLinks]
+    newLinks[index][key] = value
+    setSocialLinks(newLinks)
+    const newErrors = [...linkErrors]
+    newErrors[index] = false
+    setLinkErrors(newErrors)
+  }
+
+  const removeSocialLink = (index: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index))
+  }
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch gap-5 pt-2 w-full mb-6">
-      
-      {/* ЛЕВАЯ КОЛОНКА (Фиксированная ширина w-40, аватар всегда квадратный) */}
+    <div className="flex flex-col sm:flex-row items-stretch gap-8 pt-2 w-full mb-6">
       <div className="flex flex-col gap-3 w-full sm:w-40 shrink-0">
         <div className="relative w-full aspect-square border border-border/80 rounded-none bg-muted overflow-hidden shadow-sm">
           {userData?.avatarUrl ? (
@@ -100,58 +133,168 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
         
         <label className="flex items-center justify-center gap-2 border border-border/80 bg-background text-foreground w-full py-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none shadow-sm shrink-0">
           <Upload size={12} className="stroke-[1.8]" /> 
-          {isUploading ? "Syncing..." : "Update"}
+          {isUploading ? "Syncing..." : "Update Avatar"}
           <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploading} />
         </label>
       </div>
 
-      {/* ПРАВАЯ КОЛОНКА (min-w-0 предотвращает наложение длинного текста) */}
-      <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
-        
-        <div className="mb-3">
-          <h2 className="text-2xl font-bold uppercase tracking-tight leading-none text-foreground font-display mb-1.5 truncate">
+      <div className="flex flex-col flex-1 min-w-0 py-0.5 justify-start">
+        <div className="mb-4 border-b border-border/30 pb-4">
+          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-none text-foreground font-display mb-1.5 truncate max-w-xs md:max-w-md block">
             {userData?.username || "Guest Node"}
           </h2>
-          <p className="text-[11px] font-medium tracking-tight text-muted-foreground/90 lowercase border-b border-border/30 pb-2 truncate">
+          <p className="text-[11px] font-medium tracking-tight text-muted-foreground/90 lowercase truncate block max-w-xs md:max-w-md">
             {userData?.email}
           </p>
         </div>
 
-        {/* ПЛАШКИ (Сделаны короче и компактнее через p-2) */}
-        <div className="space-y-1.5">
-          <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground block mb-1 font-mono">
-            System Registry // Identity
-          </span>
-          
-          <div className="flex items-center gap-2.5 border border-border/40 p-2 bg-card/40 rounded-none w-full shadow-sm">
-            <Zap size={13} className="text-primary stroke-[1.8]" />
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Node status</span>
-              <span className="text-[11px] font-semibold text-foreground uppercase tracking-tight truncate">{userData?.status || 'ACTIVE'}</span> 
-            </div>
-          </div>
+        {!isEditing ? (
+          <div className="space-y-5 flex-1 flex flex-col justify-between">
+            <div className="space-y-3">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground block font-mono">
+                Author Description // Bio
+              </span>
+              <p className="text-sm text-foreground/80 leading-relaxed font-normal whitespace-pre-wrap">
+                {userData?.bio || <span className="opacity-40 italic text-xs">No description provided.</span>}
+              </p>
 
-          <div className="flex items-center gap-2.5 border border-border/40 p-2 bg-card/40 rounded-none w-full shadow-sm">
-            <Shield size={13} className="text-primary stroke-[1.8]" />
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Verified Rights</span>
-              <span className="text-[11px] font-semibold text-foreground uppercase tracking-tight truncate">
-                {isAuthor ? "PLATFORM PARTNER" : "STANDARD CLIENT"}
-              </span> 
+              {userData?.socialLinks && userData.socialLinks.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {userData.socialLinks.map((link, idx) => {
+                    const platformDef = ALLOWED_PLATFORMS.find(p => p.id === link.platform)
+                    const Icon = platformDef?.icon || LinkIcon
+                    return (
+                      <a 
+                        key={idx} 
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-border bg-muted/40 hover:bg-accent hover:text-primary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground"
+                      >
+                        <Icon size={12} /> {platformDef?.label || link.platform}
+                      </a>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-start">
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-secondary-foreground text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors border border-border/50"
+              >
+                <Edit2 size={10} /> Edit Identity
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2.5 border border-border/40 p-2 bg-card/40 rounded-none w-full shadow-sm">
-            <Hash size={13} className="text-muted-foreground stroke-[1.8]" />
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Access Key ID</span>
-              <span className="text-[11px] font-medium text-foreground truncate font-mono">
-                {userData?.id ? `${userData.id.padStart(4, '0')}` : "UNVERIFIED"}
-              </span> 
+        ) : (
+          <div className="space-y-5 animate-in fade-in duration-200 flex-1 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground block font-mono">
+                  Update Bio
+                </label>
+                <textarea 
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Write a short description about your digital studio..."
+                  className="w-full h-24 p-3 bg-background border border-border/80 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm text-foreground resize-none rounded-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <label className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground block font-mono">
+                    Social Network Matrix
+                  </label>
+                  {socialLinks.length < ALLOWED_PLATFORMS.length && (
+                    <button 
+                      onClick={addSocialLink}
+                      className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Plus size={10} /> Add Link
+                    </button>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  {socialLinks.length === 0 && (
+                    <div className="text-xs text-muted-foreground/50 italic border border-dashed border-border/40 p-3 text-center">
+                      No active network links.
+                    </div>
+                  )}
+                  {socialLinks.map((link, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <select 
+                        value={link.platform}
+                        onChange={(e) => updateSocialLink(idx, 'platform', e.target.value)}
+                        className="w-full sm:w-1/3 bg-background border border-border/80 p-2 text-xs font-semibold uppercase tracking-wider outline-none focus:border-primary text-foreground rounded-none cursor-pointer"
+                      >
+                        {ALLOWED_PLATFORMS.map(platform => {
+                          const isUsed = socialLinks.some(l => l.platform === platform.id) && link.platform !== platform.id;
+                          
+                          return (
+                            <option 
+                              key={platform.id} 
+                              value={platform.id}
+                              disabled={isUsed}
+                              className="bg-popover text-popover-foreground content-box"
+                            >
+                              {platform.label}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      
+                      <input 
+                        type="url"
+                        placeholder="https://"
+                        value={link.url}
+                        onChange={(e) => updateSocialLink(idx, 'url', e.target.value)}
+                        className={`flex-1 bg-background border p-2 text-xs text-foreground outline-none rounded-none transition-all ${
+                          linkErrors[idx] 
+                            ? "border-destructive ring-1 ring-destructive" 
+                            : "border-border/80 focus:border-primary focus:ring-1 focus:ring-primary"
+                        }`}
+                      />
+                      {linkErrors[idx] && (
+                        <p className="text-[9px] text-destructive mt-1 font-bold">
+                          Invalid URL format for {ALLOWED_PLATFORMS.find(p => p.id === link.platform)?.label}
+                        </p>
+                      )}
+                      
+                      <button 
+                        onClick={() => removeSocialLink(idx)}
+                        className="p-2 border border-destructive/30 text-destructive hover:bg-destructive hover:text-white transition-colors flex items-center justify-center rounded-none"
+                        title="Remove Link"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-2 justify-start">
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-transparent text-muted-foreground text-[9px] font-bold uppercase tracking-widest hover:bg-accent border border-border/50 transition-colors"
+              >
+                <X size={10} /> Cancel
+              </button>
+              <button 
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest hover:opacity-90 border border-primary transition-colors disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} 
+                Commit
+              </button>
             </div>
           </div>
-        </div>
-        
+        )}
       </div>
     </div>
   )

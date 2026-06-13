@@ -44,6 +44,12 @@ query GetUserProfile {
     avatarUrl
     status
     roles
+    bio
+    stripeAccountId
+    socialLinks {
+      platform
+      url
+    }
     authoredCollections {
       id
       name
@@ -73,4 +79,20 @@ query GetUserProfile {
       }
     }
   }
+}
+
+mutation UpdateProfileDetails($bio: String, $socialLinks: [SocialLinkInput!]) {
+  updateProfileDetails(bio: $bio, socialLinks: $socialLinks) {
+    id
+    bio
+    socialLinks {
+      platform
+      url
+    }
+  }
+}
+
+input SocialLinkInput {
+     platform: String!
+   url: String!
 }

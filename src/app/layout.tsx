@@ -6,6 +6,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { Navbar } from "@/components/Navbar";
 import { SplashProvider } from "@/components/SplashProvider";
 import { ApolloWrapper } from "@/lib/apolloWrapper";
+import { Toaster } from "sonner";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default function RootLayout({
             </ThemeProvider>
           </ApolloWrapper>
         </AuthSessionProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
