@@ -116,3 +116,20 @@ query GetCollectionsByTag($input: CollectionFilterInput!) {
     totalElements
   }
 }
+
+query GetTopLikedCollections($limit: Int!) {
+  getTopLikedCollections(limit: $limit) {
+    id
+    name
+    description
+    price
+    likesCount
+    isLiked
+    author {
+      username
+    }
+    galleryImages {
+      filePath
+    }
+  }
+}

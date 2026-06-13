@@ -3,6 +3,7 @@
 import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation" // <-- Добавлен импорт роутера
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
@@ -46,6 +47,7 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const { terminateSession } = useAuthActions();
   const { theme, setTheme } = useTheme();
+  const router = useRouter(); // <-- Инициализация роутера
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -103,9 +105,11 @@ export function Navbar() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-                
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/60 data-[state=open]:bg-accent/40 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors">
+                  <NavigationMenuTrigger 
+                    className="bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/60 data-[state=open]:bg-accent/40 rounded-none font-medium uppercase text-[11px] tracking-wider transition-colors cursor-pointer"
+                    onClick={() => router.push('/bundles')}
+                  >
                     Bundles
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>

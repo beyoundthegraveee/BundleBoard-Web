@@ -1,18 +1,17 @@
 "use client"
 
 import { CollectionGrid } from "@/components/CollectionGrid";
-import { ArrowRight, Activity, Grid3X3, ExternalLink } from "lucide-react";
+import { HighestRatedCarousel } from "@/components/HighestRatedCarousel";
+import { ArrowRight, Activity, Grid3X3, ExternalLink, Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
-// Импортируем наши стилизованные коробки
 import { Boxes } from "@/components/ui/background-boxes";
+import Link from "next/link";
 
 export default function Home() {
   const { status } = useSession();
 
   return (
     <main className="min-h-screen bg-background text-foreground antialiased font-sans">
-
-      {/* Глобальная статическая сетка (оставляем для структуры нижних блоков) */}
       <div 
         className="absolute inset-0 z-0 opacity-[0.025] pointer-events-none" 
         style={{ 
@@ -21,7 +20,6 @@ export default function Home() {
         }} 
       />
 
-      {/* Верхний статус-бар */}
       <div className="w-full bg-foreground text-background py-2.5 border-b border-border/10 relative z-10 text-[11px] font-medium uppercase tracking-wider">
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -35,20 +33,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* HERO СЕКЦИЯ: Добавили overflow-hidden, чтобы сетка не ломала верстку */}
       <section className="relative border-b border-border/60 pt-28 pb-24 bg-background/50 backdrop-blur-sm onyx-glow overflow-hidden">
-        
-        {/* Вставляем интерактивные коробки на задний план секции */}
         <Boxes />
-
-        {/* Контент-контейнер: Добавили z-10, чтобы текст был поверх коробок и оставался читаемым */}
         <div className="max-w-7xl mx-auto px-6 md:px-8 relative z-10">
           
           <div className="absolute -top-4 -left-1 w-1.5 h-1.5 bg-foreground" />
           <div className="absolute -top-4 -right-1 w-1.5 h-1.5 bg-foreground" />
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0">
-            
             <div className="lg:col-span-8 space-y-6 lg:pr-16">
               <div className="inline-flex items-center gap-2 border border-border/80 px-3 py-1 bg-card/40 text-foreground text-[11px] font-semibold uppercase tracking-wider rounded-none">
                 <Activity size={12} className="text-primary" />
@@ -92,14 +84,26 @@ export default function Home() {
                 </p>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* Секция инвентаря */}
-      <section className="relative py-20 border-t border-white/5 z-10">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-16 flex items-center justify-between relative">
+      {/* СЕКЦИЯ КАРУСЕЛИ (Заменила статический грид) */}
+      <section className="relative py-16 border-b border-white/5 z-10 overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-10 flex items-center justify-between relative">
+          <div className="flex items-center gap-3">
+            <Heart size={14} className="text-primary" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-foreground">Highest Rated Modules</h2>
+          </div>
+          <span className="text-[10px] font-medium opacity-40 tracking-widest uppercase hidden sm:block">Community Verified / Auto-Scroll</span>
+        </div>
+
+        {/* Вызов компонента карусели */}
+        <HighestRatedCarousel />
+      </section>
+
+      <section className="relative py-16 border-t border-white/5 z-10">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-10 flex items-center justify-between relative">
           <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-foreground" />
           <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-foreground" />
           
@@ -109,11 +113,20 @@ export default function Home() {
           </div>
           <span className="text-[10px] font-medium opacity-40 tracking-widest uppercase">Stream Vol 001</span>
         </div>
-
+        
         <CollectionGrid />
+        
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mt-12 flex justify-center">
+          <Link 
+            href="/bundles" 
+            className="group flex items-center gap-3 border border-border/60 bg-background/50 px-8 py-4 hover:bg-foreground hover:text-background transition-all duration-300 backdrop-blur-sm"
+          >
+            <span className="text-xs font-bold uppercase tracking-[0.25em]">Access Full Directory</span>
+            <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
       </section>
 
-      {/* Футер сайта */}
       <footer className="bg-foreground text-background pt-20 pb-12 relative z-20 border-t border-border/10">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
