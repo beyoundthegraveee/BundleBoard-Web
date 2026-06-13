@@ -3,7 +3,7 @@
 import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation" // <-- Добавлен импорт роутера
+import { useRouter } from "next/navigation" 
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
@@ -47,7 +47,7 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const { terminateSession } = useAuthActions();
   const { theme, setTheme } = useTheme();
-  const router = useRouter(); // <-- Инициализация роутера
+  const router = useRouter();
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -99,9 +99,8 @@ export function Navbar() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[320px] gap-0 border border-border/60 bg-popover p-1 rounded-none shadow-xl">
-                      <ListItem href="/tutorials" title="Tutorials">Guides for platform tools.</ListItem>
-                      <ListItem href="/tutorials/video" title="Video Streams">Visual asset walk-throughs.</ListItem>
-                      <ListItem href="/tutorials/read" title="Documentation">Core integration logs.</ListItem>
+                      <ListItem href="/tutorials" title="Tutorials">Guides for platform assets and software.</ListItem>
+                      <ListItem href="/hardware" title="Hardware Setup">Gear recommendations for designers.</ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -141,7 +140,6 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="h-9 w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center transition-colors relative"
