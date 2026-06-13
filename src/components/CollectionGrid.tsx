@@ -1,15 +1,15 @@
 "use client"
 
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { FALLBACK_IMAGE } from '@/lib/constants'
-import { useLazyQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import { GetCollectionsPagedDocument } from '@/graphql/generated'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 12;
 
 interface Collection {
   id: string;
@@ -27,96 +27,18 @@ interface Collection {
 
 export function CollectionGrid() {
   const { status } = useSession()
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [page, setPage] = useState(0)
-  
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  const [hasMore, setHasMore] = useState(true)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const [fetchCollections] = useLazyQuery(GetCollectionsPagedDocument)
+  const { data, loading, error, refetch } = useQuery(GetCollectionsPagedDocument, {
+    variables: {
+      page: 0,
+      size: PAGE_SIZE
+    },
+    skip: status === "loading",
+    fetchPolicy: 'cache-first'
+  });
 
-  const handleReset = () => {
-    setCollections([])
-    setPage(0)
-    setHasMore(true)
-    setRefreshTrigger(prev => prev + 1)
-  };
+  const collections = (data?.getAllCollections || []) as Collection[];
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!hasMore && page !== 0) return;
-
-    let isMounted = true;
-
-    const fetchPage = async () => {
-      if (page === 0) setInitialLoading(true);
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data, error: apolloError } = await fetchCollections({
-          variables: {
-            page: page,
-            size: PAGE_SIZE
-          },
-        });
-
-        if (apolloError) {
-          throw new Error(apolloError.message || "INTERNAL_SERVER_ERROR");
-        }
-
-        const newItems = (data?.getAllCollections || []) as Collection[];
-
-        if (isMounted) {
-          const validItems = newItems.filter(Boolean);
-
-          if (validItems.length < PAGE_SIZE) {
-            setHasMore(false);
-          }
-
-          setCollections((prev) => {
-            return page === 0 ? validItems : [...prev, ...validItems];
-          });
-        }
-      } catch (err: any) {
-        if (isMounted) {
-          setError(err.message || "FAILED_TO_STREAM_DATA");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          setInitialLoading(false);
-        }
-      }
-    };
-
-    fetchPage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [status, page, refreshTrigger, fetchCollections, hasMore]);
-
-  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading || initialLoading) return;
-    if (observerRef.current) observerRef.current.disconnect();
-
-    observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage((prevPage) => prevPage + 1);
-      }
-    }, {
-      rootMargin: "250px"
-    });
-
-    if (node) observerRef.current.observe(node);
-  }, [loading, initialLoading, hasMore]);
-
-  if (initialLoading) return (
+  if (loading) return (
     <div className="flex flex-col justify-center items-center py-40 space-y-3 font-sans">
       <Loader2 className="animate-spin h-5 w-5 text-muted-foreground stroke-[1.5]" />
       <span className="text-muted-foreground text-[11px] uppercase tracking-[0.2em] font-medium">Syncing active registry...</span>
@@ -127,10 +49,10 @@ export function CollectionGrid() {
     <div className="p-8 border border-destructive/20 text-destructive font-sans text-xs uppercase tracking-wider bg-destructive/5 flex flex-col items-start gap-4 rounded-none max-w-xl mx-auto">
       <div>
         <span className="font-bold mr-2">Registry connection error:</span> 
-        {error}
+        {error.message || "FAILED_TO_STREAM_DATA"}
       </div>
       <button 
-        onClick={handleReset}
+        onClick={() => refetch()}
         className="flex items-center gap-2 border border-destructive/40 px-4 py-2 text-[10px] font-semibold uppercase hover:bg-destructive hover:text-white transition-all"
       >
         Reinitialize Stream
@@ -139,9 +61,9 @@ export function CollectionGrid() {
   )
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-24">
+    <div className="max-w-[1600px] mx-auto px-6 md:px-12">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
-        {collections.map((item) => {
+        {collections.slice(0, 12).map((item) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
             ? fileName 
@@ -189,22 +111,6 @@ export function CollectionGrid() {
             </Link>
           );
         })}
-      </div>
-
-      <div className="w-full pt-14 flex justify-center border-t border-white/[0.05]">
-        <div ref={lastElementRef} className="flex justify-center w-full">
-          {loading && (
-            <div className="flex items-center gap-2 text-muted-foreground font-semibold uppercase tracking-widest text-[10px]">
-              <Loader2 className="animate-spin h-3.5 w-3.5 text-primary" />
-              Streaming page data node...
-            </div>
-          )}
-          {!hasMore && collections.length > 0 && (
-            <div className="text-muted-foreground font-normal uppercase tracking-[0.25em] text-[10px] opacity-30">
-              // End of active directory stream
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )
