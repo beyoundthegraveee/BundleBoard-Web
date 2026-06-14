@@ -12,22 +12,24 @@ const PAGE_SIZE = 12;
 
 interface SortCollectionGridProps {
   sortBy: string;
+  mimeTypes: string[];
 }
 
-export function SortCollectionGrid({ sortBy }: SortCollectionGridProps) {
+export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProps) {
   const { data, loading, error, refetch } = useQuery(GetSortedCollectionsDocument, {
     variables: {
       page: 0,
       size: PAGE_SIZE,
-      sortBy: sortBy
+      sortBy: sortBy,
+      mimeTypes: mimeTypes || null
     },
     fetchPolicy: 'cache-and-network'
   });
 
 
   useEffect(() => {
-    refetch({ page: 0, size: PAGE_SIZE, sortBy: sortBy });
-  }, [sortBy, refetch]);
+    refetch({ page: 0, size: PAGE_SIZE, sortBy: sortBy, mimeTypes: mimeTypes && mimeTypes.length > 0 ? mimeTypes : null });
+  }, [sortBy, mimeTypes, refetch]);
 
   const collections = data?.getSortedCollections || [];
 
