@@ -7,7 +7,6 @@ import { SortSidebar } from '@/components/SortSidebar';
 
 export default function BundlesPage() {
   const [activeSort, setActiveSort] = useState("newest");
-  const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
 
   const toggleFormat = (format: string) => {
@@ -39,12 +38,9 @@ export default function BundlesPage() {
         
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           
-          {/* Наш новый липкий сайдбар */}
           <SortSidebar 
             activeSort={activeSort}
             setActiveSort={setActiveSort}
-            showFreeOnly={showFreeOnly}
-            setShowFreeOnly={setShowFreeOnly}
             activeFormats={activeFormats}
             toggleFormat={toggleFormat}
           />
