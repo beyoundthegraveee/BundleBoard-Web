@@ -47,9 +47,14 @@ export default function Home() {
                 <span>Asset Deployment Protocol</span>
               </div>
               
-              <h1 className="text-4xl md:text-[5.5rem] font-bold tracking-tight leading-[0.95] uppercase text-foreground">
-                Curated Supply <br />
-                <span className="font-light opacity-50">Intelligent Data.</span>
+              <h1 className="text-4xl md:text-[5.5rem] font-bold tracking-tight leading-[0.95] uppercase">
+                <span className="text-foreground">Curated Supply</span> <br />
+                <span 
+                  className="font-black text-transparent" 
+                  style={{ WebkitTextStroke: '2px var(--foreground)' }}
+                >
+                  Intelligent Data.
+                </span>
               </h1>
               
               <p className="text-muted-foreground text-sm md:text-base max-w-xl leading-relaxed pt-4 font-normal">
@@ -88,7 +93,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* СЕКЦИЯ КАРУСЕЛИ (Заменила статический грид) */}
       <section className="relative py-16 border-b border-white/5 z-10 overflow-hidden">
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-10 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
@@ -97,8 +101,6 @@ export default function Home() {
           </div>
           <span className="text-[10px] font-medium opacity-40 tracking-widest uppercase hidden sm:block">Community Verified / Auto-Scroll</span>
         </div>
-
-        {/* Вызов компонента карусели */}
         <HighestRatedCarousel />
       </section>
 
