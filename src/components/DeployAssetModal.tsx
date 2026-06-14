@@ -9,7 +9,6 @@ import { useMutation } from "@apollo/client/react"
 import { CreateCollectionDocument } from '@/graphql/generated'
 import type { 
   MimeType, 
-  Provider, 
   ImageShortInput 
 } from '@/graphql/generated'
 
@@ -40,7 +39,8 @@ interface DeployAssetModalProps {
 
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
-  const [newAsset, setNewAsset] = useState({ name: "", description: "", price: "", category: "gradients" })
+  // Убрали price из состояния
+  const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -109,17 +109,10 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     })
   }
 
-  const handleDragStart = (index: number) => {
-    setDragItemIndex(index);
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  }
-
+  const handleDragStart = (index: number) => { setDragItemIndex(index); }
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); }
   const handleDrop = (index: number) => {
     if (dragItemIndex === null || dragItemIndex === index) return;
-
     setPreviewItems((prev) => {
       const newItems = [...prev];
       const draggedItem = newItems[dragItemIndex];
@@ -136,12 +129,6 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
     if (newAsset.description.length < 100) {
       setValidationError(`Description requires minimum one hundred characters. Content parameters too short (${newAsset.description.length}/100).`)
-      return
-    }
-
-    const numericPrice = parseFloat(newAsset.price)
-    if (isNaN(numericPrice) || numericPrice < 5.00) {
-      setValidationError("Minimum allowed single product asset license is 5.00 USD.")
       return
     }
 
@@ -179,7 +166,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         return {
           fileName: previewFileName,
           filePath: publicUrl,
-          mimeType: "webp", // Используем строку
+          mimeType: "webp",
           width: width,
           height: height,
           fileSize: webpBlob.size
@@ -195,24 +182,22 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         
       if (vError) throw vError
       
-      // Используем строковые литералы для типов
       let calculatedMime: MimeType = "zip" 
       if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
       
-      // 4. ВЫЗЫВАЕМ МУТАЦИЮ БЕЗ ПРОВЕРКИ ERRORS
       await executeCreate({
         variables: {
           input: {
             name: newAsset.name,
             description: newAsset.description,
-            price: numericPrice,
+            price: 0, // Устанавливаем цену 0 жестко
             videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
             tagIds: ["1", "2"], 
             mediaResource: {
               fileName: projectFile.name,
               filePath: archivePath,
               mimeType: calculatedMime,
-              provider: "local", // Используем строку вместо Provider.Local
+              provider: "local",
               fileSize: projectFile.size
             },
             galleryImages: uploadedImages
@@ -220,14 +205,13 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         }
       })
 
-      setNewAsset({ name: "", description: "", price: "", category: "gradients" })
+      setNewAsset({ name: "", description: "", category: "gradients" })
       setPreviewItems([])
       setProjectFile(null)
       onSuccess()
       onClose()
     } catch (err: any) {
       console.error("CATALOG_DEPLOYMENT_FAILURE:", err)
-      // Apollo заботливо положит сообщение с бэкенда в err.message
       setValidationError(err.message || "An unexpected system variation occurred during asset compilation.")
     } finally {
       setIsCreatingAsset(false)
@@ -246,8 +230,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         </button>
         
         <div className="mb-6 border-b border-border/40 pb-4">
-          <h3 className="text-xl font-bold tracking-tight text-foreground uppercase">Deploy New Asset</h3>
-          <p className="text-xs text-muted-foreground mt-1.5 font-normal">Submit asset components and manifest parameters to initialize catalog database stream.</p>
+          <h3 className="text-xl font-bold tracking-tight text-foreground uppercase">Deploy Free Asset</h3>
+          <p className="text-xs text-muted-foreground mt-1.5 font-normal">Submit asset components to initialize public catalog node.</p>
         </div>
         
         {validationError && (
@@ -305,20 +289,6 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             />
           </div>
 
-          <div className="grid gap-1.5">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">License Price (USD)</label>
-            <input 
-              type="number" 
-              step="0.01" 
-              required 
-              min="5.00" 
-              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm outline-none transition-all focus:border-primary font-bold placeholder:text-muted-foreground/40" 
-              placeholder="Minimum 5.00" 
-              value={newAsset.price} 
-              onChange={e => setNewAsset({...newAsset, price: e.target.value})} 
-            />
-          </div>
-
           <div className="space-y-3">
             <div className="flex justify-between items-end">
               <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Media Files</label>
@@ -350,7 +320,6 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                 {!projectFile && (
                   <input 
                     type="file" 
-                    // Убрали .7z из интерфейса, так как бэкенд поддерживает только zip и rar
                     accept=".zip,.rar,.grd,.asl,.atn" 
                     className="absolute inset-0 opacity-0 cursor-pointer" 
                     required 

@@ -21,7 +21,7 @@ export function SortSidebar({
     <aside className="w-full lg:w-[240px] flex-shrink-0 space-y-10 sticky top-28 self-start">
 
       <div className="space-y-4">
-        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em] flex items-center gap-2 border-b border-white/[0.06] pb-3">
+        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em] flex items-center gap-2 border-b border-border pb-3">
           <SlidersHorizontal size={14} className="text-primary" />
           Sort Parameters
         </h3>
@@ -35,7 +35,7 @@ export function SortSidebar({
             { id: "alpha", label: "Alphabetical" },
           ].map((option) => (
             <label key={option.id} className="flex items-center gap-3 group cursor-pointer select-none">
-              <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors rounded-none ${activeSort === option.id ? 'border-primary bg-primary/20' : 'border-white/[0.15] group-hover:border-white/[0.3]'}`}>
+              <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors rounded-none ${activeSort === option.id ? 'border-primary bg-primary/20' : 'border-border group-hover:border-foreground/30'}`}>
                 {activeSort === option.id && <div className="w-1.5 h-1.5 bg-primary rounded-none" />}
               </div>
               <span className={`text-[10px] uppercase tracking-wider ${activeSort === option.id ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
@@ -48,7 +48,7 @@ export function SortSidebar({
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em] border-b border-white/[0.06] pb-3">
+        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em] border-b border-border pb-3">
           File Matrix
         </h3>
         <div className="flex flex-col gap-4 pt-2">
@@ -56,7 +56,7 @@ export function SortSidebar({
             const isActive = activeFormats.includes(format);
             return (
               <label key={format} className="flex items-center gap-3 group cursor-pointer select-none">
-                <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors rounded-none ${isActive ? 'border-primary bg-primary' : 'border-white/[0.15] group-hover:border-white/[0.3]'}`}>
+                <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors rounded-none ${isActive ? 'border-primary bg-primary' : 'border-border group-hover:border-foreground/30'}`}>
                   {isActive && <Check size={10} className="text-primary-foreground stroke-[3]" />}
                 </div>
                 <span className={`text-[10px] uppercase tracking-wider ${isActive ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
