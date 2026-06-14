@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { X, Trash2, ArrowRight, ShoppingBag, Loader2 } from "lucide-react"
+import { X, Trash2, ArrowRight, ShoppingBag, Loader2, Download } from "lucide-react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@apollo/client/react"
 import { CreateCheckoutSessionDocument } from "@/graphql/generated"
@@ -22,6 +24,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { data: session } = useSession()
+  const router = useRouter()
   const [cartItems, setCartItems] = React.useState<CartItem[]>([])
   const [executeCreateCheckout, { loading: isRedirecting }] = useMutation(CreateCheckoutSessionDocument)
 
@@ -46,6 +49,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }, [isOpen])
 
   const total = cartItems.reduce((sum, item) => sum + item.price, 0)
+  const isFreeCart = total === 0 && cartItems.length > 0;
 
   const removeItem = (id: string) => {
     const updatedCart = cartItems.filter(item => item.id !== id)
@@ -58,14 +62,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     if (cartItems.length === 0 || isRedirecting) return
     
     if (!session) {
-      alert("Please sign in to proceed with your purchase.")
+      toast.error("Please sign in to proceed.")
       return
     }
 
     try {
       const currentSession = session as any;
-      
-      // 3. ВЫПОЛНЯЕМ МУТАЦИЮ БЕЗ РУЧНОЙ ПРОВЕРКИ ERRORS
       const { data } = await executeCreateCheckout({
         variables: {
           input: {
@@ -76,23 +78,25 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         }
       })
 
-      const stripeUrl = data?.createCheckoutSession
+      const returnedUrl = data?.createCheckoutSession
 
-      if (stripeUrl) {
+      if (returnedUrl) {
         setCartItems([]) 
         localStorage.removeItem("bundleboard_cart")
         window.dispatchEvent(new Event("cartUpdate"))
-
-        // Редирект на Stripe Checkout
-        window.location.href = stripeUrl
+        if (returnedUrl.startsWith('http')) {
+           window.location.href = returnedUrl
+        } else {
+           router.push(returnedUrl)
+           onClose()
+        }
       } else {
-        throw new Error("Stripe URL not found in response")
+        throw new Error("Target URL not found in response")
       }
 
     } catch (error: any) {
-      // Любые GraphQL и сетевые ошибки отловятся здесь автоматически!
       console.error("❌ Critical error during payment session initialization:", error)
-      alert(error.message || "Unable to connect to the payment server. Please try again later.")
+      toast.error(error.message || "Unable to process the request. Please try again later.")
     }
   }
 
@@ -104,9 +108,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         className="absolute inset-0 bg-background/40 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
-
       <div className="absolute top-0 right-0 h-full w-full max-w-md bg-card border-l border-border/60 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 rounded-none">
-        
         <div>
           <div className="flex justify-between items-center border-b border-border/40 pb-4 mb-6">
             <div className="flex items-center gap-2">
@@ -146,7 +148,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </h4>
                     </div>
                     <div className="text-xs font-bold text-foreground">
-                      ${item.price.toFixed(2)}
+                      {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                     </div>
                   </div>
 
@@ -172,12 +174,15 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           <div className="flex justify-between items-baseline">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtotal Value</span>
             <div className="text-xl font-bold tracking-tight text-foreground">
-              USD ${total.toFixed(2)}
+              {isFreeCart ? "FREE" : `USD $${total.toFixed(2)}`}
             </div>
           </div>
 
           <p className="text-[10px] text-muted-foreground leading-normal uppercase">
-            Taxation and license certificates will be generated automatically upon checkout initialization.
+            {isFreeCart 
+              ? "Assets will be instantly added to your library."
+              : "Taxation and license certificates will be generated automatically upon checkout initialization."
+            }
           </p>
 
           <button 
@@ -190,7 +195,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           >
             {isRedirecting ? (
               <>
-                Connecting to Stripe... <Loader2 size={13} className="animate-spin" />
+                Processing... <Loader2 size={13} className="animate-spin" />
+              </>
+            ) : isFreeCart ? (
+              <>
+                Get For Free <Download size={13} />
               </>
             ) : (
               <>

@@ -2,11 +2,7 @@
 
 import React from 'react'
 import { User, Star, ShoppingCart, Share2, ExternalLink } from "lucide-react"
-
-// 1. ИМПОРТИРУЕМ ТИП ЗАПРОСА ВМЕСТО СХЕМЫ
 import { GetCollectionQuery } from '@/graphql/generated'
-
-// 2. ВЫТАСКИВАЕМ ТИП АВТОРА ИЗ СТРУКТУРЫ ОТВЕТА
 type AuthorData = GetCollectionQuery['getCollectionById']['author'];
 
 interface AuthorSidebarProps {

@@ -16,7 +16,8 @@ interface CategoryCollectionGridProps {
 export function CategoryCollectionGrid({ collections }: CategoryCollectionGridProps) {
   if (collections.length === 0) {
     return (
-      <div className="border border-dashed border-white/[0.08] p-16 text-center max-w-xl mx-auto rounded-none bg-[#111013]/30 animate-in fade-in duration-300">
+      // Исправлено: border-white/[0.08] -> border-border, bg-[#111013]/30 -> bg-muted/10
+      <div className="border border-dashed border-border p-16 text-center max-w-xl mx-auto rounded-none bg-muted/10 animate-in fade-in duration-300">
         <Layers className="mx-auto text-muted-foreground/30 mb-3 stroke-[1.3]" size={28} />
         <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Data Stream Terminal Empty</h3>
         <p className="text-[11px] text-muted-foreground mt-1 font-normal leading-normal">
@@ -38,9 +39,11 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
           <Link 
             href={`/collection/${item.id}`} 
             key={item.id} 
-            className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground border border-white/[0.04] p-4 bg-[#0d0c0e] hover:border-white/[0.12] transition-colors duration-300"
+            // Исправлено: border-white/[0.04] -> border-border, bg-[#0d0c0e] -> bg-card, hover:border-white/[0.12] -> hover:border-foreground/30
+            className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground border border-border p-4 bg-card hover:border-foreground/30 transition-colors duration-300"
           >
-            <div className="aspect-video relative overflow-hidden bg-[#111013] border border-white/[0.02]">
+            {/* Исправлено: bg-[#111013] -> bg-muted, border-white/[0.02] -> border-border/50 */}
+            <div className="aspect-video relative overflow-hidden bg-muted border border-border/50">
               <img 
                 src={imageUrl || FALLBACK_IMAGE} 
                 alt={item.name}
@@ -52,11 +55,11 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
             <div className="pt-4 flex-grow flex flex-col justify-between">
               <div className="space-y-2">
                 <div className="flex justify-between items-baseline gap-2">
-                  <h3 className="font-bold text-[15px] leading-tight tracking-tight uppercase text-foreground truncate max-w-[75%] transition-colors group-hover:text-zinc-400">
+                  <h3 className="font-bold text-[15px] leading-tight tracking-tight uppercase text-foreground truncate max-w-[75%] transition-colors group-hover:text-primary">
                     {item.name}
                   </h3>
                   <span className="font-bold text-[14px] text-foreground tracking-tight font-mono">
-                    ${item.price.toFixed(2)}
+                    {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-[12px] leading-relaxed line-clamp-2 font-normal opacity-70">
@@ -64,12 +67,14 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-white/[0.03] flex justify-between items-center text-[9px] text-muted-foreground uppercase tracking-wider">
+              {/* Исправлено: border-white/[0.03] -> border-border */}
+              <div className="mt-4 pt-3 border-t border-border flex justify-between items-center text-[9px] text-muted-foreground uppercase tracking-wider">
                 <div>
                   <span>By </span>
                   <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
                 </div>
-                <span className="text-white/40 group-hover:text-primary transition-colors font-bold">
+                {/* Исправлено: text-white/40 -> text-muted-foreground */}
+                <span className="text-muted-foreground group-hover:text-primary transition-colors font-bold">
                   Extract →
                 </span>
               </div>

@@ -90,7 +90,7 @@ export function CollectionGrid() {
                       {item.name}
                     </h3>
                     <span className="font-bold text-[18px] text-foreground tracking-tight">
-                      ${item.price.toFixed(2)}
+                      {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                     </span>
                   </div>
                   <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">

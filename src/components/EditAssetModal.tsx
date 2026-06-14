@@ -40,9 +40,9 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
+  // Убрали price из состояния формы
   const [form, setForm] = useState({
     name: "",
-    price: "",
     description: ""
   })
   
@@ -56,7 +56,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       setValidationError(null)
       setForm({
         name: initialData.name || "",
-        price: initialData.price ? initialData.price.toString() : "5.00",
         description: initialData.description || ""
       })
       if (initialData.galleryImages) {
@@ -145,10 +144,9 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setValidationError(null)
-    const numericPrice = parseFloat(form.price)
     
-    if (!form.name.trim() || isNaN(numericPrice) || numericPrice < 5.00) {
-      setValidationError("Invalid configuration. Minimum price is 5.00 USD.")
+    if (!form.name.trim()) {
+      setValidationError("Invalid configuration. Asset name is required.")
       return
     }
 
@@ -166,9 +164,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     const timestamp = Date.now()
     
     try {
-      // Явно типизируем обещание как Promise<ImageShortInput>
       const finalGalleryPromises = gallery.map(async (item, index): Promise<ImageShortInput> => {
-        // Логика для старых (неизмененных) изображений
         if (!item.isNew && !item.file) {
           return { 
             filePath: item.filePath,
@@ -180,7 +176,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           };
         }
 
-        // Исправленная логика для новых загружаемых изображений
         if (item.isNew && item.file) {
           const webpBlob = await convertToWebP(item.file, 1200, 0.82)
           const { width, height } = await getImageDimensions(webpBlob)
@@ -199,7 +194,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
           return {
             fileName: previewFileName,
-            filePath: publicUrl, // Теперь сохраняется вечная ссылка из хранилища Supabase!
+            filePath: publicUrl, 
             mimeType: "webp" as any, 
             width: width,
             height: height,
@@ -212,7 +207,8 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
       
-      await onSave(form.name, numericPrice, form.description, finalGalleryImages)
+      // Передаем жестко 0 в качестве цены
+      await onSave(form.name, 0, form.description, finalGalleryImages)
     } catch (err: any) {
       console.error("Update failed:", err)
       setValidationError(err.message || "Failed to update asset.")
@@ -228,7 +224,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       <div className="bg-card border border-border/60 w-full max-w-lg p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         
         <div className="mb-4 border-b border-border/40 pb-3 flex justify-between items-center sticky top-0 bg-card z-10">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Asset Manifest</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
           <button 
             type="button" 
             onClick={onClose} 
@@ -315,20 +311,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
               className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-            />
-          </div>
-
-          <div className="grid gap-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">License Price (USD)</label>
-            <input 
-              type="number" 
-              step="0.01"
-              min="5.00"
-              required
-              disabled={isWorking}
-              className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground font-mono outline-none rounded-none focus:border-primary transition-colors disabled:opacity-50"
-              value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })}
             />
           </div>
 

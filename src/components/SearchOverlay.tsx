@@ -17,11 +17,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
-  
-  // Ленивый запрос для активного поиска
   const [executeSearch, { loading: isSearching, data }] = useLazyQuery(SearchCollectionsDocument);
-
-  // Загружаем 6 штук для New Arrivals
   const { data: latestData, loading: isLatestLoading } = useQuery(GetLatestCollectionsDocument, {
     variables: { limit: 6 }, 
     skip: !isOpen || debouncedQuery.trim().length >= 2,
@@ -55,8 +51,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
   const searchResults = data?.searchCollections ?? [];
   const latestCollections = latestData?.getLatestCollections ?? [];
-
-  // Анимация для списков внутри оверлея
   const listVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
@@ -67,7 +61,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Задник с блюром */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -76,7 +69,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
           />
           
-          {/* Основной оверлей */}
           <motion.div
             initial={{ y: "-100%" }}
             animate={{ y: "0%" }}
@@ -85,8 +77,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             className="fixed left-0 right-0 z-[65] bg-card/95 backdrop-blur-xl border-b border-border/40 font-sans shadow-2xl"
           >
             <div className="max-w-7xl mx-auto px-6 md:px-8 pt-12 pb-12 relative">
-              
-              {/* Поисковая строка */}
+            
               <div className="flex items-center gap-6 max-w-5xl mx-auto mb-10 border-b border-border/40 pb-4 focus-within:border-primary transition-colors">
                 <Search className="h-6 w-6 text-muted-foreground stroke-[1.5]" />
                 <div className="relative flex-1">
@@ -110,13 +101,9 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   </button>
                 )}
               </div>
-
-              {/* Основной контент (На всю ширину) */}
               <div className="max-w-5xl mx-auto min-h-[300px]">
                 <AnimatePresence mode="wait">
                   {query.trim().length >= 2 ? (
-                    
-                    // РЕЗУЛЬТАТЫ ПОИСКА (Теперь карточки гораздо крупнее)
                     <motion.div key="results" variants={listVariants} initial="hidden" animate="visible" exit="exit" className="space-y-5">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary">
                         Live Results
@@ -153,8 +140,9 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                 </div>
                               </div>
                               <div className="flex flex-col justify-center items-end gap-3 pl-4">
+                                {/* --- ОБНОВЛЕННЫЙ БЛОК ЦЕНЫ ДЛЯ LIVE RESULTS --- */}
                                 <span className="font-mono text-sm md:text-base font-bold text-foreground">
-                                  ${item.price?.toFixed(2) || "0.00"}
+                                  {item.price === 0 ? "FREE" : `$${item.price?.toFixed(2) || "0.00"}`}
                                 </span>
                                 <ArrowRight className="h-5 w-5 stroke-[1.5] text-primary opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                               </div>
@@ -170,7 +158,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
                   ) : (
 
-                    // ДЕФОЛТНОЕ СОСТОЯНИЕ: NEW ARRIVALS
                     <motion.div key="default" variants={listVariants} initial="hidden" animate="visible" exit="exit" className="space-y-6">
                       <div className="space-y-4">
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -200,7 +187,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                 </div>
                                 <div className="flex items-center justify-between mt-auto border-t border-border/20 pt-3">
                                   <span className="font-mono text-sm font-bold text-foreground">
-                                    ${item.price?.toFixed(2) || "0.00"}
+                                    {item.price === 0 ? "FREE" : `$${item.price?.toFixed(2) || "0.00"}`}
                                   </span>
                                   <ArrowRight className="h-4 w-4 stroke-[1.5] text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                                 </div>

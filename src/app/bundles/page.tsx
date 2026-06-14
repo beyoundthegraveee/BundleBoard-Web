@@ -27,7 +27,8 @@ export default function BundlesPage() {
           <span className="text-foreground">Global Directory</span>
         </div>
         
-        <header className="border-b border-white/[0.06] pb-6">
+        {/* ИСПРАВЛЕНО: border-white/[0.06] заменено на border-border */}
+        <header className="border-b border-border pb-6">
           <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase font-display">
             Directory // Global
           </h1>
