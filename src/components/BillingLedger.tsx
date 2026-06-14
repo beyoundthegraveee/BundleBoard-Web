@@ -27,21 +27,30 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
             <thead>
               <tr className="border-b border-border/40 uppercase font-semibold text-muted-foreground tracking-wider">
                 <th className="pb-3">Date</th>
-                <th className="pb-3 text-center">Reference ID</th>
+                {/* Заменили Reference ID на Status / Details */}
+                <th className="pb-3 text-center">Status / Details</th>
                 <th className="pb-3 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="font-medium text-foreground uppercase tracking-wide">
-              {purchases.map((p: any) => (
-                <tr key={p.id} className="border-b border-border/10 last:border-0 text-xs hover:bg-muted/10 transition-colors">
+              {purchases.map((p: any, index: number) => (
+                <tr key={p.id || index} className="border-b border-border/10 last:border-0 text-xs hover:bg-muted/10 transition-colors">
                   <td className="py-3.5 font-semibold">
                     {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
-                  <td className="py-3.5 text-center text-[11px] text-muted-foreground opacity-60 font-mono">
-                    #{p.id ? p.id.slice(0, 8) : '????'}
+                  {/* Выводим статус и количество ассетов */}
+                  <td className="py-3.5 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-0.5">
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                        {p.status || 'PROCESSED'}
+                      </span>
+                      <span className="text-[8px] text-muted-foreground uppercase tracking-widest font-mono">
+                        {p.items?.length || 0} NODES ACQUIRED
+                      </span>
+                    </div>
                   </td>
                   <td className="py-3.5 text-right font-bold text-foreground font-mono">
-                    {Number(p.amount || 0).toFixed(2)} {p.currency}
+                    {Number(p.amount || 0) === 0 ? "FREE" : `${Number(p.amount).toFixed(2)} ${p.currency}`}
                   </td>
                 </tr>
               ))}
@@ -62,7 +71,7 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
             Total Value Processed
           </span>
           <span className="text-xl font-bold tracking-tight text-foreground font-mono">
-            {totalSpent} {purchases?.[0]?.currency || "USD"}
+            {totalSpent === "0.00" ? "FREE" : `${totalSpent} ${purchases?.[0]?.currency || "USD"}`}
           </span>
         </div>
       </div>

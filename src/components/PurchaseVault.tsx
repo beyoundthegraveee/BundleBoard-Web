@@ -34,7 +34,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
             <h3 className="text-xl font-bold uppercase tracking-wider font-display text-foreground">
               Core Vault Directory
             </h3>
-
+            
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-xs font-mono font-medium text-muted-foreground uppercase tracking-widest">
                 Total Value: ${totalAmount.toFixed(2)}
@@ -91,13 +91,13 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
                         {assetData.name || `Asset Node #${item.id || "Unknown"}`}
                       </h4>
                       <div className="flex items-center gap-2.5">
-                        <span className="block text-[10px] text-muted-foreground uppercase tracking-wide font-mono">
-                          Status // {item.pStatus}
-                        </span>
-                        {/* --- УВЕЛИЧЕННЫЙ ТЕКСТ "[FREE LICENSE]" --- */}
-                        {item.snapshotPrice === 0 && (
+                        {item.snapshotPrice === 0 ? (
                           <span className="block text-[10px] font-semibold text-primary uppercase tracking-wide font-mono">
                             [Free License]
+                          </span>
+                        ) : (
+                          <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide font-mono">
+                            [Standard License]
                           </span>
                         )}
                       </div>
