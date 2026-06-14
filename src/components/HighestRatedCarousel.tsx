@@ -100,7 +100,6 @@ export function HighestRatedCarousel() {
                         <span className="text-[10px] font-bold tracking-wider">{item.likesCount || 0}</span>
                       </div>
                       
-                      {/* У вас уже была отличная логика для плашки поверх картинки! */}
                       {item.price === 0 && (
                         <div className="absolute top-3 left-3 bg-primary/20 backdrop-blur-md px-2 py-1 border border-primary/50 z-10 rounded-none">
                           <span className="text-primary text-[9px] font-bold uppercase tracking-widest">Free</span>
@@ -113,9 +112,6 @@ export function HighestRatedCarousel() {
                           <h3 className="font-bold text-[17px] md:text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover/card:text-primary truncate">
                             {item.name}
                           </h3>
-                          <span className="font-bold text-[16px] md:text-[18px] text-foreground tracking-tight">
-                            {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
-                          </span>
                         </div>
                         <p className="text-muted-foreground text-[13px] md:text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
                           {item.description || "No description data submitted."}
