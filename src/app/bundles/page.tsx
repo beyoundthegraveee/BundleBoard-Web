@@ -46,7 +46,7 @@ export default function BundlesPage() {
           />
           
           <div className="flex-1 w-full min-w-0">
-            <SortCollectionGrid sortBy={activeSort} />
+            <SortCollectionGrid sortBy={activeSort} mimeTypes={activeFormats} />
           </div>
           
         </div>
