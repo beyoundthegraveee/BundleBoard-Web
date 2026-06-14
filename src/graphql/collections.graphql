@@ -144,3 +144,20 @@ query GetLatestCollections($limit: Int!) {
     }
   }
 }
+
+query GetSortedCollections($page: Int!, $size: Int!, $sortBy: String!) {
+  getSortedCollections(page: $page, size: $size, sortBy: $sortBy) {
+    id
+    name
+    description
+    price
+    likesCount
+    author {
+      username
+      totalSales
+    }
+    galleryImages {
+      filePath
+    }
+  }
+}
