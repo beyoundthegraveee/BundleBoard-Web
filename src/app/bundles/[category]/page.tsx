@@ -48,7 +48,7 @@ export default function BundleCategoryPage() {
           <span className="text-primary">{categorySlug}</span>
         </div>
 
-        <header className="border-b border-white/[0.06] pb-6">
+        <header className="border-b border-border pb-6">
           <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase font-display">
             Directory // {categorySlug}
           </h1>
@@ -73,11 +73,11 @@ export default function BundleCategoryPage() {
             <CategoryCollectionGrid collections={collections} />
             
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 pt-10 mt-10 border-t border-white/[0.05] select-none">
+              <div className="flex items-center justify-center gap-4 pt-10 mt-10 border-t border-border select-none">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 0}
-                  className="h-9 w-9 border border-white/[0.08] bg-[#0d0c0e] hover:bg-accent disabled:opacity-10 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-foreground"
+                  className="h-9 w-9 border border-border bg-card hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-foreground"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -89,7 +89,7 @@ export default function BundleCategoryPage() {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages - 1}
-                  className="h-9 w-9 border border-white/[0.08] bg-[#0d0c0e] hover:bg-accent disabled:opacity-10 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-foreground"
+                  className="h-9 w-9 border border-border bg-card hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-foreground"
                 >
                   <ChevronRight size={16} />
                 </button>

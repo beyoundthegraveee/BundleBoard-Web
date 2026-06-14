@@ -56,7 +56,8 @@ export default function FavoritesPage() {
           </span>
         </div>
         
-        <header className="border-b border-white/[0.06] pb-6 flex justify-between items-end">
+        {/* ИСПРАВЛЕНО: border-white/[0.06] -> border-border */}
+        <header className="border-b border-border pb-6 flex justify-between items-end">
           <div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase font-display">
               Saved Assets
@@ -84,7 +85,7 @@ export default function FavoritesPage() {
         ) : (
           <>
             {likedCollections.length === 0 && !error ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px] border border-dashed border-white/[0.05] bg-white/[0.01]">
+              <div className="flex flex-col items-center justify-center min-h-[300px] border border-dashed border-border bg-muted/10">
                 <Heart size={32} className="text-muted-foreground/30 mb-4 stroke-[1]" />
                 <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">No Saved Manifests</h3>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mt-2">
