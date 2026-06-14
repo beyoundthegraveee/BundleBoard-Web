@@ -56,7 +56,7 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
                     {item.name}
                   </h3>
                   <span className="font-bold text-[14px] text-foreground tracking-tight font-mono">
-                    ${item.price.toFixed(2)}
+                    {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-[12px] leading-relaxed line-clamp-2 font-normal opacity-70">

@@ -22,7 +22,6 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
       className="w-full"
     >
       <CardBody className="relative border border-border/60 bg-card aspect-video w-full h-auto overflow-hidden rounded-none shadow-xl group/card">
-        {/* Картинка, которая "вылетает" вперед на 40px при наведении */}
         <CardItem 
           translateZ="40" 
           className="w-full h-full"
@@ -118,7 +117,10 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         <div className="flex items-center gap-4 border border-border/60 p-2 bg-card/50 rounded-none shrink-0 w-full md:w-auto justify-between md:justify-start">
           <div className="px-3">
             <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Value</span>
-            <div className="text-xl font-bold text-foreground">${price.toFixed(2)}</div>
+            {/* --- ОБНОВЛЕННЫЙ БЛОК ЦЕНЫ --- */}
+            <div className="text-xl font-bold text-foreground">
+              {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
+            </div>
           </div>
           <div className="flex items-center gap-2 h-full w-full md:w-auto">
             <div className="flex items-center h-full">
@@ -142,7 +144,10 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             >
               <ShoppingCart size={12} />
               {localIsInCart ? "In Cart" : "Add to Cart"}
-              <span className="md:hidden ml-auto">${price.toFixed(2)}</span>
+              {/* --- ОБНОВЛЕННЫЙ БЛОК ЦЕНЫ ДЛЯ МОБИЛОК --- */}
+              <span className="md:hidden ml-auto">
+                {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
+              </span>
             </button>
           </div>
         </div>

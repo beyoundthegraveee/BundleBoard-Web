@@ -6,8 +6,6 @@ import { Heart, Loader2 } from 'lucide-react';
 import { FALLBACK_IMAGE } from '@/lib/constants';
 import { useQuery } from '@apollo/client/react';
 import { GetTopLikedCollectionsDocument } from '@/graphql/generated';
-
-// Обязательно импортируйте ваши 3D компоненты по правильному пути!
 import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card'; 
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
@@ -52,16 +50,13 @@ export function HighestRatedCarousel() {
     );
   }
 
-  // Дублируем массив 2 раза для создания бесшовной бесконечной CSS-ленты
   const carouselItems = [...fetchedCollections, ...fetchedCollections];
 
   return (
     <div className="relative w-full overflow-hidden font-sans py-8">
-      {/* Градиентные затемнения по бокам */}
       <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
       <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-      {/* GPU-ускоренная CSS анимация */}
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes marquee {
@@ -79,7 +74,6 @@ export function HighestRatedCarousel() {
         `
       }} />
 
-      {/* Лента, которая останавливается при наведении (hover) */}
       <div className="animate-marquee">
         {carouselItems.map((item, index) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
@@ -89,13 +83,10 @@ export function HighestRatedCarousel() {
 
           return (
             <div key={`${item.id}-${index}`} className="px-5">
-              {/* Обертка 3D-контейнера */}
               <CardContainer containerClassName="py-0" className="w-[280px] md:w-[360px]">
                 <CardBody className="relative group/card w-full h-auto rounded-none flex flex-col">
                   
                   <Link href={`/collection/${item.id}`} className="block w-full h-full" draggable={false}>
-                    
-                    {/* Картинка получает сильный 3D-вылет (translateZ="50") */}
                     <CardItem translateZ="50" className="w-full aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                       <img 
                         src={imageUrl || FALLBACK_IMAGE}
@@ -109,14 +100,13 @@ export function HighestRatedCarousel() {
                         <span className="text-[10px] font-bold tracking-wider">{item.likesCount || 0}</span>
                       </div>
                       
+                      {/* У вас уже была отличная логика для плашки поверх картинки! */}
                       {item.price === 0 && (
                         <div className="absolute top-3 left-3 bg-primary/20 backdrop-blur-md px-2 py-1 border border-primary/50 z-10 rounded-none">
                           <span className="text-primary text-[9px] font-bold uppercase tracking-widest">Free</span>
                         </div>
                       )}
                     </CardItem>
-
-                    {/* Текст получает средний 3D-вылет (translateZ="30") */}
                     <CardItem translateZ="30" className="w-full pt-6 flex flex-col justify-between">
                       <div className="space-y-2.5">
                         <div className="flex justify-between items-baseline gap-4">
@@ -124,7 +114,7 @@ export function HighestRatedCarousel() {
                             {item.name}
                           </h3>
                           <span className="font-bold text-[16px] md:text-[18px] text-foreground tracking-tight">
-                            ${item.price.toFixed(2)}
+                            {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                           </span>
                         </div>
                         <p className="text-muted-foreground text-[13px] md:text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
