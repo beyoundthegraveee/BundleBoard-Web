@@ -133,3 +133,14 @@ query GetTopLikedCollections($limit: Int!) {
     }
   }
 }
+
+query GetLatestCollections($limit: Int!) {
+  getLatestCollections(limit: $limit) {
+    id
+    name
+    price
+    galleryImages {
+      filePath
+    }
+  }
+}
