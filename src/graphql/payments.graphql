@@ -1,3 +1,10 @@
 mutation CreateCheckoutSession($input: PaymentRequest!) {
   createCheckoutSession(input: $input)
 }
+
+query VerifyAssetPurchase($assetId: ID!) {
+  getPurchaseByAsset(assetId: $assetId) {
+    status
+    assetPath
+  }
+}
