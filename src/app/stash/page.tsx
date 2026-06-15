@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Loader2, FolderLock, Download, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Loader2, FolderLock, Download, AlertTriangle, Clock } from 'lucide-react'
 import LikeButton from '@/components/LikeButton'
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { useQuery } from '@apollo/client/react'
@@ -20,7 +20,7 @@ export default function StashPage() {
   const userData = data?.getUserProfile
   const purchases = userData?.purchases || []
   const totalAssetsCount = useMemo(() => {
-    return purchases.reduce((acc, curr) => acc + (curr?.items?.length || 0), 0)
+    return purchases.reduce((acc: any, curr: any) => acc + (curr?.items?.length || 0), 0)
   }, [purchases])
 
   if (status === "loading" || loading) {
@@ -50,7 +50,7 @@ export default function StashPage() {
         <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
           <Link href="/" className="hover:text-foreground transition-colors">Core</Link>
           <span className="opacity-30">/</span>
-          <Link href="/profile" className="hover:text-foreground transition-colors">Node Control</Link>
+          <span className="text-muted-foreground">Node Control</span>
           <span className="opacity-30">/</span>
           <span className="text-primary flex items-center gap-1">
             <FolderLock size={10} className="text-primary" /> Secure Stash
@@ -69,6 +69,7 @@ export default function StashPage() {
             {totalAssetsCount} Nodes Decrypted
           </span>
         </header>
+        
         {totalAssetsCount > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
             {purchases.map((purchase: any) => (
@@ -88,7 +89,7 @@ export default function StashPage() {
                     <div key={item.id} className="group border border-border/40 bg-card rounded-none shadow-sm overflow-hidden flex flex-col justify-between relative">
                       <div className="aspect-video border-b border-border/30 overflow-hidden bg-muted relative">
                         <img 
-                          src={item.asset.previewImage?.filePath || FALLBACK_IMAGE} 
+                          src={item.asset.galleryImages?.[0]?.filePath || FALLBACK_IMAGE} 
                           alt={item.asset.name} 
                           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" 
                         />
@@ -100,17 +101,34 @@ export default function StashPage() {
 
                       <div className="p-4 space-y-4">
                         <div className="flex justify-between items-start gap-4">
-                          <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">{item.asset.name}</span>
-                          <div className="text-[8px] bg-muted border border-border/60 px-1.5 py-0.5 font-bold uppercase text-muted-foreground tracking-wider shrink-0 font-mono">
+                          <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">
+                            {item.asset.name}
+                          </span>
+                          
+                          {/* Цветовая индикация статуса покупки */}
+                          <div className={`text-[8px] border px-1.5 py-0.5 font-bold uppercase tracking-wider shrink-0 font-mono
+                            ${purchase.status === 'succeeded' ? 'bg-primary/10 text-primary border-primary/30' : 
+                              purchase.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' : 
+                              'bg-destructive/10 text-destructive border-destructive/30'}`}>
                             {purchase.status}
                           </div>
                         </div>
-                        <Link 
-                          href={`/assets/${item.asset.id}`} 
-                          className="flex items-center justify-center gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2.5 font-bold text-[10px] uppercase tracking-widest transition-colors rounded-none"
-                        >
-                          <Download size={12} /> Download Asset Package
-                        </Link>
+
+                        {purchase.status === 'succeeded' ? (
+                          <a 
+                            href={`/api/download/${item.asset.id}`}
+                            download
+                            className="flex items-center justify-center gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2.5 font-bold text-[10px] uppercase tracking-widest transition-colors rounded-none"
+                          >
+                            <Download size={12} /> Download Asset
+                          </a>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 w-full bg-muted text-muted-foreground p-2.5 font-bold text-[10px] uppercase tracking-widest border border-border/50 cursor-not-allowed">
+                            <Clock size={12} className={purchase.status === 'pending' ? "animate-pulse text-yellow-500" : ""} /> 
+                            {purchase.status === 'pending' ? 'Awaiting Payment' : 'Payment Failed'}
+                          </div>
+                        )}
+                        
                       </div>
                     </div>
                   )
