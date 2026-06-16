@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
+import { useSession } from "next-auth/react"
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
 import LikeButton from '@/components/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
@@ -53,17 +54,22 @@ const formatBytes = (bytes: number) => {
 };
 
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
+  const { data: session } = useSession();
+
   if (!collection) return null;
-  const { name, description, price, mediaResource, id, galleryImages, likesCount = 0, isLiked = false } = collection;
+  const { name, description, price, mediaResource, id, galleryImages, likesCount = 0, isLiked = false, author } = collection;
+  
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(likesCount);
   
+  const isOwnCollection = session?.user?.name === author.username;
+
   useEffect(() => {
     setLocalIsInCart(isInCart);
   }, [isInCart]);
 
   const handleAddToCartClick = () => {
-    if (localIsInCart) return;
+    if (localIsInCart || isOwnCollection) return;
     onAddToCart({
       id,
       name,
@@ -117,7 +123,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         <div className="flex items-center gap-4 border border-border/60 p-2 bg-card/50 rounded-none shrink-0 w-full md:w-auto justify-between md:justify-start">
           <div className="px-3">
             <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Value</span>
-            {/* --- ОБНОВЛЕННЫЙ БЛОК ЦЕНЫ --- */}
             <div className="text-xl font-bold text-foreground">
               {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
             </div>
@@ -133,22 +138,32 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
                 {localLikesCount}
               </div>
             </div>
-            <button 
-              onClick={handleAddToCartClick}
-              disabled={localIsInCart}
-              className={`flex items-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full ${
-                localIsInCart
-                  ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
-                  : 'bg-primary hover:opacity-90'
-              }`}
-            >
-              <ShoppingCart size={12} />
-              {localIsInCart ? "In Cart" : "Add to Cart"}
-              {/* --- ОБНОВЛЕННЫЙ БЛОК ЦЕНЫ ДЛЯ МОБИЛОК --- */}
-              <span className="md:hidden ml-auto">
-                {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
-              </span>
-            </button>
+            
+            {isOwnCollection ? (
+              <button 
+                disabled
+                className="flex items-center justify-center gap-2 text-muted-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full bg-muted border border-border/40 cursor-not-allowed min-w-[120px]"
+              >
+                <Shield size={12} />
+                Your Asset
+              </button>
+            ) : (
+              <button 
+                onClick={handleAddToCartClick}
+                disabled={localIsInCart}
+                className={`flex items-center justify-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full min-w-[120px] ${
+                  localIsInCart
+                    ? 'bg-muted text-muted-foreground border border-border/40 cursor-not-allowed' 
+                    : 'bg-primary hover:opacity-90'
+                }`}
+              >
+                <ShoppingCart size={12} />
+                {localIsInCart ? "In Cart" : "Add to Cart"}
+                <span className="md:hidden ml-auto">
+                  {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
