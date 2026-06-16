@@ -63,6 +63,7 @@ query GetCollection($id: ID!) {
       bio
       rating
       totalSales
+      downloadCount
       socialLinks { 
         platform 
         url 

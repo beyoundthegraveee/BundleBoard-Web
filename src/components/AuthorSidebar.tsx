@@ -1,8 +1,10 @@
 "use client"
 
 import React from 'react'
-import { User, Star, ShoppingCart, Share2, ExternalLink } from "lucide-react"
+import { User, Star, ShoppingCart, Share2, ExternalLink, Download } from "lucide-react"
 import { GetCollectionQuery } from '@/graphql/generated'
+import { ALLOWED_PLATFORMS } from '@/lib/socialLinks'
+
 type AuthorData = GetCollectionQuery['getCollectionById']['author'];
 
 interface AuthorSidebarProps {
@@ -12,12 +14,13 @@ interface AuthorSidebarProps {
 export default function AuthorSidebar({ author }: AuthorSidebarProps) {
   const { 
     username, 
-    bio, 
-    rating = 0, 
+    rating = 0,     
     totalSales = 0, 
     avatarUrl, 
     socialLinks 
   } = author;
+
+  const downloadCount = (author as any).downloadCount || 0;
 
   return (
     <div className="border border-border/60 bg-card text-foreground rounded-none shadow-xl font-sans overflow-hidden">
@@ -49,7 +52,7 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
             )}
           </div>
           <div className="space-y-1">
-            <h3 className="text-xl font-bold tracking-tight text-foreground">
+            <h3 className="text-xl font-bold tracking-tight text-foreground truncate max-w-[180px]">
               @{username}
             </h3>
             <span className="inline-block text-[9px] font-medium uppercase tracking-widest text-muted-foreground border border-border/60 px-2 py-0.5">
@@ -58,25 +61,36 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
           </div>
         </div>
 
-        <p className="text-[13px] leading-relaxed text-muted-foreground font-normal">
-          {bio || "No custom bio parameters submitted for this profile matrix."}
-        </p>
-
-        <div className="grid grid-cols-2 border border-border/40 bg-background divide-x divide-border/40 rounded-none">
-          <div className="p-3 text-center">
-            <div className="flex justify-center items-center gap-1.5 text-muted-foreground mb-1">
-              <Star size={13} className="text-primary fill-primary/20 stroke-[1.5]" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Rating</span>
-            </div>
-            <div className="text-lg font-bold tracking-tight text-foreground">{rating?.toFixed(1) || "N/A"}</div>
-          </div>
+        <div className="grid grid-cols-3 border border-border/40 bg-background divide-x divide-border/40 rounded-none">
           
-          <div className="p-3 text-center">
-            <div className="flex justify-center items-center gap-1.5 text-muted-foreground mb-1">
-              <ShoppingCart size={13} className="stroke-[1.5]" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Sales</span>
+          <div className="p-2 text-center">
+            <div className="flex justify-center items-center gap-1 text-muted-foreground mb-1">
+              <Star size={11} className="text-primary fill-primary/20 stroke-[1.5]" />
+              <span className="text-[9px] font-medium uppercase tracking-wider">Rating</span>
             </div>
-            <div className="text-lg font-bold tracking-tight text-foreground">{totalSales?.toString() || "N/A"}</div>
+            <div className="text-base font-bold tracking-tight text-foreground">
+              {rating != null ? rating.toFixed(1) : "0.0"}
+            </div>
+          </div>
+
+          <div className="p-2 text-center">
+            <div className="flex justify-center items-center gap-1 text-muted-foreground mb-1">
+              <ShoppingCart size={11} className="stroke-[1.5]" />
+              <span className="text-[9px] font-medium uppercase tracking-wider">Sales</span>
+            </div>
+            <div className="text-base font-bold tracking-tight text-foreground">
+              {totalSales ?? 0}
+            </div>
+          </div>
+
+          <div className="p-2 text-center">
+            <div className="flex justify-center items-center gap-1 text-muted-foreground mb-1">
+              <Download size={11} className="stroke-[1.5]" />
+              <span className="text-[9px] font-medium uppercase tracking-wider">Downs</span>
+            </div>
+            <div className="text-base font-bold tracking-tight text-foreground">
+              {downloadCount ?? 0}
+            </div>
           </div>
         </div>
 
@@ -88,20 +102,29 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
           
           <div className="grid grid-cols-1 gap-2">
             {socialLinks && socialLinks.length > 0 ? (
-              socialLinks.map((link, idx) => (
-                <a 
-                  key={idx} 
-                  href={link?.url || "#"} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group flex justify-between items-center border border-border/60 p-3 bg-background hover:bg-accent text-foreground transition-all rounded-none"
-                >
-                  <span className="text-xs font-medium uppercase tracking-wider">
-                    {link?.platform}
-                  </span>
-                  <ExternalLink size={13} className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-px transition-all stroke-[1.5]" />
-                </a>
-              ))
+              socialLinks.map((link, idx) => {
+                const platformDef = ALLOWED_PLATFORMS.find(p => p.id === link?.platform);
+                const Icon = platformDef?.icon || ExternalLink;
+                const label = platformDef?.label || link?.platform;
+
+                return (
+                  <a 
+                    key={idx} 
+                    href={link?.url || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group flex justify-between items-center border border-border/60 p-3 bg-background hover:bg-accent text-foreground transition-all rounded-none"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        {label}
+                      </span>
+                    </div>
+                    <ExternalLink size={13} className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-px group-hover:-translate-y-px transition-transform stroke-[1.5]" />
+                  </a>
+                );
+              })
             ) : (
               <div className="text-[10px] text-muted-foreground/60 text-center py-4 border border-dashed border-border/40 rounded-none uppercase tracking-wide">
                 No external links submitted

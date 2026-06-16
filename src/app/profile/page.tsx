@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu } from "lucide-react"
+import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive } from "lucide-react" // 1. Добавил иконки Download и Archive
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
@@ -43,14 +43,34 @@ export default function ProfilePage() {
     )
   }
 
-
   const isAuthor = userData?.roles?.includes("author")
-  const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
   
+  // Подсчет для секции покупателя (PurchasedVault / BillingLedger)
+  const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
   let totalAssetsCount = 0;
   if (userData?.purchases) {
     userData.purchases.forEach((purchase: any) => {
       totalAssetsCount += purchase?.items?.length || 0;
+    });
+  }
+
+  // 2. ПОДСЧЕТ МЕТРИК ДЛЯ АВТОРА
+  let authorTotalDownloads = 0;
+  let authorTotalRevenue = 0;
+  const authorCollectionsCount = userData?.authoredCollections?.length || 0;
+
+  if (userData?.authoredCollections) {
+    userData.authoredCollections.forEach((col: any) => {
+      if (col) {
+        // Суммируем скачивания (нужно убедиться, что downloadCount есть в GraphQL запросе)
+        const downloads = col.downloadCount || 0;
+        authorTotalDownloads += downloads;
+        
+        // Считаем выручку: (кол-во скачиваний) * (цена коллекции)
+        // Предполагается, что скачивание = успешная покупка
+        const price = col.price || 0;
+        authorTotalRevenue += (downloads * price);
+      }
     });
   }
 
@@ -108,15 +128,35 @@ export default function ProfilePage() {
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                
                 <div className="border border-border/40 p-4 bg-background">
-                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1"><BarChart3 size={11}/> Total Sales</div>
-                  <div className="text-xl font-bold mt-1 text-foreground">0 Units</div>
+                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Archive size={11}/> Collections
+                  </div>
+                  <div className="text-xl font-bold mt-1 text-foreground">
+                    {authorCollectionsCount}
+                  </div>
                 </div>
+
                 <div className="border border-border/40 p-4 bg-background">
-                  <div className="text-[9px] font-semibold uppercase text-muted-foreground">Net Profit</div>
-                  <div className="text-xl font-bold mt-1 text-primary">$0.00</div>
+                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Download size={11}/> Downloads
+                  </div>
+                  <div className="text-xl font-bold mt-1 text-foreground">
+                    {authorTotalDownloads}
+                  </div>
                 </div>
+
+                <div className="border border-border/40 p-4 bg-background col-span-2">
+                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <BarChart3 size={11}/> Est. Revenue
+                  </div>
+                  <div className="text-xl font-bold mt-1 text-primary">
+                    ${authorTotalRevenue.toFixed(2)}
+                  </div>
+                </div>
+
               </div>
 
               <div className="space-y-2">
