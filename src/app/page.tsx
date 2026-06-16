@@ -129,7 +129,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-foreground text-background pt-20 pb-12 relative z-20 border-t border-border/10">
+     <footer className="bg-foreground text-background pt-20 pb-12 relative z-20 border-t border-border/10">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
             
@@ -137,29 +137,27 @@ export default function Home() {
               <div className="text-sm font-bold tracking-[0.25em] text-background uppercase">
                 BUNDLE<span className="opacity-40">BOARD</span>
               </div>
-              <p className="text-background/60 text-xs max-w-sm leading-relaxed uppercase tracking-wider font-normal">
-                Developing professional utility interface nodes and secure file delivery streams. Engineered for agencies, digital product designers, and technical artists.
-              </p>
             </div>
             
-            {['Directory', 'Protocols'].map((title, i) => (
-              <div key={title} className="flex flex-col gap-3">
-                <span className="text-background text-xs font-bold uppercase tracking-wider mb-1">{title}</span>
-                <a className="text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors inline-flex items-center gap-1 cursor-pointer">
-                  {i === 0 ? "Global Catalog" : "Developer Manifest"} <ExternalLink size={10} className="opacity-40" />
-                </a>
-                <a className="text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors inline-flex items-center gap-1 cursor-pointer">
-                  {i === 0 ? "License Framework" : "Encryption Architecture"} <ExternalLink size={10} className="opacity-40" />
-                </a>
-              </div>
-            ))}
+            <div className="flex flex-col gap-3">
+              <span className="text-background text-xs font-bold uppercase tracking-wider mb-1">Directory</span>
+              <Link href="/bundles" className="text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors">
+                Global Catalog
+              </Link>
+              <Link href="/terms" className="text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors">
+                Terms of Service
+              </Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-background text-xs font-bold uppercase tracking-wider mb-1">Protocols</span>
+              <a href="mailto:bundleboard@gmail.com" className="text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors inline-flex items-center gap-1">
+                Support Node <ExternalLink size={10} className="opacity-40" />
+              </a>
+            </div>
           </div>
-
           <div className="flex flex-col sm:flex-row justify-between items-center border-t border-background/10 pt-8 gap-4 text-[10px] text-background/40 tracking-widest uppercase font-medium">
-            <span>Core Node: 52.2297° N, 21.0122° E</span>
             <div className="flex gap-8 items-center">
-              <span className="hover:text-background transition-colors cursor-pointer">Privacy Protocol</span>
-              <span>© 2026 BundleBoard. Storage encrypted.</span>
+              <span>© 2026 BundleBoard. All Rights Reserved.</span>
             </div>
           </div>
         </div>
