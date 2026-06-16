@@ -30,13 +30,18 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
   const handleSaveProfile = async () => {
     const platformIds = socialLinks.map(link => link.platform);
     const hasDuplicates = new Set(platformIds).size !== platformIds.length;
-    const newErrors = socialLinks.map(link => !validateSocialUrl(link.platform, link.url));
-    setLinkErrors(newErrors);
 
     if (hasDuplicates) {
       toast.error("You cannot add the same platform more than once");
       return;
     }
+
+    const newErrors = socialLinks.map(link => {
+      if (!link.url || link.url.trim() === "") return true;
+      return !validateSocialUrl(link.platform, link.url);
+    });
+
+    setLinkErrors(newErrors);
 
     if (newErrors.some(err => err)) {
       toast.error("Please check the link format");
@@ -52,9 +57,11 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
         }
       })
       setIsEditing(false)
+      toast.success("Profile configuration updated successfully.");
       onUpdate()
     } catch (err: any) {
       console.error("PROFILE_UPDATE_FAILURE:", err)
+      toast.error("Failed to commit profile changes.");
     } finally {
       setIsSaving(false)
     }

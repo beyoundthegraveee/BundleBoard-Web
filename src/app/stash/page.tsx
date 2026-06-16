@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Loader2, FolderLock, Download, AlertTriangle, Clock } from 'lucide-react'
-import LikeButton from '@/components/LikeButton'
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
+import { toast } from 'sonner'
 
 export default function StashPage() {
   const { status } = useSession()
@@ -16,6 +16,12 @@ export default function StashPage() {
     skip: status !== "authenticated",
     fetchPolicy: 'cache-and-network'
   })
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to load core vault pipeline.")
+    }
+  }, [error])
 
   const userData = data?.getUserProfile
   const purchases = userData?.purchases || []
@@ -31,11 +37,11 @@ export default function StashPage() {
     )
   }
 
-  if (status === "unauthenticated" || error) {
+  if (status === "unauthenticated") {
     return (
       <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 font-sans text-center">
         <div className="p-4 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide bg-destructive/5 rounded-none max-w-md">
-          [SECURE_ACCESS_DENIED]: Authentication token required or database pipeline failure.
+          [SECURE_ACCESS_DENIED]: Authentication token required.
         </div>
         <Link href="/login" className="mt-4 border border-border/80 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-colors">
           Initialize Auth Sequence
@@ -46,7 +52,7 @@ export default function StashPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-12 font-sans animate-in fade-in duration-300">
-      <div className="max-w-[1600px] mx-auto space-y-10">
+      <div className="relative z-10 max-w-[1600px] mx-auto space-y-10">
         <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
           <Link href="/" className="hover:text-foreground transition-colors">Core</Link>
           <span className="opacity-30">/</span>
@@ -95,17 +101,12 @@ export default function StashPage() {
                         />
                       </div>
                       
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <LikeButton collectionId={item.asset.id} />
-                      </div>
-
                       <div className="p-4 space-y-4">
                         <div className="flex justify-between items-start gap-4">
                           <span className="font-bold uppercase text-xs text-foreground tracking-tight leading-snug line-clamp-1">
                             {item.asset.name}
                           </span>
                           
-                          {/* Цветовая индикация статуса покупки */}
                           <div className={`text-[8px] border px-1.5 py-0.5 font-bold uppercase tracking-wider shrink-0 font-mono
                             ${purchase.status === 'succeeded' ? 'bg-primary/10 text-primary border-primary/30' : 
                               purchase.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' : 
