@@ -55,6 +55,7 @@ query GetUserProfile {
       name
       price
       description
+      downloadCount
       galleryImages { 
         filePath 
       }
