@@ -22,7 +22,12 @@ const syncopate = Syncopate({
 
 export const metadata = {
   title: "BundleBoard",
-  description: "Production-grade asset platform",
+  description: "Asset platform",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
