@@ -1,19 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FaGoogle } from "react-icons/fa"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { signIn } from "next-auth/react"
 import { useMutation } from "@apollo/client/react"
 import { RegisterDocument, SocialRegisterDocument } from "@/graphql/generated"
 import { toast } from "sonner"
+import TermsDialog from "@/components/TermsDialog"
 
 const generateRandomPassword = () => Math.random().toString(36).slice(-10) + "A1!";
 
@@ -28,12 +30,13 @@ function RegisterFormContent() {
   
   const isLoading = isSocialLoading || isRegisterLoading;
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, control, formState: { errors } } = useForm({
     defaultValues: {
       username: "",
       email: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      termsAccepted: false 
     }
   })
 
@@ -164,6 +167,43 @@ function RegisterFormContent() {
             <Label htmlFor="confirmPassword" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Confirm Password</Label>
             <Input id="confirmPassword" type="password" className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50" placeholder="Re-enter password" disabled={isLoading} {...register("confirmPassword", { required: "Confirm your password", validate: (val) => val === password || "Passwords do not match" })} />
             {errors.confirmPassword && <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">{errors.confirmPassword.message as string}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="termsAccepted"
+                control={control}
+                rules={{ required: "You must accept the terms" }}
+                render={({ field }) => (
+                  <Checkbox 
+                    id="terms" 
+                    checked={field.value} 
+                    onCheckedChange={field.onChange} 
+                    disabled={isLoading}
+                    className="rounded-none border-border/60 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  />
+                )}
+              />
+              <Label 
+                htmlFor="terms" 
+                className="text-[11px] text-muted-foreground font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I agree to the{" "}
+                <TermsDialog 
+                  trigger={
+                    <span className="text-primary hover:underline cursor-pointer font-bold uppercase tracking-wider">
+                      Terms of Service
+                    </span>
+                  }
+                />
+              </Label>
+            </div>
+            {errors.termsAccepted && (
+              <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-1">
+                {errors.termsAccepted.message as string}
+              </p>
+            )}
           </div>
 
           <Button className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm" type="submit" disabled={isLoading}>
