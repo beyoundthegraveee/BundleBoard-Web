@@ -138,7 +138,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
           )}
         </div>
         
-        <label className="flex items-center justify-center gap-2 border border-border/80 bg-background text-foreground w-full py-2.5 hover:bg-accent font-semibold text-[10px] uppercase tracking-wider cursor-pointer transition-colors rounded-none shadow-sm shrink-0">
+        <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 border border-border/80 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:border-primary/50 cursor-pointer transition-all rounded-none shadow-sm shrink-0">
           <Upload size={12} className="stroke-[1.8]" /> 
           {isUploading ? "Syncing..." : "Update Avatar"}
           <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploading} />
@@ -176,7 +176,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
                         href={link.url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-border bg-muted/40 hover:bg-accent hover:text-primary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground"
+                        className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:border-primary/50 transition-all rounded-none"
                       >
                         <Icon size={12} /> {platformDef?.label || link.platform}
                       </a>
@@ -189,7 +189,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
             <div className="pt-2 flex justify-start">
               <button 
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-secondary-foreground text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors border border-border/50"
+                className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:border-primary/50 transition-all rounded-none"
               >
                 <Edit2 size={10} /> Edit Identity
               </button>
@@ -218,7 +218,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
                   {socialLinks.length < ALLOWED_PLATFORMS.length && (
                     <button 
                       onClick={addSocialLink}
-                      className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                      className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors"
                     >
                       <Plus size={10} /> Add Link
                     </button>
@@ -236,18 +236,12 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
                       <select 
                         value={link.platform}
                         onChange={(e) => updateSocialLink(idx, 'platform', e.target.value)}
-                        className="w-full sm:w-1/3 bg-background border border-border/80 p-2 text-xs font-semibold uppercase tracking-wider outline-none focus:border-primary text-foreground rounded-none cursor-pointer"
+                        className="w-full sm:w-1/3 bg-background border border-border/80 p-2 text-xs font-bold uppercase tracking-wider outline-none focus:border-primary text-foreground rounded-none cursor-pointer"
                       >
                         {ALLOWED_PLATFORMS.map(platform => {
                           const isUsed = socialLinks.some(l => l.platform === platform.id) && link.platform !== platform.id;
-                          
                           return (
-                            <option 
-                              key={platform.id} 
-                              value={platform.id}
-                              disabled={isUsed}
-                              className="bg-popover text-popover-foreground content-box"
-                            >
+                            <option key={platform.id} value={platform.id} disabled={isUsed}>
                               {platform.label}
                             </option>
                           );
@@ -265,16 +259,10 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
                             : "border-border/80 focus:border-primary focus:ring-1 focus:ring-primary"
                         }`}
                       />
-                      {linkErrors[idx] && (
-                        <p className="text-[9px] text-destructive mt-1 font-bold">
-                          Invalid URL format for {ALLOWED_PLATFORMS.find(p => p.id === link.platform)?.label}
-                        </p>
-                      )}
                       
                       <button 
                         onClick={() => removeSocialLink(idx)}
                         className="p-2 border border-destructive/30 text-destructive hover:bg-destructive hover:text-white transition-colors flex items-center justify-center rounded-none"
-                        title="Remove Link"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -287,14 +275,14 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
             <div className="pt-2 flex gap-2 justify-start">
               <button 
                 onClick={() => setIsEditing(false)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-transparent text-muted-foreground text-[9px] font-bold uppercase tracking-widest hover:bg-accent border border-border/50 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:border-primary/50 transition-all rounded-none"
               >
                 <X size={10} /> Cancel
               </button>
               <button 
                 onClick={handleSaveProfile}
                 disabled={isSaving}
-                className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest hover:opacity-90 border border-primary transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 border border-primary bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all rounded-none disabled:opacity-50"
               >
                 {isSaving ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} 
                 Commit
