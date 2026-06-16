@@ -7,13 +7,29 @@ interface WaveBackgroundProps {
   yScale?: number;
   distortion?: number;
   speed?: number;
+  color1?: string;
+  color2?: string;
+  color3?: string;
 }
+
+const hexToRgb = (hex: string) => {
+  const cleanHex = hex.replace('#', '');
+  if (cleanHex.length !== 6) return [1, 1, 1]; 
+  return [
+    parseInt(cleanHex.substring(0, 2), 16) / 255,
+    parseInt(cleanHex.substring(2, 4), 16) / 255,
+    parseInt(cleanHex.substring(4, 6), 16) / 255
+  ];
+};
 
 export default function WaveBackground({
   xScale = 1.0,
   yScale = 0.5,
   distortion = 0.05,
-  speed = 1.0
+  speed = 1.0,
+  color1 = "#ff0000",
+  color2 = "#00ff00",
+  color3 = "#0000ff" 
 }: WaveBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -24,7 +40,6 @@ export default function WaveBackground({
     const gl = canvas.getContext('webgl');
     if (!gl) return;
 
-    // Vertex Shader (Просто растягивает холст на весь экран)
     const vsSource = `
       attribute vec2 position;
       void main() {
@@ -32,7 +47,6 @@ export default function WaveBackground({
       }
     `;
 
-    // Fragment Shader (Твоя логика волн)
     const fsSource = `
       precision highp float;
       uniform vec2 resolution;
@@ -40,6 +54,11 @@ export default function WaveBackground({
       uniform float xScale;
       uniform float yScale;
       uniform float distortion;
+      
+      // Добавляем переменные цветов
+      uniform vec3 u_color1;
+      uniform vec3 u_color2;
+      uniform vec3 u_color3;
 
       void main() {
         vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y);
@@ -50,15 +69,16 @@ export default function WaveBackground({
         float gx = p.x;
         float bx = p.x * (1.0 - d);
 
-        float r = 0.05 / abs(p.y + sin((rx + time) * xScale) * yScale);
-        float g = 0.05 / abs(p.y + sin((gx + time) * xScale) * yScale);
-        float b = 0.05 / abs(p.y + sin((bx + time) * xScale) * yScale);
+        float i1 = 0.05 / abs(p.y + sin((rx + time) * xScale) * yScale);
+        float i2 = 0.05 / abs(p.y + sin((gx + time) * xScale) * yScale);
+        float i3 = 0.05 / abs(p.y + sin((bx + time) * xScale) * yScale);
         
-        gl_FragColor = vec4(r, g, b, 1.0);
+        vec3 finalColor = (i1 * u_color1) + (i2 * u_color2) + (i3 * u_color3);
+        
+        gl_FragColor = vec4(finalColor, 1.0);
       }
     `;
 
-    // Компиляция шейдеров
     const compileShader = (source: string, type: number) => {
       const shader = gl.createShader(type)!;
       gl.shaderSource(shader, source);
@@ -75,7 +95,6 @@ export default function WaveBackground({
     gl.linkProgram(program);
     gl.useProgram(program);
 
-    // Установка буфера позиций
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(
@@ -88,18 +107,24 @@ export default function WaveBackground({
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    // Uniform locations
     const resolutionLoc = gl.getUniformLocation(program, "resolution");
     const timeLoc = gl.getUniformLocation(program, "time");
     const xScaleLoc = gl.getUniformLocation(program, "xScale");
     const yScaleLoc = gl.getUniformLocation(program, "yScale");
     const distortionLoc = gl.getUniformLocation(program, "distortion");
+    
+    const color1Loc = gl.getUniformLocation(program, "u_color1");
+    const color2Loc = gl.getUniformLocation(program, "u_color2");
+    const color3Loc = gl.getUniformLocation(program, "u_color3");
+
+    const rgb1 = hexToRgb(color1);
+    const rgb2 = hexToRgb(color2);
+    const rgb3 = hexToRgb(color3);
 
     let animationFrameId: number;
     const startTime = Date.now();
 
     const render = () => {
-      // Подстраиваем размер канваса под экран
       if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -113,6 +138,10 @@ export default function WaveBackground({
       gl.uniform1f(xScaleLoc, xScale);
       gl.uniform1f(yScaleLoc, yScale);
       gl.uniform1f(distortionLoc, distortion);
+      
+      gl.uniform3f(color1Loc, rgb1[0], rgb1[1], rgb1[2]);
+      gl.uniform3f(color2Loc, rgb2[0], rgb2[1], rgb2[2]);
+      gl.uniform3f(color3Loc, rgb3[0], rgb3[1], rgb3[2]);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       animationFrameId = requestAnimationFrame(render);
@@ -127,12 +156,11 @@ export default function WaveBackground({
       gl.deleteShader(fragmentShader);
       gl.deleteBuffer(positionBuffer);
     };
-  }, [xScale, yScale, distortion, speed]);
+  }, [xScale, yScale, distortion, speed, color1, color2, color3]); // Добавили цвета в зависимости
 
   return (
     <canvas
       ref={canvasRef}
-      // mix-blend-screen убирает черный фон канваса, оставляя только свечение
       className="fixed inset-0 w-full h-full pointer-events-none -z-10 mix-blend-screen opacity-60"
     />
   );

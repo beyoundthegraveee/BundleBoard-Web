@@ -3,6 +3,7 @@ query SearchCollections($query: String!, $page: Int!, $size: Int!) {
     id
     name
     price
+    externalLink
     galleryImages { 
       filePath 
     }
@@ -27,6 +28,7 @@ mutation UpdateCollection($id: ID!, $input: UpdateCollectionRequest!) {
     name
     price
     description
+    externalLink
     galleryImages {
       filePath
     }
@@ -39,6 +41,7 @@ query GetCollectionsPaged($page: Int!, $size: Int!) {
     name
     description
     price
+    externalLink
     author {
       username
       totalSales
@@ -57,7 +60,7 @@ query GetCollection($id: ID!) {
     price
     likesCount
     isLiked
-    videoTutorialUrl
+    externalLink
     author {
       username
       bio
@@ -88,6 +91,7 @@ query GetLikedCollections {
     name
     description
     price
+    externalLink
     author {
       username
     }
@@ -126,6 +130,7 @@ query GetTopLikedCollections($limit: Int!) {
     price
     likesCount
     isLiked
+    externalLink
     author {
       username
     }
@@ -140,6 +145,7 @@ query GetLatestCollections($limit: Int!) {
     id
     name
     price
+    externalLink
     galleryImages {
       filePath
     }
@@ -153,6 +159,7 @@ query GetSortedCollections($page: Int!, $size: Int!, $sortBy: String!, $mimeType
     description
     price
     likesCount
+    externalLink
     author {
       username
       totalSales
