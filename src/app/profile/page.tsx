@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Terminal, Plus, BarChart3, Cpu } from "lucide-react"
+import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu } from "lucide-react"
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
@@ -14,15 +14,23 @@ import { InventoryItemCard } from '@/components/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const { terminateSession } = useAuthActions()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  
   const { data, loading: isProfileLoading, error, refetch } = useQuery(GetUserProfileDocument, {
     skip: status !== "authenticated",
     fetchPolicy: 'cache-and-network',
   });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(`[SYSTEM_PIPELINE_ERROR]: ${error.message}`);
+    }
+  }, [error]);
 
   const userData = data?.getUserProfile;
 
@@ -35,16 +43,10 @@ export default function ProfilePage() {
     )
   }
 
-  if (error) {
-    return (
-       <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-background font-sans text-destructive">
-         <p>Critical System Error: {error.message}</p>
-       </div>
-    )
-  }
 
   const isAuthor = userData?.roles?.includes("author")
   const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
+  
   let totalAssetsCount = 0;
   if (userData?.purchases) {
     userData.purchases.forEach((purchase: any) => {
@@ -53,7 +55,6 @@ export default function ProfilePage() {
   }
 
   return (
-    // 💡 ИЗМЕНЕНИЯ ЗДЕСЬ: добавлено min-h-[calc(100vh-5rem)], h-full и pb-24
     <AuroraBackground className="p-6 md:p-10 lg:p-12 pb-24 min-h-[calc(100vh-5rem)] h-full relative justify-start items-stretch">
       <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative z-10">
         <div>
@@ -145,7 +146,6 @@ export default function ProfilePage() {
           
           <BillingLedger purchases={userData?.purchases as any} totalSpent={totalSpent} />
         </div>
-
       </div>
 
       {isAuthor && (

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
 import { MailCheck, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,20 +8,18 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useMutation } from "@apollo/client/react"
 import { ResendVerificationDocument } from "@/graphql/generated"
+import { toast } from "sonner"
 
 export default function VerifyRequestPage() {
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
   const [executeResend, { loading: isResending }] = useMutation(ResendVerificationDocument)
 
   const handleResendEmail = async () => {
     if (!email) {
-      setMessage({ type: 'error', text: "Email address is missing. Please try to register again." })
+      toast.error("Email address is missing. Please try to register again.")
       return
     }
-
-    setMessage(null)
 
     try {
       const { data } = await executeResend({
@@ -31,12 +29,12 @@ export default function VerifyRequestPage() {
       const resultData = data?.resendVerificationEmail
 
       if (resultData?.success) {
-        setMessage({ type: 'success', text: resultData.message || "Verification email resent successfully. Please check your inbox." })
+        toast.success(resultData.message || "Verification email resent successfully. Please check your inbox.")
       } else {
-        setMessage({ type: 'error', text: resultData?.message || "Failed to resend email. Please try again later." })
+        toast.error(resultData?.message || "Failed to resend email. Please try again later.")
       }
     } catch (e: any) {
-      setMessage({ type: 'error', text: e.message || "Failed to resend email. Please try again later." })
+      toast.error(e.message || "Failed to resend email. Please try again later.")
     }
   }
 
@@ -59,15 +57,6 @@ export default function VerifyRequestPage() {
         </CardHeader>
 
         <CardContent className="grid gap-4 p-8 text-left">
-          {message && (
-            <div className={`border p-3.5 rounded-none text-xs font-semibold uppercase tracking-wide ${
-              message.type === 'success' 
-                ? 'border-border/60 bg-muted/40 text-foreground' 
-                : 'border-destructive/20 bg-destructive/5 text-destructive'
-            }`}>
-              {message.text}
-            </div>
-          )}
           
           <p className="text-xs font-normal leading-relaxed text-muted-foreground">
             We have transmitted an activation key to your destination address. 

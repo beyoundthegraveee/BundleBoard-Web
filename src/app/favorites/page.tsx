@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { Loader2, Heart, ShieldAlert } from 'lucide-react'
 import { useSession } from 'next-auth/react'
@@ -8,6 +8,7 @@ import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid'
 import { useQuery } from '@apollo/client/react'
 import { GetLikedCollectionsDocument } from '@/graphql/generated'
 import WaveBackground from '@/components/WaveBackground'
+import { toast } from 'sonner'
 
 export default function FavoritesPage() {
   const { status } = useSession();
@@ -15,6 +16,13 @@ export default function FavoritesPage() {
     skip: status !== "authenticated",
     fetchPolicy: 'cache-and-network' 
   });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(`[PIPELINE_ERROR]: ${error.message || "Failed to load preferences sequence"}`);
+    }
+  }, [error]);
+
   const likedCollections = data?.getLikedCollections || [];
 
   if (status === "loading") {
@@ -77,12 +85,6 @@ export default function FavoritesPage() {
             {likedCollections.length} Nodes Indexed
           </div>
         </header>
-
-        {error && (
-          <div className="p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none">
-            [PIPELINE_ERROR]: {error.message}
-          </div>
-        )}
         
         {loading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-muted-foreground">

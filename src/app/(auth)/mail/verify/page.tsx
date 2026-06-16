@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useMutation } from "@apollo/client/react"
 import { VerifyEmailDocument } from "@/graphql/generated"
+import { toast } from "sonner"
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
@@ -21,7 +22,9 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (!token) {
       setStatus('error')
-      setErrorMsg("Invalid or missing verification token")
+      const msg = "Invalid or missing verification token"
+      setErrorMsg(msg)
+      toast.error(msg)
       return
     }
 
@@ -36,13 +39,18 @@ export default function VerifyEmailPage() {
 
         if (data?.verifyEmail?.success) {
           setStatus('success')
+          toast.success("Email verified successfully!")
         } else {
           setStatus('error')
-          setErrorMsg(data?.verifyEmail?.message || "Verification process failed")
+          const msg = data?.verifyEmail?.message || "Verification process failed"
+          setErrorMsg(msg)
+          toast.error(msg)
         }
       } catch (e: any) {
         setStatus('error')
-        setErrorMsg(e.message || "Secure connection terminated")
+        const msg = e.message || "Secure connection terminated"
+        setErrorMsg(msg)
+        toast.error(msg)
       }
     }
 
@@ -54,6 +62,7 @@ export default function VerifyEmailPage() {
       
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none z-0" />
       <Card className="w-full max-w-md border border-border/60 rounded-none shadow-2xl bg-card text-center relative z-10 overflow-hidden">
+        
         {status === 'loading' && (
           <>
             <CardHeader className="space-y-2 text-center border-b border-border/40 bg-muted/20 p-6">
@@ -72,6 +81,7 @@ export default function VerifyEmailPage() {
             </CardContent>
           </>
         )}
+
         {status === 'success' && (
           <>
             <CardHeader className="space-y-2 text-center border-b border-border/40 bg-emerald-50/5 dark:bg-emerald-950/10 p-6">
