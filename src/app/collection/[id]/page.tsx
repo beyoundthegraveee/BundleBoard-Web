@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft, AlertTriangle } from "lucide-react"
 import CollectionDetails from '@/components/CollectionDetails'
 import AuthorSidebar from '@/components/AuthorSidebar'
 import CommentsSection from '@/components/CommentSection'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
+import { toast } from 'sonner'
 
 export default function CollectionPage() {
   const { id } = useParams()
@@ -21,6 +22,12 @@ export default function CollectionPage() {
     skip: !collectionId,
     fetchPolicy: 'cache-and-network'
   });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to retrieve asset data.");
+    }
+  }, [error]);
 
   const collection = data?.getCollectionById;
 
@@ -44,6 +51,7 @@ export default function CollectionPage() {
         localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
         setIsInCart(true)
         window.dispatchEvent(new Event('cartUpdate'))
+        toast.success("Asset added to cart")
       }
     }
   }
@@ -56,13 +64,23 @@ export default function CollectionPage() {
   )
 
   if (error || !collection) return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center font-sans font-semibold uppercase text-xs tracking-widest text-destructive bg-background">
-      Error: Asset catalog node not found {error && `// ${error.message}`}
-    </div>
+    <AuroraBackground className="text-foreground font-sans p-6 md:p-10 lg:p-16 flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
+      <div className="border border-dashed border-border/60 p-12 text-center bg-card/20 backdrop-blur-sm max-w-md w-full flex flex-col items-center relative z-10 rounded-none shadow-xl">
+        <AlertTriangle size={24} className="text-muted-foreground/50 mb-4" />
+        <div className="font-semibold uppercase text-muted-foreground text-xs tracking-widest mb-6">
+          Asset node offline or destroyed
+        </div>
+        <button 
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 font-semibold text-[10px] uppercase border border-border/80 px-4 py-2 bg-background hover:bg-accent tracking-wider transition-colors rounded-none"
+        >
+          <ArrowLeft size={13} /> Return to Directory
+        </button>
+      </div>
+    </AuroraBackground>
   )
 
   return (
-    // 💡 ИЗМЕНЕНИЯ ЗДЕСЬ: добавлены min-h-[calc(100vh-5rem)], h-full и увеличен pb-24 для правильного скроллинга
     <AuroraBackground className="text-foreground font-sans p-6 md:p-10 lg:p-16 pb-24 min-h-[calc(100vh-5rem)] h-full justify-start items-stretch">
       <nav className="mb-14 border-b border-border/40 pb-5 flex justify-between items-center relative z-10">
         <button 

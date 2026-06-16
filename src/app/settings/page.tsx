@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Loader2, ArrowLeft, User, Mail, Lock, ShieldCheck, ShieldAlert, AlertTriangle } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { 
   UpdateMeDocument, 
@@ -205,8 +206,6 @@ export default function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-10 lg:p-12 font-sans relative overflow-hidden">
-      
-      {/* Системный сетчатый бэкграунд платформы */}
       <div 
         className="absolute inset-0 z-0 opacity-[0.025] pointer-events-none" 
         style={{ 
@@ -216,7 +215,6 @@ export default function SettingsPage() {
       />
 
       <div className="max-w-3xl mx-auto space-y-10 relative z-10">
-        
         <nav className="flex justify-between items-center pb-6 border-b border-white/[0.06]">
           <button 
             onClick={() => router.back()}
@@ -239,8 +237,6 @@ export default function SettingsPage() {
         </header>
 
         <div className="space-y-8">
-          
-          {/* СЕКЦИЯ 1: USERNAME */}
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <User size={14} className="text-primary" /> Identity Parameters
@@ -277,7 +273,6 @@ export default function SettingsPage() {
             </form>
           </section>
 
-          {/* СЕКЦИЯ 2: EMAIL */}
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <Mail size={14} className="text-primary" /> Communication Channel
@@ -330,7 +325,6 @@ export default function SettingsPage() {
             )}
           </section>
 
-          {/* СЕКЦИЯ 3: PASSWORD */}
           <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-4">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <Lock size={14} className="text-primary" /> Cryptographic Keys

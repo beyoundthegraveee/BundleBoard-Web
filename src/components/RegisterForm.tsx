@@ -4,23 +4,25 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FaGoogle } from "react-icons/fa"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signIn } from "next-auth/react"
 import { useMutation } from "@apollo/client/react"
 import { RegisterDocument, SocialRegisterDocument } from "@/graphql/generated"
+import { toast } from "sonner"
 
 const generateRandomPassword = () => Math.random().toString(36).slice(-10) + "A1!";
 
 function RegisterFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [serverError, setServerError] = useState<string | null>(null)
+  
+  const [isSocialSetupFailed, setIsSocialSetupFailed] = useState(false)
+  
   const [executeSocialRegister, { loading: isSocialLoading }] = useMutation(SocialRegisterDocument)
   const [executeRegister, { loading: isRegisterLoading }] = useMutation(RegisterDocument)
   
@@ -44,7 +46,7 @@ function RegisterFormContent() {
 
     if (mode === "social-setup" && email && username) {
       const executeSocialRegistration = async () => {
-        setServerError(null)
+        setIsSocialSetupFailed(false)
         try {
           const { data } = await executeSocialRegister({
             variables: {
@@ -61,9 +63,11 @@ function RegisterFormContent() {
             throw new Error(data.socialRegister.error)
           }
           
+          toast.success("Google account linked successfully")
           router.push(`/select-role?email=${encodeURIComponent(email)}`)
         } catch (error: any) {
-          setServerError(error.message || "Failed to initialize social record")
+          setIsSocialSetupFailed(true)
+          toast.error(error.message || "Failed to initialize social record")
         }
       }
 
@@ -72,7 +76,6 @@ function RegisterFormContent() {
   }, [searchParams, router, executeSocialRegister])
 
   const onEmailSubmit = async (formData: any) => {
-    setServerError(null)
     try {
       const { data } = await executeRegister({
         variables: {
@@ -86,16 +89,17 @@ function RegisterFormContent() {
       })
 
       if (data?.register?.error) {
-        setServerError(data.register.error)
+        toast.error(data.register.error)
       } else {
+        toast.success("Identity registered. Proceeding to setup...")
         router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
     } catch (error: any) {
-      setServerError(error.message || "An unexpected error occurred.")
+      toast.error(error.message || "An unexpected error occurred.")
     }
   }
 
-  if (searchParams.get("mode") === "social-setup" && !serverError) {
+  if (searchParams.get("mode") === "social-setup" && !isSocialSetupFailed) {
     return (
       <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center p-12">
         <Loader2 className="animate-spin text-primary mx-auto mb-4 stroke-[1.5]" size={36} />
@@ -137,14 +141,6 @@ function RegisterFormContent() {
         </div>
 
         <form onSubmit={handleSubmit(onEmailSubmit)} className="grid gap-4">
-          {serverError && (
-            <Alert className="border border-destructive/30 rounded-none bg-destructive/5 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-              <AlertDescription className="text-destructive font-semibold uppercase text-[11px] tracking-wider">
-                {serverError}
-              </AlertDescription>
-            </Alert>
-          )}
 
           <div className="grid gap-1.5">
             <Label htmlFor="username" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Username</Label>

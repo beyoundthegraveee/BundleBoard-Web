@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid';
 import { useQuery } from '@apollo/client/react';
 import { GetCollectionsByTagDocument } from '@/graphql/generated';
+import { toast } from 'sonner';
 
 const PAGE_SIZE = 12;
 
@@ -27,6 +28,12 @@ export default function BundleCategoryPage() {
     fetchPolicy: 'cache-first' 
   });
 
+  useEffect(() => {
+    if (error) {
+      toast.error(`[PIPELINE_ERROR]: ${error.message || "Failed to load directory sequence"}`);
+    }
+  }, [error]);
+
   const collections = data?.getCollectionsByTag?.collections || [];
   const totalPages = data?.getCollectionsByTag?.totalPages || 1;
 
@@ -40,13 +47,10 @@ export default function BundleCategoryPage() {
   return (
     <main className="relative min-h-screen text-foreground p-6 md:p-12 font-sans animate-in fade-in duration-300">
       
-      {/* Фон с сеткой и темно-фиолетовым свечением */}
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
-        {/* Заменили bg-primary на bg-purple-900 и настроили opacity */}
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[400px] w-[400px] rounded-full bg-purple-900 opacity-40 blur-[120px]"></div>
       </div>
 
-      {/* Обертка контента с relative z-10 */}
       <div className="relative z-10 max-w-[1600px] mx-auto space-y-10">
         <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
           <Link href="/" className="hover:text-foreground transition-colors">Core</Link>
@@ -64,12 +68,6 @@ export default function BundleCategoryPage() {
             Displaying paginated index mapping matrices.
           </p>
         </header>
-
-        {error && (
-          <div className="p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none">
-            [PIPELINE_ERROR]: {error.message}
-          </div>
-        )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-muted-foreground">

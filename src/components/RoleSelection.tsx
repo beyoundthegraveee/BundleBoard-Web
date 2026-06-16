@@ -4,11 +4,12 @@ import * as React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { User, PenTool, Loader2, Check, AlertTriangle } from "lucide-react"
+import { User, PenTool, Loader2, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useMutation } from "@apollo/client/react"
 import { UpdateUserRoleDocument } from "@/graphql/generated"
+import { toast } from "sonner"
 
 interface RoleSelectionProps {
   email: string;
@@ -18,7 +19,6 @@ export function RoleSelection({ email }: RoleSelectionProps) {
   const router = useRouter()
   const { data: session, update: updateSession } = useSession()
   const [selected, setSelected] = useState<"client" | "author" | null>(null);
-  const [errorProtocol, setErrorProtocol] = useState<string | null>(null)
   const [executeUpdateRole, { loading: isLoading }] = useMutation(UpdateUserRoleDocument)
 
   const roles = [
@@ -38,11 +38,9 @@ export function RoleSelection({ email }: RoleSelectionProps) {
 
   const handleRoleConfirm = async (role: "client" | "author") => {
     if (!email) {
-      setErrorProtocol("Identity transmission failed: Missing payload address.")
+      toast.error("Identity transmission failed: Missing payload address.")
       return
     }
-
-    setErrorProtocol(null)
     
     try {
       const { data } = await executeUpdateRole({
@@ -62,27 +60,20 @@ export function RoleSelection({ email }: RoleSelectionProps) {
             isNewUser: false 
           })
         }
+        toast.success("Role configuration finalized.")
         router.push(`/mail/verify-email?email=${encodeURIComponent(email)}`)
       } else {
-        setErrorProtocol(responseData?.message || "Role configuration mutation failed")
+        toast.error(responseData?.message || "Role configuration mutation failed")
       }
     } catch (error: any) {
       console.error("Role update failure:", error)
-      setErrorProtocol(error.message || "Critical connection failure")
+      toast.error(error.message || "Critical connection failure")
     }
   }
 
   return (
     <div className="space-y-5">
-      {errorProtocol && (
-        <div className="border border-destructive/20 bg-destructive/5 text-destructive p-4 rounded-none flex items-start gap-3">
-          <AlertTriangle className="h-4 w-4 shrink-0 stroke-[1.8] mt-0.5" />
-          <div className="text-xs leading-relaxed font-semibold uppercase tracking-wide">
-            <span className="font-bold mr-1.5 text-destructive border-b border-destructive/30">Error Matrix:</span> 
-            {errorProtocol}
-          </div>
-        </div>
-      )}
+      {/* 5. Удалили блок с errorProtocol */}
 
       <div className="grid gap-6 md:grid-cols-2 font-sans text-foreground">
         {roles.map((role) => {

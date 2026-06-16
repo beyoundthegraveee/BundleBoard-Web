@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { useForm } from "react-hook-form"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMutation } from "@apollo/client/react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "sonner"
 
 import {
   ConfirmPasswordResetDocument,
@@ -33,13 +33,10 @@ interface ResetPasswordFormData {
 export default function ResetPasswordPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  // Автоматически забираем токен из URL query параметров (?token=...)
   const token = searchParams.get("token")
-
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [serverSuccess, setServerSuccess] = useState<string | null>(null)
-
+  
+  const [isSuccess, setIsSuccess] = useState(false)
+  
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ResetPasswordFormData>({
     defaultValues: {
       newPassword: "",
@@ -54,12 +51,15 @@ export default function ResetPasswordPage() {
     ConfirmPasswordResetMutationVariables
   >(ConfirmPasswordResetDocument)
 
-  const onSubmit = async (data: ResetPasswordFormData) => {
-    setServerError(null)
-    setServerSuccess(null)
-
+  useEffect(() => {
     if (!token) {
-      setServerError("Reset token is missing or invalid. Please request a new link.")
+      toast.error("Secure token not found. Action denied.")
+    }
+  }, [token])
+
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!token) {
+      toast.error("Reset token is missing or invalid. Please request a new link.")
       return
     }
 
@@ -77,15 +77,16 @@ export default function ResetPasswordPage() {
       const result = response.data?.confirmPasswordReset
 
       if (result?.success) {
-        setServerSuccess("Password changed successfully! Redirecting to login...")
+        toast.success("Password changed successfully! Redirecting to login...")
+        setIsSuccess(true)
         setTimeout(() => {
           router.push("/login")
         }, 3000)
       } else {
-        setServerError(result?.message || "Invalid or expired recovery token.")
+        toast.error(result?.message || "Invalid or expired recovery token.")
       }
     } catch (error: any) {
-      setServerError(error.message || "An unexpected error occurred.")
+      toast.error(error.message || "An unexpected error occurred.")
     }
   }
 
@@ -102,35 +103,20 @@ export default function ResetPasswordPage() {
         </CardHeader>
 
         <CardContent className="grid gap-5 p-8">
-          {/* Если токена нет в URL вообще */}
+          
           {!token && (
-            <Alert className="border border-destructive/30 rounded-none bg-destructive/5 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-              <AlertDescription className="text-destructive font-semibold uppercase text-[11px] tracking-wider">
-                Secure token not found. Action denied.
-              </AlertDescription>
-            </Alert>
+            <div className="py-8 text-center border border-dashed border-destructive/30 bg-destructive/5 text-destructive font-bold uppercase text-[10px] tracking-widest">
+              Action Denied: Missing Token
+            </div>
           )}
 
-          {serverError && (
-            <Alert className="border border-destructive/30 rounded-none bg-destructive/5 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-              <AlertDescription className="text-destructive font-semibold uppercase text-[11px] tracking-wider">
-                {serverError}
-              </AlertDescription>
-            </Alert>
+          {isSuccess && (
+            <div className="py-8 text-center border border-dashed border-primary/30 bg-primary/5 text-primary font-bold uppercase text-[10px] tracking-widest">
+              Override Complete. Redirecting...
+            </div>
           )}
 
-          {serverSuccess && (
-            <Alert className="border border-primary/30 rounded-none bg-primary/5 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-              <AlertDescription className="text-primary font-semibold uppercase text-[11px] tracking-wider">
-                {serverSuccess}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {token && !serverSuccess && (
+          {token && !isSuccess && (
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
               <div className="grid gap-1.5">
                 <Label htmlFor="newPassword" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">New Password</Label>
