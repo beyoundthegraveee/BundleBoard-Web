@@ -12,6 +12,9 @@ import type {
   ImageShortInput 
 } from '@/graphql/generated'
 
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+
 const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -31,6 +34,7 @@ interface PreviewFileItem {
   file: File;
   previewUrl: string;
 }
+
 interface DeployAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,12 +43,15 @@ interface DeployAssetModalProps {
 
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
-  // Убрали price из состояния
   const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
+  
+  // Состояние для галочки прав
+  const [rightsConfirmed, setRightsConfirmed] = useState(false)
+
   const [executeCreate] = useMutation(CreateCollectionDocument)
 
   useEffect(() => {
@@ -137,6 +144,11 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       return
     }
 
+    if (!rightsConfirmed) {
+      setValidationError("You must confirm you have the rights to distribute these files.")
+      return
+    }
+
     setIsCreatingAsset(true)
 
     try {
@@ -190,7 +202,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           input: {
             name: newAsset.name,
             description: newAsset.description,
-            price: 0, // Устанавливаем цену 0 жестко
+            price: 0,
             videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
             tagIds: ["1", "2"], 
             mediaResource: {
@@ -208,6 +220,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       setNewAsset({ name: "", description: "", category: "gradients" })
       setPreviewItems([])
       setProjectFile(null)
+      setRightsConfirmed(false)
       onSuccess()
       onClose()
     } catch (err: any) {
@@ -386,9 +399,27 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             )}
           </div>
 
+          <div className="pt-2">
+            <div className="flex items-start space-x-3 bg-muted/10 p-4 border border-border/40 rounded-none">
+              <Checkbox 
+                id="rights-confirm" 
+                checked={rightsConfirmed} 
+                onCheckedChange={(checked) => setRightsConfirmed(checked as boolean)} 
+                disabled={isCreatingAsset}
+                className="mt-0.5 rounded-none border-border/60 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              />
+              <Label 
+                htmlFor="rights-confirm" 
+                className="text-[11px] leading-relaxed text-muted-foreground font-medium cursor-pointer"
+              >
+                I confirm that I own the rights to distribute these files or have obtained the necessary licenses.
+              </Label>
+            </div>
+          </div>
+
           <button 
             type="submit" 
-            disabled={isCreatingAsset || previewItems.length === 0 || !projectFile} 
+            disabled={isCreatingAsset || previewItems.length === 0 || !projectFile || !rightsConfirmed} 
             className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-xs tracking-widest p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
           >
             {isCreatingAsset ? (
