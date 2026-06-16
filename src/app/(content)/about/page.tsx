@@ -49,7 +49,7 @@ export default function AboutPage() {
           <p className="text-xs text-muted-foreground mt-1">Behind the scenes & Asset Showcases</p>
         </div>
         <Link 
-          href="https://tiktok.com/@bundleboard" 
+          href="https://www.tiktok.com/@beyoundheavven" 
           target="_blank"
           className="flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 font-bold text-xs uppercase hover:bg-primary/90 transition-all active:scale-95"
         >
