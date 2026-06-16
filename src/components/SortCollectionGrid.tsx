@@ -26,7 +26,6 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
     fetchPolicy: 'cache-and-network'
   });
 
-
   useEffect(() => {
     refetch({ page: 0, size: PAGE_SIZE, sortBy: sortBy, mimeTypes: mimeTypes && mimeTypes.length > 0 ? mimeTypes : null });
   }, [sortBy, mimeTypes, refetch]);
@@ -88,7 +87,8 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
                     {item.name}
                   </h3>
                   <span className="font-bold text-[18px] text-foreground tracking-tight">
-                    ${item.price?.toFixed(2) || "0.00"}
+                    {/* 💡 ИСПРАВЛЕНО: Выводим FREE вместо нулей */}
+                    {!item.price || item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">

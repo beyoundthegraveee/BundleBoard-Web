@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal } from "lucide-react"
+import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
@@ -13,10 +13,11 @@ interface GalleryItem {
   isNew: boolean;
 }
 
+// 💡 НОВОЕ: Обновленные типы для externalLink
 interface EditAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, price: number, description: string, galleryImages: ImageShortInput[]) => Promise<void>;
+  onSave: (name: string, price: number, description: string, galleryImages: ImageShortInput[], externalLink?: string | null) => Promise<void>;
   isLoading: boolean;
   initialData: {
     id: string;
@@ -24,6 +25,7 @@ interface EditAssetModalProps {
     price: number;
     description: string;
     galleryImages?: { filePath: string }[];
+    externalLink?: string | null;
   };
 }
 
@@ -40,11 +42,13 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
-  // Убрали price из состояния формы
   const [form, setForm] = useState({
     name: "",
     description: ""
   })
+  
+  // 💡 НОВОЕ: Состояние для внешней ссылки
+  const [externalLink, setExternalLink] = useState("")
   
   const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -58,6 +62,8 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
         name: initialData.name || "",
         description: initialData.description || ""
       })
+      setExternalLink(initialData.externalLink || "")
+      
       if (initialData.galleryImages) {
         setGallery(initialData.galleryImages.map(img => ({
           id: Math.random().toString(36).substring(7),
@@ -207,8 +213,8 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
       
-      // Передаем жестко 0 в качестве цены
-      await onSave(form.name, 0, form.description, finalGalleryImages)
+      // 💡 НОВОЕ: Отправляем externalLink (или null, если оно пустое)
+      await onSave(form.name, 0, form.description, finalGalleryImages, externalLink.trim() || null)
     } catch (err: any) {
       console.error("Update failed:", err)
       setValidationError(err.message || "Failed to update asset.")
@@ -329,6 +335,24 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
             />
+          </div>
+
+          {/* 💡 НОВОЕ: Поле для изменения внешней ссылки */}
+          <div className="grid gap-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">External Link (Optional)</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LinkIcon size={14} className="text-muted-foreground" />
+              </div>
+              <input 
+                type="url" 
+                disabled={isWorking}
+                placeholder="https://..."
+                className="w-full bg-background border border-border/60 py-2.5 pl-9 pr-3 text-xs text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
+                value={externalLink}
+                onChange={e => setExternalLink(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="mt-6 flex justify-end gap-3 select-none pt-4 border-t border-border/20 sticky bottom-0 bg-card">

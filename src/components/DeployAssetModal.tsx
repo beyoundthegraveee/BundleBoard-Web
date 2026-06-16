@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Loader2, X, Image as ImageIcon, FileArchive, Trash2 } from "lucide-react"
+import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
@@ -45,11 +45,13 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
   const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
+    const [uploadMode, setUploadMode] = useState<'hosted' | 'external'>('hosted')
+  const [externalLink, setExternalLink] = useState("")
+  
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
   
-  // Состояние для галочки прав
   const [rightsConfirmed, setRightsConfirmed] = useState(false)
 
   const [executeCreate] = useMutation(CreateCollectionDocument)
@@ -139,8 +141,18 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       return
     }
 
-    if (previewItems.length === 0 || !projectFile) {
-      setValidationError("Deployment manifest incomplete. Upload gallery previews and a secure project archive.")
+    if (previewItems.length === 0) {
+      setValidationError("Visual payload incomplete. Upload at least one gallery preview.")
+      return
+    }
+
+    if (uploadMode === 'hosted' && !projectFile) {
+      setValidationError("Deployment manifest incomplete. Upload a secure project archive.")
+      return
+    }
+
+    if (uploadMode === 'external' && (!externalLink || !externalLink.trim())) {
+      setValidationError("Deployment manifest incomplete. Provide a valid external download link.")
       return
     }
 
@@ -155,6 +167,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       const timestamp = Date.now()
       const category = newAsset.category
       const folderId = `collection-${timestamp}`
+      
       const uploadPreviewsPromises = previewItems.map(async (item, index): Promise<ImageShortInput> => {
         const webpBlob = await convertToWebP(item.file, 1200, 0.82)
         const { width, height } = await getImageDimensions(webpBlob)
@@ -186,40 +199,52 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       })
 
       const uploadedImages = await Promise.all(uploadPreviewsPromises)
-
-      const archivePath = `${category}/${folderId}/${projectFile.name}`
-      const { error: vError } = await supabase.storage
-        .from("vault")
-        .upload(archivePath, projectFile)
+      let mediaResourceData = null;
+      if (uploadMode === 'hosted' && projectFile) {
+        const archivePath = `${category}/${folderId}/${projectFile.name}`
+        const { error: vError } = await supabase.storage
+          .from("vault")
+          .upload(archivePath, projectFile)
+          
+        if (vError) throw vError
         
-      if (vError) throw vError
+        let calculatedMime: MimeType = "zip" 
+        if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
+        
+        mediaResourceData = {
+          fileName: projectFile.name,
+          filePath: archivePath,
+          mimeType: calculatedMime,
+          provider: "local",
+          fileSize: projectFile.size
+        }
+      }
       
-      let calculatedMime: MimeType = "zip" 
-      if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
-      
+      const createInput: any = {
+        name: newAsset.name,
+        description: newAsset.description,
+        price: 0,
+        videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
+        tagIds: ["1", "2"], 
+        galleryImages: uploadedImages
+      }
+
+      if (uploadMode === 'hosted' && mediaResourceData) {
+        createInput.mediaResource = mediaResourceData;
+      } else if (uploadMode === 'external') {
+        createInput.externalLink = externalLink;
+      }
+
       await executeCreate({
         variables: {
-          input: {
-            name: newAsset.name,
-            description: newAsset.description,
-            price: 0,
-            videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
-            tagIds: ["1", "2"], 
-            mediaResource: {
-              fileName: projectFile.name,
-              filePath: archivePath,
-              mimeType: calculatedMime,
-              provider: "local",
-              fileSize: projectFile.size
-            },
-            galleryImages: uploadedImages
-          }
+          input: createInput
         }
       })
 
       setNewAsset({ name: "", description: "", category: "gradients" })
       setPreviewItems([])
       setProjectFile(null)
+      setExternalLink("")
       setRightsConfirmed(false)
       onSuccess()
       onClose()
@@ -230,6 +255,12 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       setIsCreatingAsset(false)
     }
   }
+
+  const isSubmitDisabled = isCreatingAsset || 
+                           previewItems.length === 0 || 
+                           !rightsConfirmed || 
+                           (uploadMode === 'hosted' && !projectFile) || 
+                           (uploadMode === 'external' && !externalLink.trim());
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans">
@@ -304,61 +335,29 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
           <div className="space-y-3">
             <div className="flex justify-between items-end">
-              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Media Files</label>
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload</label>
               <span className={`text-[9px] font-bold uppercase ${previewItems.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {previewItems.length} / 5 Images
               </span>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className={`border border-dashed p-5 text-center flex flex-col items-center justify-center relative transition-colors rounded-none ${previewItems.length >= 5 ? 'border-border/40 bg-muted/10 cursor-not-allowed opacity-50' : 'border-border/80 bg-background hover:bg-accent/50 cursor-pointer group'}`}>
-                <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
-                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">
-                  {previewItems.length >= 5 ? 'Limit reached' : `Select up to 5 (Max ${process.env.NEXT_PUBLIC_MAX_IMAGE_SIZE_MB} MB each)`}
-                </span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  multiple 
-                  disabled={previewItems.length >= 5}
-                  className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" 
-                  onChange={handleFileChange} 
-                />
-              </div>
-
-              <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
-                <FileArchive size={18} className={projectFile ? "text-primary mb-2 stroke-[1.5]" : "text-muted-foreground mb-2 stroke-[1.5]"} />
-                <span className="text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
-                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Archive core package (Max 300MB)"}</span>
-                {!projectFile && (
-                  <input 
-                    type="file" 
-                    accept=".zip,.rar,.grd,.asl,.atn" 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                    required 
-                    onChange={e => { 
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > MAX_FILE_SIZE_BYTES) {
-                          setValidationError("The project archive exceeds the maximum allowed size of 300 MB.");
-                          e.target.value = "";
-                          setProjectFile(null);
-                        } else {
-                          setValidationError(null);
-                          setProjectFile(file);
-                        }
-                      } else {
-                        setProjectFile(null);
-                      }
-                    }} 
-                  />
-                )}
-                {projectFile && <button type="button" onClick={() => setProjectFile(null)} className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-none transition-colors"><X size={12} /></button>}
-              </div>
+            <div className={`border border-dashed p-5 text-center flex flex-col items-center justify-center relative transition-colors rounded-none ${previewItems.length >= 5 ? 'border-border/40 bg-muted/10 cursor-not-allowed opacity-50' : 'border-border/80 bg-background hover:bg-accent/50 cursor-pointer group'}`}>
+              <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
+              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">
+                {previewItems.length >= 5 ? 'Limit reached' : `Select up to 5 gallery images`}
+              </span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                multiple 
+                disabled={previewItems.length >= 5}
+                className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" 
+                onChange={handleFileChange} 
+              />
             </div>
 
             {previewItems.length > 0 && (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-2">
                 <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Drag to reorder. First image is the cover.</span>
                 <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 rounded-none">
                   {previewItems.map((item, idx) => (
@@ -398,6 +397,73 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
               </div>
             )}
           </div>
+          <div className="space-y-3 pt-4 border-t border-border/20">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Method</label>
+            <div className="flex bg-muted/20 border border-border/40 p-1">
+              <button 
+                type="button"
+                onClick={() => setUploadMode('hosted')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'hosted' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+              >
+                <FileArchive size={14} className="stroke-[1.8]" /> Hosted Archive
+              </button>
+              <button 
+                type="button"
+                onClick={() => setUploadMode('external')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'external' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+              >
+                <LinkIcon size={14} className="stroke-[1.8]" /> External Link
+              </button>
+            </div>
+
+            {uploadMode === 'hosted' ? (
+              <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
+                <FileArchive size={18} className={projectFile ? "text-primary mb-2 stroke-[1.5]" : "text-muted-foreground mb-2 stroke-[1.5]"} />
+                <span className="text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
+                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Archive core package (Max 300MB)"}</span>
+                {!projectFile && (
+                  <input 
+                    type="file" 
+                    accept=".zip,.rar,.grd,.asl,.atn" 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    onChange={e => { 
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > MAX_FILE_SIZE_BYTES) {
+                          setValidationError("The project archive exceeds the maximum allowed size of 300 MB.");
+                          e.target.value = "";
+                          setProjectFile(null);
+                        } else {
+                          setValidationError(null);
+                          setProjectFile(file);
+                        }
+                      } else {
+                        setProjectFile(null);
+                      }
+                    }} 
+                  />
+                )}
+                {projectFile && <button type="button" onClick={() => setProjectFile(null)} className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-none transition-colors"><X size={12} /></button>}
+              </div>
+            ) : (
+              <div className="grid gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LinkIcon size={14} className="text-muted-foreground" />
+                  </div>
+                  <input 
+                    type="url" 
+                    required
+                    placeholder="https://..." 
+                    value={externalLink}
+                    onChange={e => setExternalLink(e.target.value)}
+                    className="w-full bg-background border border-border/60 py-3 pl-9 pr-3 text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors placeholder:text-muted-foreground/40"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Users will be redirected to this link to download the asset.</p>
+              </div>
+            )}
+          </div>
 
           <div className="pt-2">
             <div className="flex items-start space-x-3 bg-muted/10 p-4 border border-border/40 rounded-none">
@@ -419,7 +485,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
           <button 
             type="submit" 
-            disabled={isCreatingAsset || previewItems.length === 0 || !projectFile || !rightsConfirmed} 
+            disabled={isSubmitDisabled} 
             className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-xs tracking-widest p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
           >
             {isCreatingAsset ? (

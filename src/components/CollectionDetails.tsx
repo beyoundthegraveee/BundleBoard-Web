@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart } from "lucide-react"
+import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, Link as LinkIcon } from "lucide-react"
 import LikeButton from '@/components/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
@@ -57,24 +57,23 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
   const { data: session } = useSession();
 
   if (!collection) return null;
-  const { name, description, price, mediaResource, id, galleryImages, likesCount = 0, isLiked = false, author } = collection;
-  
+  const { name, description, price, mediaResource, externalLink, id, galleryImages, likesCount = 0, isLiked = false, author } = collection;
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(likesCount);
-  
   const isOwnCollection = session?.user?.name === author.username;
+  const isExternal = !!externalLink;
 
   useEffect(() => {
     setLocalIsInCart(isInCart);
   }, [isInCart]);
 
   const handleAddToCartClick = () => {
-    if (localIsInCart || isOwnCollection) return;
+    if (localIsInCart || isOwnCollection || isExternal) return;
     onAddToCart({
       id,
       name,
       price,
-      category: String(mediaResource.mimeType).split('/')[0] || "Asset",
+      category: mediaResource?.mimeType ? String(mediaResource.mimeType).split('/')[0] : "Asset",
       previewImage: getFullImageUrl(galleryImages?.[0]?.filePath)
     });
     setLocalIsInCart(true);
@@ -112,7 +111,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           <div className="flex items-center gap-2 text-primary">
             <Activity size={13} className="animate-pulse" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Active Directory Node
+              {isExternal ? 'External Network Node' : 'Active Directory Node'}
             </span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight leading-tight max-w-2xl">
@@ -147,6 +146,17 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
                 <Shield size={12} />
                 Your Asset
               </button>
+            ) : isExternal ? (
+              <a 
+                href={externalLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 text-primary-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full min-w-[120px] bg-primary hover:opacity-90"
+              >
+                <ExternalLink size={12} />
+                Get Original Asset
+                <span className="md:hidden ml-auto">FREE</span>
+              </a>
             ) : (
               <button 
                 onClick={handleAddToCartClick}
@@ -205,36 +215,54 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-        <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
-          <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Filename</div>
-          <div className="text-xs font-medium text-foreground truncate">{mediaResource.fileName}</div>
-        </div>
-        
-        <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
-          <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Payload Size</div>
-          <div className="flex items-center gap-2">
-            <HardDrive size={13} className="text-muted-foreground stroke-[1.5]" />
-            <div className="text-xs font-semibold text-foreground">{formatBytes(mediaResource.fileSize)}</div>
+      {/* 💡 НОВОЕ: Условный рендеринг карточек данных (Локальный файл VS Внешняя ссылка) */}
+      {isExternal ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Hub</div>
+            <div className="text-xs font-medium text-foreground truncate">External Author Node</div>
+          </div>
+          
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Access Protocol</div>
+            <div className="flex items-center gap-2">
+              <LinkIcon size={13} className="text-muted-foreground stroke-[1.5]" />
+              <div className="text-xs font-semibold text-foreground">Secure Redirect Link</div>
+            </div>
           </div>
         </div>
+      ) : mediaResource ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Filename</div>
+            <div className="text-xs font-medium text-foreground truncate">{mediaResource.fileName}</div>
+          </div>
+          
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Payload Size</div>
+            <div className="flex items-center gap-2">
+              <HardDrive size={13} className="text-muted-foreground stroke-[1.5]" />
+              <div className="text-xs font-semibold text-foreground">{formatBytes(mediaResource.fileSize)}</div>
+            </div>
+          </div>
 
-        <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
-          <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Mime Type</div>
-          <div className="text-xs font-semibold text-foreground">{String(mediaResource.mimeType).toUpperCase()}</div>
-        </div>
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Mime Type</div>
+            <div className="text-xs font-semibold text-foreground">{String(mediaResource.mimeType).toUpperCase()}</div>
+          </div>
 
-        <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
-          <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Provider Protocol</div>
-          <div className="flex items-center gap-2">
-            <Shield size={13} className="text-muted-foreground stroke-[1.5]" />
-            <div className="text-xs font-semibold text-foreground">{String(mediaResource.provider).toUpperCase()}</div>
+          <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
+            <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Provider Protocol</div>
+            <div className="flex items-center gap-2">
+              <Shield size={13} className="text-muted-foreground stroke-[1.5]" />
+              <div className="text-xs font-semibold text-foreground">{String(mediaResource.provider).toUpperCase()}</div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground opacity-60 pt-6 flex justify-between border-t border-border/20">
-        <span>License: Single User Commercial</span>
+        <span>License: {isExternal ? "Author Original License" : "Single User Commercial"}</span>
         <span>Secure Connection Verified</span>
       </div>
     </div>
