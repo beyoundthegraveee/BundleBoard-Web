@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
@@ -43,24 +43,47 @@ interface DeployAssetModalProps {
 
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
-  const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
-  const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
-    const [uploadMode, setUploadMode] = useState<'hosted' | 'external'>('hosted')
+    const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
+  const [uploadMode, setUploadMode] = useState<'hosted' | 'external'>('hosted')
   const [externalLink, setExternalLink] = useState("")
   
+  const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
-  
   const [rightsConfirmed, setRightsConfirmed] = useState(false)
 
   const [executeCreate] = useMutation(CreateCollectionDocument)
 
   useEffect(() => {
-    return () => {
-      previewItems.forEach(item => URL.revokeObjectURL(item.previewUrl))
+    if (typeof window !== "undefined") {
+      const draftAsset = sessionStorage.getItem("draft_newAsset")
+      if (draftAsset) setNewAsset(JSON.parse(draftAsset))
+
+      const draftMode = sessionStorage.getItem("draft_uploadMode")
+      if (draftMode) setUploadMode(draftMode as 'hosted' | 'external')
+
+      const draftLink = sessionStorage.getItem("draft_externalLink")
+      if (draftLink) setExternalLink(draftLink)
     }
-  }, [previewItems])
+  }, [])
+
+  useEffect(() => {
+    sessionStorage.setItem("draft_newAsset", JSON.stringify(newAsset))
+    sessionStorage.setItem("draft_uploadMode", uploadMode)
+    sessionStorage.setItem("draft_externalLink", externalLink)
+  }, [newAsset, uploadMode, externalLink])
+
+  const previewItemsRef = useRef(previewItems);
+  useEffect(() => {
+    previewItemsRef.current = previewItems;
+  }, [previewItems]);
+
+  useEffect(() => {
+    return () => {
+      previewItemsRef.current.forEach(item => URL.revokeObjectURL(item.previewUrl));
+    }
+  }, []);
 
   if (!isOpen) return null
 
@@ -246,6 +269,11 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       setProjectFile(null)
       setExternalLink("")
       setRightsConfirmed(false)
+      
+      sessionStorage.removeItem("draft_newAsset")
+      sessionStorage.removeItem("draft_uploadMode")
+      sessionStorage.removeItem("draft_externalLink")
+
       onSuccess()
       onClose()
     } catch (err: any) {

@@ -44,8 +44,8 @@ export function HighestRatedCarousel() {
 
   if (error || fetchedCollections.length === 0) {
     return (
-      <div className="w-full text-center py-12 text-[10px] font-bold uppercase tracking-widest text-destructive font-sans">
-        [ERROR]: Failed to compile data stream or no nodes available.
+      <div className="w-full text-center py-12 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 font-sans">
+        [SYSTEM]: No collections available yet.
       </div>
     );
   }
