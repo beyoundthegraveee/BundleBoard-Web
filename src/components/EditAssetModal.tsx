@@ -5,6 +5,7 @@ import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
+import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
 
 interface GalleryItem {
   id: string;
@@ -41,52 +42,68 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
-  const [form, setForm] = useState({
-    name: "",
-    description: ""
-  })
   
-  const [externalLink, setExternalLink] = useState("")
-  const [gallery, setGallery] = useState<GalleryItem[]>([])
+  const [form, setForm] = useState(() => {
+    if (typeof window !== 'undefined' && initialData?.id) {
+      const draft = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+      if (draft) return JSON.parse(draft);
+    }
+    return {
+      name: initialData.name || "",
+      description: initialData.description || ""
+    };
+  });
+  
+  const [externalLink, setExternalLink] = useState(() => {
+    if (typeof window !== 'undefined' && initialData?.id) {
+      const draft = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+      if (draft !== null) return draft;
+    }
+    return initialData.externalLink || "";
+  });
+
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
+    if (initialData.galleryImages && initialData.galleryImages.length > 0) {
+      return initialData.galleryImages.map(img => ({
+        id: Math.random().toString(36).substring(7),
+        filePath: img.filePath,
+        file: null,
+        isNew: false
+      }));
+    }
+    return [];
+  });
+
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
+  const [currentEditId, setCurrentEditId] = useState(initialData.id);
 
   useEffect(() => {
-    if (isOpen) {
-      setValidationError(null)
-
-      const draftFormKey = `draft_editForm_${initialData.id}`
-      const draftLinkKey = `draft_editLink_${initialData.id}`
-
-      const draftForm = sessionStorage.getItem(draftFormKey)
-      const draftLink = sessionStorage.getItem(draftLinkKey)
-
-      if (draftForm) {
-        setForm(JSON.parse(draftForm))
-      } else {
-        setForm({
-          name: initialData.name || "",
-          description: initialData.description || ""
-        })
-      }
-
-      if (draftLink !== null) {
-        setExternalLink(draftLink)
-      } else {
-        setExternalLink(initialData.externalLink || "")
-      }
+    if (isOpen && initialData.id !== currentEditId) {
+      setCurrentEditId(initialData.id);
       
-      if (initialData.galleryImages && gallery.length === 0) {
+      const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+      if (draftForm) setForm(JSON.parse(draftForm));
+      else setForm({ name: initialData.name || "", description: initialData.description || "" });
+
+      const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+      if (draftLink !== null) setExternalLink(draftLink);
+      else setExternalLink(initialData.externalLink || "");
+
+      if (initialData.galleryImages) {
         setGallery(initialData.galleryImages.map(img => ({
           id: Math.random().toString(36).substring(7),
           filePath: img.filePath,
           file: null,
           isNew: false
-        })))
+        })));
+      } else {
+        setGallery([]);
       }
+      setValidationError(null);
     }
-  }, [isOpen, initialData, gallery.length])
+  }, [isOpen, initialData, currentEditId]);
 
   useEffect(() => {
     if (isOpen && initialData.id) {
@@ -126,6 +143,13 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     if (e.target.files) {
       setValidationError(null)
       const incomingFiles = Array.from(e.target.files)
+      
+      const oversized = incomingFiles.find(f => f.size > MAX_IMAGE_SIZE_BYTES);
+      if (oversized) {
+        setValidationError(`Preview images must be under 10 MB.`);
+        e.target.value = "";
+        return;
+      }
       
       setGallery((prev) => {
         const currentTotal = prev.length + incomingFiles.length;
@@ -197,6 +221,13 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     if (gallery.length === 0) {
       setValidationError("Visual payload incomplete. At least 1 image required.")
       return
+    }
+
+    if (externalLink && externalLink.trim().length > 0) {
+      if (!EXTERNAL_URL_REGEX.test(externalLink.trim())) {
+        setValidationError("Invalid URL format. Please provide a valid external link (e.g., https://example.com/...).")
+        return;
+      }
     }
 
     setIsUploading(true)
@@ -285,7 +316,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           
           <div className="space-y-2">
             <div className="flex justify-between items-end">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 5)</label>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
               <span className={`text-[9px] font-bold uppercase ${gallery.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {gallery.length} / 5 Images
               </span>

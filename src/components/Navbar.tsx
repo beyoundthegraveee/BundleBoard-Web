@@ -202,7 +202,7 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuGroup>
                     <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
-                      <Link href="/profile">Account Node</Link>
+                      <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
                       <Link href="/favorites">Favorites Vault</Link>

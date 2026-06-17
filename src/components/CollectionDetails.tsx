@@ -58,9 +58,12 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
 
   if (!collection) return null;
   const { name, description, price, mediaResource, externalLink, id, galleryImages, likesCount = 0, isLiked = false, author } = collection;
+  
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(likesCount);
-  const isOwnCollection = session?.user?.name === author.username;
+  
+  // Безопасные проверки
+  const isOwnCollection = session?.user?.name === author?.username;
   const isExternal = !!externalLink;
 
   useEffect(() => {
@@ -138,15 +141,8 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
               </div>
             </div>
             
-            {isOwnCollection ? (
-              <button 
-                disabled
-                className="flex items-center justify-center gap-2 text-muted-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full bg-muted border border-border/40 cursor-not-allowed min-w-[120px]"
-              >
-                <Shield size={12} />
-                Your Asset
-              </button>
-            ) : isExternal ? (
+            {/* 💡 ПРИОРИТЕТ КНОПОК ИЗМЕНЕН */}
+            {isExternal ? (
               <a 
                 href={externalLink}
                 target="_blank"
@@ -157,6 +153,14 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
                 Get Original Asset
                 <span className="md:hidden ml-auto">FREE</span>
               </a>
+            ) : isOwnCollection ? (
+              <button 
+                disabled
+                className="flex items-center justify-center gap-2 text-muted-foreground font-bold uppercase text-[10px] tracking-widest transition-all py-3 px-5 rounded-none h-full bg-muted border border-border/40 cursor-not-allowed min-w-[120px]"
+              >
+                <Shield size={12} />
+                Your Asset
+              </button>
             ) : (
               <button 
                 onClick={handleAddToCartClick}
@@ -177,8 +181,9 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           </div>
         </div>
 
+        {/* 💡 БЕЗОПАСНЫЙ ID */}
         <div className="absolute -top-3 right-0 opacity-20 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground hidden md:block">
-          ID // {id.padStart(4, '0')}
+          ID // {String(id).padStart(4, '0')}
         </div>
       </div>
 
@@ -215,7 +220,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         </div>
       </div>
 
-      {/* 💡 НОВОЕ: Условный рендеринг карточек данных (Локальный файл VS Внешняя ссылка) */}
+      {/* 💡 КЛИКАБЕЛЬНАЯ ССЫЛКА В НИЖНЕМ БЛОКЕ */}
       {isExternal ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
@@ -226,8 +231,16 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
             <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Access Protocol</div>
             <div className="flex items-center gap-2">
-              <LinkIcon size={13} className="text-muted-foreground stroke-[1.5]" />
-              <div className="text-xs font-semibold text-foreground">Secure Redirect Link</div>
+              <LinkIcon size={13} className="text-muted-foreground stroke-[1.5] shrink-0" />
+              <a 
+                href={externalLink || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-primary hover:underline truncate"
+                title={externalLink || ''}
+              >
+                {externalLink || "Secure Redirect Link"}
+              </a>
             </div>
           </div>
         </div>

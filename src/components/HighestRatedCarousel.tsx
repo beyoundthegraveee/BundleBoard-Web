@@ -32,6 +32,8 @@ export function HighestRatedCarousel() {
   });
 
   const fetchedCollections = (data?.getTopLikedCollections || []) as CollectionResponse[];
+  const isMarquee = fetchedCollections.length >= 4;
+ 
 
   if (loading) {
     return (
@@ -50,31 +52,39 @@ export function HighestRatedCarousel() {
     );
   }
 
-  const carouselItems = [...fetchedCollections, ...fetchedCollections];
+  const carouselItems = isMarquee 
+    ? [...fetchedCollections, ...fetchedCollections] 
+    : fetchedCollections;
 
   return (
     <div className="relative w-full overflow-hidden font-sans py-8">
-      <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      {isMarquee && (
+        <>
+          <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        </>
+      )}
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes marquee {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee {
-            animation: marquee 35s linear infinite;
-            display: flex;
-            width: max-content;
-          }
-          .animate-marquee:hover {
-            animation-play-state: paused;
-          }
-        `
-      }} />
+      {isMarquee && (
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes marquee {
+              0% { transform: translateX(0%); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              animation: marquee 35s linear infinite;
+              display: flex;
+              width: max-content;
+            }
+            .animate-marquee:hover {
+              animation-play-state: paused;
+            }
+          `
+        }} />
+      )}
 
-      <div className="animate-marquee">
+      <div className={isMarquee ? "animate-marquee" : "flex flex-wrap items-center justify-center md:justify-start w-full"}>
         {carouselItems.map((item, index) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
@@ -82,7 +92,7 @@ export function HighestRatedCarousel() {
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
           return (
-            <div key={`${item.id}-${index}`} className="px-5">
+            <div key={`${item.id}-${index}`} className="px-5 mb-6 md:mb-0">
               <CardContainer containerClassName="py-0" className="w-[280px] md:w-[360px]">
                 <CardBody className="relative group/card w-full h-auto rounded-none flex flex-col">
                   

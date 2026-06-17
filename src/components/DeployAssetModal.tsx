@@ -31,6 +31,16 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
   });
 };
 
+const CATEGORY_TO_TAG_ID: Record<string, string> = {
+  "brushes": "1",
+  "fonts": "2",
+  "gradients": "3",
+  "graphics": "4",
+  "textures": "5",
+  "mockups": "6",
+  "actions-effects": "7"
+};
+
 interface PreviewFileItem {
   id: string;
   file: File;
@@ -99,9 +109,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     if (e.target.files) {
       setValidationError(null)
       const incomingFiles = Array.from(e.target.files)
-      
-      const MAX_PREVIEW_BYTES = 10485760;
-      const oversized = incomingFiles.find(f => f.size > MAX_PREVIEW_BYTES);
+      const oversized = incomingFiles.find(f => f.size > MAX_IMAGE_SIZE_BYTES);
 
       if (oversized) {
         setValidationError(`Preview images must be under 10 MB.`);
@@ -260,13 +268,15 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           fileSize: projectFile.size
         }
       }
+
+      const selectedTagId = CATEGORY_TO_TAG_ID[newAsset.category] || "1";
       
       const createInput: any = {
         name: newAsset.name,
         description: newAsset.description,
         price: 0,
         videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
-        tagIds: [], 
+        tagIds: [selectedTagId],
         galleryImages: uploadedImages
       }
 
