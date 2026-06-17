@@ -171,8 +171,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     e.preventDefault()
     setValidationError(null)
 
-    if (newAsset.description.length < 100) {
-      setValidationError(`Description requires minimum one hundred characters. Content parameters too short (${newAsset.description.length}/100).`)
+    // 💡 ДОБАВЛЕНА ПРОВЕРКА НА > 1000 СИМВОЛОВ (на случай если вставили копипастом)
+    if (newAsset.description.length < 100 || newAsset.description.length > 1000) {
+      setValidationError(`Description length must be between 100 and 1000 characters (${newAsset.description.length}/1000).`)
       return
     }
 
@@ -375,13 +376,17 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           <div className="grid gap-1.5">
             <div className="flex justify-between items-center">
               <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
-              <span className={`text-[10px] font-bold tracking-wide uppercase ${newAsset.description.length >= 100 ? 'text-primary' : 'text-amber-500'}`}>
-                {newAsset.description.length} of 100 characters minimum
+              <span className={`text-[10px] font-bold tracking-wide uppercase ${
+                newAsset.description.length < 100 ? 'text-amber-500' : 
+                newAsset.description.length >= 1000 ? 'text-destructive' : 'text-primary'
+              }`}>
+                {newAsset.description.length} / 1000
               </span>
             </div>
             <textarea 
               required 
               rows={4} 
+              maxLength={1000}
               className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed" 
               placeholder="Specify bundle details, file dimensions, and software compatibility versions..." 
               value={newAsset.description} 

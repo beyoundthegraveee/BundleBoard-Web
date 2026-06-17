@@ -7,19 +7,19 @@ export const metadata = {
 };
 
 const YOUTUBE_TUTORIALS = [
-  { id: 1, youtubeId: "W2DAXqS7G4E", title: "Premiere Pro for Beginners | Quick 25-Minute Tutorial!", category: "Premiere Pro", duration: "26:00" },
-  { id: 2, youtubeId: "QPXGuqeUo6g", title: "Full Adobe Premiere Pro Tutorial (how to edit videos)", category: "Premiere Pro", duration: "34:34" },
-  { id: 3, youtubeId: "IBWhFbnEs8s", title: "25 Rapid Fire Premiere Pro Tricks You Never Knew!", category: "Premiere Pro", duration: "13:15" },
-  { id: 4, youtubeId: "oUlpbue-Gw0", title: "Learn Premiere Pro in 10 minutes - Beginner Tutorial", category: "Premiere Pro", duration: "10:36" },
-  { id: 5, youtubeId: "BeH1I5n-798", title: "How to Edit a Video in Adobe Premiere (Complete Beginners)", category: "Premiere Pro", duration: "40:02" },
+  { id: 1, youtubeId: "NjJmlooCxwI", title: "3D Chrome Photoshop Tutorial (+ FREE TEMPLATE)", category: "Photoshop", duration: "15:01" },
+  { id: 2, youtubeId: "sFqEMZ-RVL4", title: "Iridescent Chrome Text Effect in Photoshop", category: "Photoshop", duration: "22:07" },
+  { id: 3, youtubeId: "XLOwAihsftE", title: "Mastering The Mograph Edit Style (Easy) | After Effects Tutorial", category: "After Effects", duration: "8:11" },
+  { id: 4, youtubeId: "EtZalJhwzVs", title: "Animate After Effects Camera Like A Pro | Only Video You Need |", category: "After Effects", duration: "13:16" },
+  { id: 5, youtubeId: "7tSB67Y1CqU", title: "How to make a MOCKUP for your CLOTHING BRAND", category: "Photoshop", duration: "12:13" },
   
-  { id: 6, youtubeId: "3wZPGUf8olE", title: "Photoshop Smoke Effect – Simple & Very Easy Tutorial", category: "Photoshop", duration: "5:46" },
-  { id: 7, youtubeId: "qwNbjGyhZ48", title: "Photoshop Tutorial for Beginners | Everything You NEED to KNOW!", category: "Photoshop", duration: "28:52" },
-  { id: 8, youtubeId: "IyR_uYsRdPs", title: "Photoshop for Beginners | FREE COURSE", category: "Photoshop", duration: "3:07:02" },
-  { id: 9, youtubeId: "OKkWRpoIFuw", title: "Photoshop for Complete Beginners: Start Here | Lesson 1", category: "Photoshop", duration: "1:00:36" },
-  { id: 10, youtubeId: "pFyOznL9UvA", title: "Adobe Photoshop Tutorial : The Basics for Beginners", category: "Photoshop", duration: "36:57" },
-  { id: 11, youtubeId: "h3B5_XIctMU", title: "How to use After Effects for Beginners | Getting Familiar", category: "After Effects", duration: "7:47" },
-  { id: 12, youtubeId: "hb2bbfiNBXA", title: "Learn After Effects in 10 Minutes! Beginner Tutorial", category: "After Effects", duration: "10:09" },
+  { id: 6, youtubeId: "WFkGbyH24AY", title: "How A Graphic Designer MUST Think in 2026 To Survive!", category: "Design", duration: "12:14" },
+  { id: 7, youtubeId: "Xy3Rg6XowC8", title: "How to Add Textures to Your Designs | Photoshop Tutorial + Free Download", category: "Photoshop", duration: "9:21" },
+  { id: 8, youtubeId: "QdoK1aFPL7Y", title: "How I Made This INSANE Brutalism Poster! (Photoshop Tutorial)", category: "Photoshop", duration: "7:16" },
+  { id: 9, youtubeId: "COMgLMYOX8k", title: "24 FREE Fonts That Feel Expensive (Must Download)", category: "Photoshop", duration: "8:31" },
+  { id: 10, youtubeId: "AXpxZMRM1EY", title: "The ULTIMATE Guide To Typography For Beginners", category: "Typography", duration: "13:29" },
+  { id: 11, youtubeId: "xmYkXNkv2GE", title: "GRADIENT MAPS for adding color?! (you'll never recover)", category: "Photoshop", duration: "6:32" },
+  { id: 12, youtubeId: "uZWnxa4mkKA", title: "15 More Design Styles You've Never Heard Of", category: "Design", duration: "22:24" },
 ];
 
 export default function TutorialsPage() {
