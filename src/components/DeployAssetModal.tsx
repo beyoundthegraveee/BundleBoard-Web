@@ -4,14 +4,16 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
-import { MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
+import { 
+  MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS 
+} from '@/lib/constants'
+
 import { useMutation } from "@apollo/client/react"
 import { CreateCollectionDocument } from '@/graphql/generated'
 import type { 
   MimeType, 
   ImageShortInput 
 } from '@/graphql/generated'
-
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
@@ -43,9 +45,28 @@ interface DeployAssetModalProps {
 
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
-    const [newAsset, setNewAsset] = useState({ name: "", description: "", category: "gradients" })
-  const [uploadMode, setUploadMode] = useState<'hosted' | 'external'>('hosted')
-  const [externalLink, setExternalLink] = useState("")
+  
+  const [newAsset, setNewAsset] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const draft = sessionStorage.getItem("draft_newAsset");
+      if (draft) return JSON.parse(draft);
+    }
+    return { name: "", description: "", category: "gradients" };
+  });
+
+  const [uploadMode, setUploadMode] = useState<'hosted' | 'external'>(() => {
+    if (typeof window !== 'undefined') {
+      return (sessionStorage.getItem("draft_uploadMode") as 'hosted' | 'external') || 'hosted';
+    }
+    return 'hosted';
+  });
+
+  const [externalLink, setExternalLink] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem("draft_externalLink") || "";
+    }
+    return "";
+  });
   
   const [previewItems, setPreviewItems] = useState<PreviewFileItem[]>([])
   const [projectFile, setProjectFile] = useState<File | null>(null)
@@ -54,19 +75,6 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
   const [rightsConfirmed, setRightsConfirmed] = useState(false)
 
   const [executeCreate] = useMutation(CreateCollectionDocument)
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const draftAsset = sessionStorage.getItem("draft_newAsset")
-      if (draftAsset) setNewAsset(JSON.parse(draftAsset))
-
-      const draftMode = sessionStorage.getItem("draft_uploadMode")
-      if (draftMode) setUploadMode(draftMode as 'hosted' | 'external')
-
-      const draftLink = sessionStorage.getItem("draft_externalLink")
-      if (draftLink) setExternalLink(draftLink)
-    }
-  }, [])
 
   useEffect(() => {
     sessionStorage.setItem("draft_newAsset", JSON.stringify(newAsset))
@@ -91,16 +99,12 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     if (e.target.files) {
       setValidationError(null)
       const incomingFiles = Array.from(e.target.files)
-      const hasOversizedFiles = incomingFiles.some(file => file.size > MAX_FILE_SIZE_BYTES);
-      const oversized = incomingFiles.find(f => f.size > MAX_IMAGE_SIZE_BYTES);
+      
+      const MAX_PREVIEW_BYTES = 10485760;
+      const oversized = incomingFiles.find(f => f.size > MAX_PREVIEW_BYTES);
 
       if (oversized) {
-        setValidationError(`Preview images must be under ${process.env.NEXT_PUBLIC_MAX_IMAGE_SIZE_MB} MB.`);
-        return;
-      }
-
-      if (hasOversizedFiles) {
-        setValidationError("One or more images exceed the maximum allowed size of 300 MB.");
+        setValidationError(`Preview images must be under 10 MB.`);
         e.target.value = "";
         return;
       }
@@ -169,14 +173,20 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       return
     }
 
-    if (uploadMode === 'hosted' && !projectFile) {
-      setValidationError("Deployment manifest incomplete. Upload a secure project archive.")
-      return
-    }
-
-    if (uploadMode === 'external' && (!externalLink || !externalLink.trim())) {
-      setValidationError("Deployment manifest incomplete. Provide a valid external download link.")
-      return
+    if (uploadMode === 'hosted') {
+      if (!projectFile) {
+        setValidationError("Deployment manifest incomplete. Upload a secure project archive.")
+        return
+      }
+    } else if (uploadMode === 'external') {
+      if (!externalLink || !externalLink.trim()) {
+        setValidationError("Deployment manifest incomplete. Provide a valid external download link.")
+        return
+      }
+      if (!EXTERNAL_URL_REGEX.test(externalLink.trim())) {
+        setValidationError("Invalid URL format. Please provide a valid external link (e.g., https://example.com/...).")
+        return
+      }
     }
 
     if (!rightsConfirmed) {
@@ -222,7 +232,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       })
 
       const uploadedImages = await Promise.all(uploadPreviewsPromises)
+      
       let mediaResourceData = null;
+      
       if (uploadMode === 'hosted' && projectFile) {
         const archivePath = `${category}/${folderId}/${projectFile.name}`
         const { error: vError } = await supabase.storage
@@ -231,8 +243,14 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           
         if (vError) throw vError
         
-        let calculatedMime: MimeType = "zip" 
-        if (projectFile.name.endsWith(".rar")) calculatedMime = "rar"
+        const ext = projectFile.name.split('.').pop()?.toLowerCase();
+        let calculatedMime: MimeType = "zip";
+        if (ext === "rar") calculatedMime = "rar" as MimeType;
+        else if (ext === "pdf") calculatedMime = "pdf" as MimeType;
+        else if (ext === "mp4") calculatedMime = "mp4" as MimeType;
+        else if (ext === "png") calculatedMime = "png" as MimeType;
+        else if (ext === "webp") calculatedMime = "webp" as MimeType;
+        else if (ext === "jpg" || ext === "jpeg") calculatedMime = "jpeg" as MimeType;
         
         mediaResourceData = {
           fileName: projectFile.name,
@@ -248,14 +266,14 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         description: newAsset.description,
         price: 0,
         videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
-        tagIds: ["1", "2"], 
+        tagIds: [], 
         galleryImages: uploadedImages
       }
 
       if (uploadMode === 'hosted' && mediaResourceData) {
         createInput.mediaResource = mediaResourceData;
       } else if (uploadMode === 'external') {
-        createInput.externalLink = externalLink;
+        createInput.externalLink = externalLink.trim();
       }
 
       await executeCreate({
@@ -363,7 +381,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
           <div className="space-y-3">
             <div className="flex justify-between items-end">
-              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload</label>
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
               <span className={`text-[9px] font-bold uppercase ${previewItems.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {previewItems.length} / 5 Images
               </span>
@@ -430,14 +448,20 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             <div className="flex bg-muted/20 border border-border/40 p-1">
               <button 
                 type="button"
-                onClick={() => setUploadMode('hosted')}
+                onClick={() => {
+                  setUploadMode('hosted')
+                  setExternalLink("")
+                }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'hosted' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
               >
                 <FileArchive size={14} className="stroke-[1.8]" /> Hosted Archive
               </button>
               <button 
                 type="button"
-                onClick={() => setUploadMode('external')}
+                onClick={() => {
+                  setUploadMode('external')
+                  setProjectFile(null)
+                }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'external' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
               >
                 <LinkIcon size={14} className="stroke-[1.8]" /> External Link
@@ -452,11 +476,20 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                 {!projectFile && (
                   <input 
                     type="file" 
-                    accept=".zip,.rar,.grd,.asl,.atn" 
+                    accept=".zip,.rar,.pdf,.jpeg,.jpg,.png,.webp,.mp4" 
                     className="absolute inset-0 opacity-0 cursor-pointer" 
                     onChange={e => { 
                       const file = e.target.files?.[0];
                       if (file) {
+                        const fileExt = file.name.split('.').pop()?.toLowerCase();
+                        
+                        if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+                          setValidationError(`Invalid file type. Allowed formats: ${ALLOWED_EXTENSIONS.join(', ')}.`);
+                          e.target.value = "";
+                          setProjectFile(null);
+                          return;
+                        }
+
                         if (file.size > MAX_FILE_SIZE_BYTES) {
                           setValidationError("The project archive exceeds the maximum allowed size of 300 MB.");
                           e.target.value = "";
