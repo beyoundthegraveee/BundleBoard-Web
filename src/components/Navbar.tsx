@@ -87,9 +87,9 @@ export function Navbar() {
           <div className="flex-shrink-0 -ml-3">
             <Link href="/" className="flex items-center gap-1 font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
               <img 
-                src="/logo2.jpg" 
+                src="/logo.png" 
                 alt="BundleBoard" 
-                className="w-7 h-7 object-cover rounded-full" 
+                className="w-9 h-9 object-cover rounded-full" 
               />
               
               <div className="flex items-center pt-[2px]">
