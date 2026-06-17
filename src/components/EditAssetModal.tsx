@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
@@ -13,7 +13,6 @@ interface GalleryItem {
   isNew: boolean;
 }
 
-// 💡 НОВОЕ: Обновленные типы для externalLink
 interface EditAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,9 +46,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     description: ""
   })
   
-  // 💡 НОВОЕ: Состояние для внешней ссылки
   const [externalLink, setExternalLink] = useState("")
-  
   const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -58,34 +55,70 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   useEffect(() => {
     if (isOpen) {
       setValidationError(null)
-      setForm({
-        name: initialData.name || "",
-        description: initialData.description || ""
-      })
-      setExternalLink(initialData.externalLink || "")
+
+      const draftFormKey = `draft_editForm_${initialData.id}`
+      const draftLinkKey = `draft_editLink_${initialData.id}`
+
+      const draftForm = sessionStorage.getItem(draftFormKey)
+      const draftLink = sessionStorage.getItem(draftLinkKey)
+
+      if (draftForm) {
+        setForm(JSON.parse(draftForm))
+      } else {
+        setForm({
+          name: initialData.name || "",
+          description: initialData.description || ""
+        })
+      }
+
+      if (draftLink !== null) {
+        setExternalLink(draftLink)
+      } else {
+        setExternalLink(initialData.externalLink || "")
+      }
       
-      if (initialData.galleryImages) {
+      if (initialData.galleryImages && gallery.length === 0) {
         setGallery(initialData.galleryImages.map(img => ({
           id: Math.random().toString(36).substring(7),
           filePath: img.filePath,
           file: null,
           isNew: false
         })))
-      } else {
-        setGallery([])
       }
     }
-  }, [isOpen, initialData])
+  }, [isOpen, initialData, gallery.length])
+
+  useEffect(() => {
+    if (isOpen && initialData.id) {
+      sessionStorage.setItem(`draft_editForm_${initialData.id}`, JSON.stringify(form))
+      sessionStorage.setItem(`draft_editLink_${initialData.id}`, externalLink)
+    }
+  }, [form, externalLink, isOpen, initialData.id])
+
+  const galleryRef = useRef(gallery);
+  useEffect(() => {
+    galleryRef.current = gallery;
+  }, [gallery]);
 
   useEffect(() => {
     return () => {
-      gallery.forEach(item => {
+      galleryRef.current.forEach(item => {
         if (item.isNew && item.filePath.startsWith('blob:')) {
           URL.revokeObjectURL(item.filePath)
         }
       })
     }
-  }, [gallery])
+  }, [])
+
+  const clearDrafts = () => {
+    sessionStorage.removeItem(`draft_editForm_${initialData.id}`)
+    sessionStorage.removeItem(`draft_editLink_${initialData.id}`)
+  }
+
+  const handleClose = () => {
+    clearDrafts()
+    onClose()
+  }
 
   if (!isOpen) return null
 
@@ -213,8 +246,9 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
       
-      // 💡 НОВОЕ: Отправляем externalLink (или null, если оно пустое)
       await onSave(form.name, 0, form.description, finalGalleryImages, externalLink.trim() || null)
+      
+      clearDrafts()
     } catch (err: any) {
       console.error("Update failed:", err)
       setValidationError(err.message || "Failed to update asset.")
@@ -233,7 +267,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
           <button 
             type="button" 
-            onClick={onClose} 
+            onClick={handleClose} 
             disabled={isWorking}
             className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
@@ -337,7 +371,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
             />
           </div>
 
-          {/* 💡 НОВОЕ: Поле для изменения внешней ссылки */}
           <div className="grid gap-1">
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">External Link (Optional)</label>
             <div className="relative">
@@ -358,7 +391,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           <div className="mt-6 flex justify-end gap-3 select-none pt-4 border-t border-border/20 sticky bottom-0 bg-card">
             <button 
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isWorking}
               className="px-4 py-2 border border-border/80 text-foreground bg-background hover:bg-accent text-[10px] font-bold uppercase tracking-wider rounded-none transition-colors disabled:opacity-50"
             >
