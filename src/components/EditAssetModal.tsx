@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
+import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
 
 interface GalleryItem {
   id: string;
@@ -13,7 +14,6 @@ interface GalleryItem {
   isNew: boolean;
 }
 
-// 💡 НОВОЕ: Обновленные типы для externalLink
 interface EditAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,50 +42,100 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
-  const [form, setForm] = useState({
-    name: "",
-    description: ""
-  })
   
-  // 💡 НОВОЕ: Состояние для внешней ссылки
-  const [externalLink, setExternalLink] = useState("")
+  const [form, setForm] = useState(() => {
+    if (typeof window !== 'undefined' && initialData?.id) {
+      const draft = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+      if (draft) return JSON.parse(draft);
+    }
+    return {
+      name: initialData.name || "",
+      description: initialData.description || ""
+    };
+  });
   
-  const [gallery, setGallery] = useState<GalleryItem[]>([])
+  const [externalLink, setExternalLink] = useState(() => {
+    if (typeof window !== 'undefined' && initialData?.id) {
+      const draft = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+      if (draft !== null) return draft;
+    }
+    return initialData.externalLink || "";
+  });
+
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
+    if (initialData.galleryImages && initialData.galleryImages.length > 0) {
+      return initialData.galleryImages.map(img => ({
+        id: Math.random().toString(36).substring(7),
+        filePath: img.filePath,
+        file: null,
+        isNew: false
+      }));
+    }
+    return [];
+  });
+
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
+  const [currentEditId, setCurrentEditId] = useState(initialData.id);
 
   useEffect(() => {
-    if (isOpen) {
-      setValidationError(null)
-      setForm({
-        name: initialData.name || "",
-        description: initialData.description || ""
-      })
-      setExternalLink(initialData.externalLink || "")
+    if (isOpen && initialData.id !== currentEditId) {
+      setCurrentEditId(initialData.id);
       
+      const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+      if (draftForm) setForm(JSON.parse(draftForm));
+      else setForm({ name: initialData.name || "", description: initialData.description || "" });
+
+      const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+      if (draftLink !== null) setExternalLink(draftLink);
+      else setExternalLink(initialData.externalLink || "");
+
       if (initialData.galleryImages) {
         setGallery(initialData.galleryImages.map(img => ({
           id: Math.random().toString(36).substring(7),
           filePath: img.filePath,
           file: null,
           isNew: false
-        })))
+        })));
       } else {
-        setGallery([])
+        setGallery([]);
       }
+      setValidationError(null);
     }
-  }, [isOpen, initialData])
+  }, [isOpen, initialData, currentEditId]);
+
+  useEffect(() => {
+    if (isOpen && initialData.id) {
+      sessionStorage.setItem(`draft_editForm_${initialData.id}`, JSON.stringify(form))
+      sessionStorage.setItem(`draft_editLink_${initialData.id}`, externalLink)
+    }
+  }, [form, externalLink, isOpen, initialData.id])
+
+  const galleryRef = useRef(gallery);
+  useEffect(() => {
+    galleryRef.current = gallery;
+  }, [gallery]);
 
   useEffect(() => {
     return () => {
-      gallery.forEach(item => {
+      galleryRef.current.forEach(item => {
         if (item.isNew && item.filePath.startsWith('blob:')) {
           URL.revokeObjectURL(item.filePath)
         }
       })
     }
-  }, [gallery])
+  }, [])
+
+  const clearDrafts = () => {
+    sessionStorage.removeItem(`draft_editForm_${initialData.id}`)
+    sessionStorage.removeItem(`draft_editLink_${initialData.id}`)
+  }
+
+  const handleClose = () => {
+    clearDrafts()
+    onClose()
+  }
 
   if (!isOpen) return null
 
@@ -93,6 +143,13 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     if (e.target.files) {
       setValidationError(null)
       const incomingFiles = Array.from(e.target.files)
+      
+      const oversized = incomingFiles.find(f => f.size > MAX_IMAGE_SIZE_BYTES);
+      if (oversized) {
+        setValidationError(`Preview images must be under 10 MB.`);
+        e.target.value = "";
+        return;
+      }
       
       setGallery((prev) => {
         const currentTotal = prev.length + incomingFiles.length;
@@ -166,6 +223,13 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       return
     }
 
+    if (externalLink && externalLink.trim().length > 0) {
+      if (!EXTERNAL_URL_REGEX.test(externalLink.trim())) {
+        setValidationError("Invalid URL format. Please provide a valid external link (e.g., https://example.com/...).")
+        return;
+      }
+    }
+
     setIsUploading(true)
     const timestamp = Date.now()
     
@@ -213,8 +277,9 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
       
-      // 💡 НОВОЕ: Отправляем externalLink (или null, если оно пустое)
       await onSave(form.name, 0, form.description, finalGalleryImages, externalLink.trim() || null)
+      
+      clearDrafts()
     } catch (err: any) {
       console.error("Update failed:", err)
       setValidationError(err.message || "Failed to update asset.")
@@ -233,7 +298,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
           <button 
             type="button" 
-            onClick={onClose} 
+            onClick={handleClose} 
             disabled={isWorking}
             className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
@@ -251,7 +316,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           
           <div className="space-y-2">
             <div className="flex justify-between items-end">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 5)</label>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
               <span className={`text-[9px] font-bold uppercase ${gallery.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {gallery.length} / 5 Images
               </span>
@@ -337,7 +402,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
             />
           </div>
 
-          {/* 💡 НОВОЕ: Поле для изменения внешней ссылки */}
           <div className="grid gap-1">
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">External Link (Optional)</label>
             <div className="relative">
@@ -358,7 +422,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           <div className="mt-6 flex justify-end gap-3 select-none pt-4 border-t border-border/20 sticky bottom-0 bg-card">
             <button 
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isWorking}
               className="px-4 py-2 border border-border/80 text-foreground bg-background hover:bg-accent text-[10px] font-bold uppercase tracking-wider rounded-none transition-colors disabled:opacity-50"
             >
