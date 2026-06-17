@@ -84,9 +84,19 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/80 dark:bg-background/80 backdrop-blur-md font-sans transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-          <div className="flex-shrink-0">
-            <Link href="/" className="font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
-              BUNDLE<span className="opacity-40 font-normal">BOARD</span>
+          <div className="flex-shrink-0 -ml-3">
+            <Link href="/" className="flex items-center gap-1 font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
+              <img 
+                src="/logo2.jpg" 
+                alt="BundleBoard" 
+                className="w-7 h-7 object-cover rounded-full" 
+              />
+              
+              <div className="flex items-center pt-[2px]">
+                <span>UNDLE</span>
+                <span className="opacity-40 font-normal">BOARD</span>
+              </div>
+              
             </Link>
           </div>
 
