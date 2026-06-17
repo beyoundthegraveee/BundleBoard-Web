@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive } from "lucide-react" // 1. Добавил иконки Download и Archive
+import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive } from "lucide-react"
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
@@ -45,7 +45,6 @@ export default function ProfilePage() {
 
   const isAuthor = userData?.roles?.includes("author")
   
-  // Подсчет для секции покупателя (PurchasedVault / BillingLedger)
   const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
   let totalAssetsCount = 0;
   if (userData?.purchases) {
@@ -54,7 +53,6 @@ export default function ProfilePage() {
     });
   }
 
-  // 2. ПОДСЧЕТ МЕТРИК ДЛЯ АВТОРА
   let authorTotalDownloads = 0;
   let authorTotalRevenue = 0;
   const authorCollectionsCount = userData?.authoredCollections?.length || 0;
@@ -62,17 +60,26 @@ export default function ProfilePage() {
   if (userData?.authoredCollections) {
     userData.authoredCollections.forEach((col: any) => {
       if (col) {
-        // Суммируем скачивания (нужно убедиться, что downloadCount есть в GraphQL запросе)
         const downloads = col.downloadCount || 0;
         authorTotalDownloads += downloads;
-        
-        // Считаем выручку: (кол-во скачиваний) * (цена коллекции)
-        // Предполагается, что скачивание = успешная покупка
         const price = col.price || 0;
         authorTotalRevenue += (downloads * price);
       }
     });
   }
+
+  // 💡 ГРУППИРОВКА КОЛЛЕКЦИЙ ПО ТЕГАМ (КАТЕГОРИЯМ)
+  const groupedCollections = userData?.authoredCollections?.reduce((acc: Record<string, any[]>, col: any) => {
+    if (!col) return acc;
+    // Берем имя первого тега. Если тегов нет (или не запросили в GQL), кидаем в "Uncategorized"
+    const categoryName = col.tags && col.tags.length > 0 ? col.tags[0].name : "Uncategorized";
+    
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
+    }
+    acc[categoryName].push(col);
+    return acc;
+  }, {});
 
   return (
     <AuroraBackground className="p-6 md:p-10 lg:p-12 pb-24 min-h-[calc(100vh-5rem)] h-full relative justify-start items-stretch">
@@ -114,8 +121,8 @@ export default function ProfilePage() {
 
         <div className="lg:col-span-8 space-y-10">
           {isAuthor && (
-            <section className="border border-border/60 p-6 bg-card rounded-none shadow-md">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4">
+            <section className="border border-border/60 p-6 bg-card rounded-none shadow-md flex flex-col max-h-[900px]">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4 shrink-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Cpu size={18} className="text-primary stroke-[1.8]" />
@@ -128,8 +135,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 shrink-0">
                 <div className="border border-border/40 p-4 bg-background">
                   <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
                     <Archive size={11}/> Collections
@@ -156,28 +162,44 @@ export default function ProfilePage() {
                     ${authorTotalRevenue.toFixed(2)}
                   </div>
                 </div>
-
               </div>
 
-              <div className="space-y-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">Active Product Inventory</span>
-                {userData?.authoredCollections && userData.authoredCollections.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {userData.authoredCollections.map((col: any) => (
-                      col ? (
-                        <InventoryItemCard 
-                          key={col.id} 
-                          collection={col} 
-                          onRefreshNeeded={() => refetch()} 
-                        />
-                      ) : null
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
-                    No product nodes submitted by this station.
-                  </div>
-                )}
+              <div className="flex flex-col flex-1 min-h-0">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-4 shrink-0">Active Product Inventory</span>
+                
+                {/* 💡 КОНТЕЙНЕР СО СКРОЛЛОМ */}
+                <div className="overflow-y-auto pr-2 pb-2 space-y-8 flex-1 min-h-0 custom-scrollbar">
+                  {groupedCollections && Object.keys(groupedCollections).length > 0 ? (
+                    Object.entries(groupedCollections).map(([category, items]) => (
+                      <div key={category} className="space-y-4">
+                        
+                        {/* 💡 ЗАГОЛОВОК ГРУППЫ */}
+                        <div className="flex items-center gap-3 border-b border-border/20 pb-2">
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+                            {category}
+                          </span>
+                          <span className="text-[9px] font-medium bg-muted px-2 py-0.5 text-muted-foreground rounded-none">
+                            {items.length} ASSETS
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {items.map((col: any) => (
+                            <InventoryItemCard 
+                              key={col.id} 
+                              collection={col} 
+                              onRefreshNeeded={() => refetch()} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
+                      No product nodes submitted by this station.
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
           )}
