@@ -14,7 +14,12 @@ export default withAuth(
           "/",
           "/about",
           "/bundles",
-          "/terms"
+          "/terms",
+          "/register",
+          "/login",
+          "/mail/verify-email",
+          "/mail/verify",
+          "/select-role"
         ];
         const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
 
