@@ -10,7 +10,14 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
-        if (pathname === "/") return true;
+        const publicPaths = [
+          "/",
+          "/about",
+          "/bundles"
+        ];
+        const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
+
+        if (isPublic) return true;
         return !!token?.accessToken;
       },
     },
