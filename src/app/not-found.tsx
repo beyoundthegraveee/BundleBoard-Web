@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,16 +13,14 @@ export default function NotFound() {
       <Card className="w-full max-w-sm border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center">
         <CardHeader className="space-y-1.5 border-b border-border/40 pb-6">
           <div className="flex justify-center mb-4">
-            <div className="relative block text-center h-[100px] w-[100px] border-b-2 border-border/40 overflow-hidden">
+            <div className="relative flex justify-center items-center h-[100px] w-[100px] border-b-2 border-border/40 overflow-visible">
               <div 
-                className="absolute bottom-0 left-1/2 w-10 h-10 -ml-5 bg-contain bg-no-repeat animate-bounce-spin"
-                ref={(el) => {
-                  if (el) el.style.backgroundImage = `url(${imgDataURI})`;
-                }}
+                className="w-10 h-10 bg-contain bg-center bg-no-repeat animate-bounce-spin"
+                style={{ backgroundImage: `url(${imgDataURI})` }}
               />
-              <div className="absolute top-[95%] bg-foreground/80 w-[10px] h-[10px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:0s]" style={{ right: '-20%' }} />
-              <div className="absolute top-[97%] bg-foreground/80 w-[5px] h-[5px] rounded-[10px_10px_0_0] animate-pebbles [animation-delay:1s]" style={{ right: '-20%' }} />
-              <div className="absolute top-[98%] bg-foreground/80 w-[3px] h-[3px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:2s]" style={{ right: '-20%' }} />
+              <div className="absolute top-[80%] bg-foreground/80 w-[10px] h-[10px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:0s]" style={{ right: '-20%' }} />
+              <div className="absolute top-[85%] bg-foreground/80 w-[5px] h-[5px] rounded-[10px_10px_0_0] animate-pebbles [animation-delay:1s]" style={{ right: '-20%' }} />
+              <div className="absolute top-[90%] bg-foreground/80 w-[3px] h-[3px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:2s]" style={{ right: '-20%' }} />
             </div>
           </div>
           
