@@ -8,7 +8,11 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token?.accessToken,
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl;
+        if (pathname === "/") return true;
+        return !!token?.accessToken;
+      },
     },
     pages: {
       signIn: "/login",
