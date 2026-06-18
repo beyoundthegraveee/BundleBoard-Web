@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive } from "lucide-react"
+import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive, ChevronDown } from "lucide-react" // Добавили ChevronDown
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/ProfileAvatar'
@@ -68,10 +68,8 @@ export default function ProfilePage() {
     });
   }
 
-  // 💡 ГРУППИРОВКА КОЛЛЕКЦИЙ ПО ТЕГАМ (КАТЕГОРИЯМ)
   const groupedCollections = userData?.authoredCollections?.reduce((acc: Record<string, any[]>, col: any) => {
     if (!col) return acc;
-    // Берем имя первого тега. Если тегов нет (или не запросили в GQL), кидаем в "Uncategorized"
     const categoryName = col.tags && col.tags.length > 0 ? col.tags[0].name : "Uncategorized";
     
     if (!acc[categoryName]) {
@@ -82,12 +80,12 @@ export default function ProfilePage() {
   }, {});
 
   return (
-    <AuroraBackground className="p-6 md:p-10 lg:p-12 pb-24 min-h-[calc(100vh-5rem)] h-full relative justify-start items-stretch">
-      <nav className="mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative z-10">
+    <AuroraBackground className="p-4 sm:p-6 md:p-10 lg:p-12 pb-24 min-h-[calc(100vh-5rem)] h-full relative justify-start items-stretch">
+      <nav className="mb-8 md:mb-12 border-b border-border/40 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative z-10">
         <div>
           <div className="flex items-center gap-2 mb-2 text-primary">
             <span className="h-1.5 w-1.5 bg-primary rounded-none animate-pulse" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Access Scope: {isAuthor ? "Partner Privileges Enabled" : "Standard Client Account"}
             </span>
           </div>
@@ -97,21 +95,21 @@ export default function ProfilePage() {
         </div>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 relative z-10">
         
         <div className="lg:col-span-4 space-y-6">
-          <section className="border border-border/60 bg-card p-6 rounded-none shadow-md relative">
+          <section className="border border-border/60 bg-card p-4 md:p-6 rounded-none shadow-md relative">
             <ProfileAvatar 
               userData={userData || null}
               onUpdate={() => refetch()} 
             />
 
-            <div className="space-y-2 border-t border-border/30 pt-4">
-              <Link href="/settings" className="flex items-center justify-between w-full border border-border/60 bg-background text-foreground p-3 hover:bg-accent text-xs font-semibold uppercase tracking-wider transition-colors rounded-none group">
-                Settings Configuration <Settings size={14} className="text-muted-foreground group-hover:rotate-45 transition-transform" />
+            <div className="space-y-2 border-t border-border/30 pt-4 mt-4">
+              <Link href="/settings" className="flex items-center justify-between w-full border border-border/60 bg-background text-foreground p-3 hover:bg-accent text-[10px] md:text-xs font-semibold uppercase tracking-wider transition-colors rounded-none group">
+                Settings Config <Settings size={14} className="text-muted-foreground group-hover:rotate-45 transition-transform" />
               </Link>
-              <button onClick={() => terminateSession()} className="flex items-center justify-between w-full border border-destructive/40 text-destructive bg-background p-3 hover:bg-destructive/5 text-xs font-semibold uppercase tracking-wider transition-colors rounded-none">
-                Sign Out Account <LogOut size={14} />
+              <button onClick={() => terminateSession()} className="flex items-center justify-between w-full border border-destructive/40 text-destructive bg-background p-3 hover:bg-destructive/5 text-[10px] md:text-xs font-semibold uppercase tracking-wider transition-colors rounded-none">
+                Sign Out <LogOut size={14} />
               </button>
             </div>
           </section>
@@ -119,83 +117,67 @@ export default function ProfilePage() {
           {userData?.id && <UserCommentsLog userId={userData.id} />}
         </div>
 
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 space-y-6 md:space-y-10">
           {isAuthor && (
-            <section className="border border-border/60 p-6 bg-card rounded-none shadow-md flex flex-col max-h-[900px]">
+            <section className="border border-border/60 p-4 md:p-6 bg-card rounded-none shadow-md flex flex-col max-h-none md:max-h-[900px]">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-border/40 pb-4 shrink-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Cpu size={18} className="text-primary stroke-[1.8]" />
-                    <h3 className="text-xl font-bold uppercase tracking-wider font-display text-foreground">Author Station</h3>
+                    <h3 className="text-lg md:text-xl font-bold uppercase tracking-wider font-display text-foreground">Author Station</h3>
                   </div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground">Deploy and monitor studio assets</p>
+                  <p className="text-[9px] md:text-[10px] font-medium uppercase text-muted-foreground">Deploy and monitor studio assets</p>
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 font-semibold text-xs uppercase hover:opacity-90 transition-opacity rounded-none tracking-wider">
+                <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 font-semibold text-xs uppercase hover:opacity-90 transition-opacity rounded-none tracking-wider">
                   <Plus size={14} /> Deploy Asset
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 shrink-0">
-                <div className="border border-border/40 p-4 bg-background">
-                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                    <Archive size={11}/> Collections
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6 shrink-0">
+                <div className="border border-border/40 p-3 md:p-4 bg-background">
+                  <div className="text-[8px] md:text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Archive size={11} className="shrink-0"/> <span className="truncate">Collections</span>
                   </div>
-                  <div className="text-xl font-bold mt-1 text-foreground">
+                  <div className="text-lg md:text-xl font-bold mt-1 text-foreground">
                     {authorCollectionsCount}
                   </div>
                 </div>
 
-                <div className="border border-border/40 p-4 bg-background">
-                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                    <Download size={11}/> Downloads
+                <div className="border border-border/40 p-3 md:p-4 bg-background">
+                  <div className="text-[8px] md:text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Download size={11} className="shrink-0"/> <span className="truncate">Downloads</span>
                   </div>
-                  <div className="text-xl font-bold mt-1 text-foreground">
+                  <div className="text-lg md:text-xl font-bold mt-1 text-foreground">
                     {authorTotalDownloads}
                   </div>
                 </div>
 
-                <div className="border border-border/40 p-4 bg-background col-span-2">
-                  <div className="text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                    <BarChart3 size={11}/> Est. Revenue
+                <div className="border border-border/40 p-3 md:p-4 bg-background col-span-2">
+                  <div className="text-[8px] md:text-[9px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <BarChart3 size={11} className="shrink-0"/> <span className="truncate">Est. Revenue</span>
                   </div>
-                  <div className="text-xl font-bold mt-1 text-primary">
+                  <div className="text-lg md:text-xl font-bold mt-1 text-primary truncate">
                     ${authorTotalRevenue.toFixed(2)}
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col flex-1 min-h-0">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-4 shrink-0">Active Product Inventory</span>
+                <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-4 shrink-0">Active Product Inventory</span>
                 
-                {/* 💡 КОНТЕЙНЕР СО СКРОЛЛОМ */}
-                <div className="overflow-y-auto pr-2 pb-2 space-y-8 flex-1 min-h-0 custom-scrollbar">
+                <div className="overflow-y-visible md:overflow-y-auto pr-0 md:pr-2 pb-2 space-y-6 md:space-y-8 flex-1 min-h-0 md:custom-scrollbar">
                   {groupedCollections && Object.keys(groupedCollections).length > 0 ? (
                     Object.entries(groupedCollections).map(([category, items]) => (
-                      <div key={category} className="space-y-4">
-                        
-                        {/* 💡 ЗАГОЛОВОК ГРУППЫ */}
-                        <div className="flex items-center gap-3 border-b border-border/20 pb-2">
-                          <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
-                            {category}
-                          </span>
-                          <span className="text-[9px] font-medium bg-muted px-2 py-0.5 text-muted-foreground rounded-none">
-                            {items.length} ASSETS
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {items.map((col: any) => (
-                            <InventoryItemCard 
-                              key={col.id} 
-                              collection={col} 
-                              onRefreshNeeded={() => refetch()} 
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      // 💡 Заменили старый код на новый умный компонент CategoryGroup
+                      <CategoryGroup 
+                        key={category} 
+                        category={category} 
+                        items={items} 
+                        onRefreshNeeded={() => refetch()} 
+                      />
                     ))
                   ) : (
-                    <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
+                    <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[9px] md:text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
                       No product nodes submitted by this station.
                     </div>
                   )}
@@ -205,7 +187,6 @@ export default function ProfilePage() {
           )}
 
           <PurchasedVault purchases={userData?.purchases as any} totalAssetsCount={totalAssetsCount} />
-          
           <BillingLedger purchases={userData?.purchases as any} totalSpent={totalSpent} />
         </div>
       </div>
@@ -219,4 +200,47 @@ export default function ProfilePage() {
       )}
     </AuroraBackground>
   )
+}
+
+// 💡 НОВЫЙ КОМПОНЕНТ: Сворачиваемая категория (Аккордеон)
+function CategoryGroup({ category, items, onRefreshNeeded }: { category: string, items: any[], onRefreshNeeded: () => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="space-y-3 md:space-y-4">
+      {/* Шапка категории: кликабельна только на мобилках */}
+      <div 
+        className="flex items-center justify-between gap-3 border-b border-border/20 pb-2 cursor-pointer md:cursor-default select-none"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-primary">
+            {category}
+          </span>
+          <span className="text-[8px] md:text-[9px] font-medium bg-muted px-2 py-0.5 text-muted-foreground rounded-none">
+            {items.length} ASSETS
+          </span>
+        </div>
+        {/* Иконка стрелочки видна только на телефонах */}
+        <ChevronDown 
+          size={14} 
+          className={`md:hidden text-muted-foreground transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </div>
+      
+      {/* САМАЯ ВАЖНАЯ СТРОКА ДЛЯ CSS: 
+        Если isOpen = true, ставим 'grid'.
+        Если isOpen = false, ставим 'hidden md:grid' (на телефоне скроется, на ПК md:grid перебьет hidden).
+      */}
+      <div className={`grid-cols-1 sm:grid-cols-2 gap-3 ${isOpen ? 'grid' : 'hidden md:grid'}`}>
+        {items.map((col: any) => (
+          <InventoryItemCard 
+            key={col.id} 
+            collection={col} 
+            onRefreshNeeded={onRefreshNeeded} 
+          />
+        ))}
+      </div>
+    </div>
+  );
 }

@@ -37,9 +37,9 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="mt-20 pt-10 border-t border-border/40 flex flex-col gap-6">
+        <div className="mt-16 md:mt-20 pt-8 md:pt-10 border-t border-border/40 flex flex-col gap-6">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Connect with the Developer</h2>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-4 md:gap-6">
             <Link href="https://github.com/beyoundthegraveee" target="_blank" className="flex items-center gap-2 hover:text-primary transition-all hover:translate-x-1 group">
               <FaGithub /> 
               <span className="font-semibold uppercase text-xs">GitHub</span>
@@ -52,16 +52,16 @@ export default function AboutPage() {
             </Link>
           </div>
         </div>
-        
-        <div className="mt-12 p-8 bg-card/80 backdrop-blur-sm border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group hover:border-primary/50 transition-colors">
+
+        <div className="mt-8 md:mt-12 p-6 md:p-8 bg-card/80 backdrop-blur-sm border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group hover:border-primary/50 transition-colors">
           <div>
-            <h3 className="font-bold uppercase text-sm tracking-widest">Follow our TikTok</h3>
-            <p className="text-xs text-muted-foreground mt-1">Behind the scenes & Asset Showcases</p>
+            <h3 className="font-bold uppercase text-sm tracking-widest">Follow TikTok</h3>
+            <p className="text-xs text-muted-foreground mt-1">Showcases</p>
           </div>
           <Link 
             href="https://www.tiktok.com/@beyoundheavven" 
             target="_blank"
-            className="flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 font-bold text-xs uppercase hover:bg-primary/90 transition-all active:scale-95 whitespace-nowrap"
+            className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary text-primary-foreground px-8 py-4 font-bold text-xs uppercase hover:bg-primary/90 transition-all active:scale-95 whitespace-nowrap"
           >
             <MessageCircle size={16} /> Visit TikTok
           </Link>

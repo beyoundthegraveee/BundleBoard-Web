@@ -9,12 +9,12 @@ const imgDataURI = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[80vh] items-center justify-center p-4">
+    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center">
         
-        <CardHeader className="space-y-1.5 border-b border-border/40 pb-8 pt-8">
+        <CardHeader className="space-y-1.5 border-b border-border/40 pb-6 pt-6 sm:pb-8 sm:pt-8">
           
-          <div className="flex justify-center mb-6 relative">
+          <div className="flex justify-center mb-5 sm:mb-6 relative">
             <div className="relative block text-center h-[120px] w-[160px] border-b-2 border-border/40 overflow-hidden shrink-0 mx-auto">
               
               <div 
@@ -28,7 +28,7 @@ export default function NotFound() {
             </div>
           </div>
           
-          <CardTitle className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground font-display">
+          <CardTitle className="text-xl sm:text-3xl font-bold uppercase tracking-wider text-foreground font-display">
             0 results found
           </CardTitle>
           <CardDescription className="font-medium uppercase text-[10px] sm:text-xs tracking-widest text-muted-foreground mt-2">
@@ -36,17 +36,17 @@ export default function NotFound() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="grid gap-6 p-8">
-          <p className="text-xs leading-relaxed text-muted-foreground">
+        <CardContent className="grid gap-5 sm:gap-6 p-6 sm:p-8">
+          <p className="text-[11px] sm:text-xs leading-relaxed text-muted-foreground">
             Sorry! We couldn't find any results. The requested resource is currently unreachable.
           </p>
 
           <Button 
             asChild 
-            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-xs tracking-widest rounded-none py-6 transition-opacity"
+            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[10px] sm:text-xs tracking-widest rounded-none py-5 sm:py-6 transition-opacity"
           >
             <Link href="/" className="flex items-center justify-center gap-2">
-              <ArrowLeft className="h-4 w-4" /> Return to primary node
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Return to primary node
             </Link>
           </Button>
         </CardContent>

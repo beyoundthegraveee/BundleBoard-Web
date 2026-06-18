@@ -103,14 +103,16 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 font-sans text-foreground">
+    <div className="fixed inset-0 z-50 font-sans text-foreground flex justify-end">
       <div 
-        className="absolute inset-0 bg-background/40 backdrop-blur-sm transition-opacity" 
+        className="absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
-      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-card border-l border-border/60 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 rounded-none">
-        <div>
-          <div className="flex justify-between items-center border-b border-border/40 pb-4 mb-6">
+      
+      <div className="relative h-full w-full sm:w-[400px] bg-card border-l border-border/60 p-4 sm:p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 rounded-none">
+        
+        <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex justify-between items-center border-b border-border/40 pb-3 sm:pb-4 mb-4 sm:mb-6 shrink-0">
             <div className="flex items-center gap-2">
               <ShoppingBag size={16} className="text-primary" />
               <h2 className="text-sm font-bold uppercase tracking-wider">Your Cart</h2>
@@ -127,14 +129,14 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </button>
           </div>
 
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-3 sm:space-y-4 custom-scrollbar pb-4">
             {cartItems.length > 0 ? (
               cartItems.map((item) => (
                 <div 
                   key={item.id} 
-                  className="flex gap-4 p-3 border border-border/40 bg-background rounded-none group relative overflow-hidden"
+                  className="flex gap-3 sm:gap-4 p-2.5 sm:p-3 border border-border/40 bg-background rounded-none group relative overflow-hidden"
                 >
-                  <div className="w-16 h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none">
                     <img src={item.previewImage} alt="" className="w-full h-full object-cover" />
                   </div>
 
@@ -143,11 +145,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wide">
                         {item.category}
                       </span>
-                      <h4 className="font-bold text-xs uppercase text-foreground truncate tracking-tight pr-6">
+                      <h4 className="font-bold text-[11px] sm:text-xs uppercase text-foreground truncate tracking-tight pr-6">
                         {item.name}
                       </h4>
                     </div>
-                    <div className="text-xs font-bold text-foreground">
+                    <div className="text-[11px] sm:text-xs font-bold text-foreground">
                       {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                     </div>
                   </div>
@@ -155,7 +157,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <button 
                     onClick={() => removeItem(item.id)}
                     disabled={isRedirecting}
-                    className="absolute top-3 right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1 disabled:opacity-30"
+                    className="absolute top-2 right-2 sm:top-3 sm:right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1 disabled:opacity-30"
                     aria-label="Remove item"
                   >
                     <Trash2 size={13} strokeWidth={1.8} />
@@ -163,22 +165,22 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
               ))
             ) : (
-              <div className="text-center py-16 border border-dashed border-border/40 text-muted-foreground/50 uppercase font-semibold text-[10px] tracking-widest">
+              <div className="text-center py-12 sm:py-16 border border-dashed border-border/40 text-muted-foreground/50 uppercase font-semibold text-[10px] tracking-widest mt-2">
                 Your shopping cart is empty
               </div>
             )}
           </div>
         </div>
 
-        <div className="border-t border-border/40 pt-5 space-y-4 bg-card">
+        <div className="border-t border-border/40 pt-4 sm:pt-5 space-y-3 sm:space-y-4 bg-card shrink-0 mt-auto">
           <div className="flex justify-between items-baseline">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtotal Value</span>
-            <div className="text-xl font-bold tracking-tight text-foreground">
+            <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtotal Value</span>
+            <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
               {isFreeCart ? "FREE" : `USD $${total.toFixed(2)}`}
             </div>
           </div>
 
-          <p className="text-[10px] text-muted-foreground leading-normal uppercase">
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-relaxed uppercase">
             {isFreeCart 
               ? "Assets will be instantly added to your library."
               : "Taxation and license certificates will be generated automatically upon checkout initialization."
@@ -189,7 +191,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             onClick={handleCheckout}
             disabled={cartItems.length === 0 || isRedirecting}
             className={cn(
-              "w-full py-4 bg-primary text-primary-foreground font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 rounded-none shadow-sm transition-all hover:opacity-90 active:scale-[0.99]",
+              "w-full py-3.5 sm:py-4 bg-primary text-primary-foreground font-bold uppercase text-[11px] sm:text-xs tracking-widest flex items-center justify-center gap-2 rounded-none shadow-sm transition-all hover:opacity-90 active:scale-[0.99]",
               (cartItems.length === 0 || isRedirecting) && "opacity-30 cursor-not-allowed pointer-events-none"
             )}
           >

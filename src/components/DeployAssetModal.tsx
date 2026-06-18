@@ -171,7 +171,6 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     e.preventDefault()
     setValidationError(null)
 
-    // 💡 ДОБАВЛЕНА ПРОВЕРКА НА > 1000 СИМВОЛОВ (на случай если вставили копипастом)
     if (newAsset.description.length < 100 || newAsset.description.length > 1000) {
       setValidationError(`Description length must be between 100 and 1000 characters (${newAsset.description.length}/1000).`)
       return
@@ -320,32 +319,32 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                            (uploadMode === 'external' && !externalLink.trim());
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans">
-      <div className="bg-card border border-border/60 w-full max-w-lg p-8 relative rounded-none shadow-2xl max-h-[90vh] overflow-y-auto text-foreground">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 font-sans">
+      <div className="bg-card border border-border/60 w-full max-w-lg p-5 sm:p-8 relative rounded-none shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar text-foreground">
         
         <button 
           onClick={onClose} 
-          className="absolute top-5 right-5 p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-none"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-none"
         >
-          <X className="h-4 w-4 stroke-[1.8]" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5 stroke-[1.8]" />
         </button>
         
-        <div className="mb-6 border-b border-border/40 pb-4">
-          <h3 className="text-xl font-bold tracking-tight text-foreground uppercase">Deploy Free Asset</h3>
-          <p className="text-xs text-muted-foreground mt-1.5 font-normal">Submit asset components to initialize public catalog node.</p>
+        <div className="mb-5 sm:mb-6 border-b border-border/40 pb-3 sm:pb-4 pr-6">
+          <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground uppercase">Deploy Free Asset</h3>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-normal">Submit asset components to initialize public catalog node.</p>
         </div>
         
         {validationError && (
-          <div className="mb-5 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
+          <div className="mb-4 sm:mb-5 p-3 sm:p-4 bg-destructive/5 border border-destructive/20 text-destructive text-[10px] sm:text-xs font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
             {validationError}
           </div>
         )}
         
-        <form onSubmit={handleDeployCollection} className="space-y-5">
-          <div className="grid gap-1.5">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Category</label>
+        <form onSubmit={handleDeployCollection} className="space-y-4 sm:space-y-5">
+          <div className="grid gap-1">
+            <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Category</label>
             <select 
-              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 outline-none text-sm font-normal transition-all focus:border-primary" 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 outline-none text-xs sm:text-sm font-normal transition-all focus:border-primary" 
               value={newAsset.category} 
               onChange={e => setNewAsset({...newAsset, category: e.target.value})}
             >
@@ -359,24 +358,24 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             </select>
           </div>
 
-          <div className="grid gap-1.5">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Title</label>
+          <div className="grid gap-1">
+            <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Title</label>
             <input 
               type="text" 
               required 
               minLength={3} 
               maxLength={100} 
-              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40" 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40" 
               placeholder="e.g., Ultra Chrome Gradient Pack" 
               value={newAsset.name} 
               onChange={e => setNewAsset({...newAsset, name: e.target.value})} 
             />
           </div>
 
-          <div className="grid gap-1.5">
+          <div className="grid gap-1">
             <div className="flex justify-between items-center">
-              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
-              <span className={`text-[10px] font-bold tracking-wide uppercase ${
+              <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
+              <span className={`text-[9px] sm:text-[10px] font-bold tracking-wide uppercase ${
                 newAsset.description.length < 100 ? 'text-amber-500' : 
                 newAsset.description.length >= 1000 ? 'text-destructive' : 'text-primary'
               }`}>
@@ -385,26 +384,26 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             </div>
             <textarea 
               required 
-              rows={4} 
+              rows={3} 
               maxLength={1000}
-              className="w-full border border-border/60 bg-background text-foreground rounded-none p-3 text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed" 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed sm:rows-4" 
               placeholder="Specify bundle details, file dimensions, and software compatibility versions..." 
               value={newAsset.description} 
               onChange={e => setNewAsset({...newAsset, description: e.target.value})} 
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex justify-between items-end">
-              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
-              <span className={`text-[9px] font-bold uppercase ${previewItems.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
+              <span className={`text-[8px] sm:text-[9px] font-bold uppercase ${previewItems.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {previewItems.length} / 5 Images
               </span>
             </div>
             
-            <div className={`border border-dashed p-5 text-center flex flex-col items-center justify-center relative transition-colors rounded-none ${previewItems.length >= 5 ? 'border-border/40 bg-muted/10 cursor-not-allowed opacity-50' : 'border-border/80 bg-background hover:bg-accent/50 cursor-pointer group'}`}>
-              <ImageIcon size={18} className="text-muted-foreground mb-2 stroke-[1.5]" />
-              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">
+            <div className={`border border-dashed p-4 sm:p-5 text-center flex flex-col items-center justify-center relative transition-colors rounded-none ${previewItems.length >= 5 ? 'border-border/40 bg-muted/10 cursor-not-allowed opacity-50' : 'border-border/80 bg-background hover:bg-accent/50 cursor-pointer group'}`}>
+              <ImageIcon size={16} className="text-muted-foreground mb-1.5 stroke-[1.5]" />
+              <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">
                 {previewItems.length >= 5 ? 'Limit reached' : `Select up to 5 gallery images`}
               </span>
               <input 
@@ -418,9 +417,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             </div>
 
             {previewItems.length > 0 && (
-              <div className="space-y-1.5 pt-2">
-                <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Drag to reorder. First image is the cover.</span>
-                <div className="grid grid-cols-5 gap-2 border border-border/40 p-2 bg-background/50 rounded-none">
+              <div className="space-y-1.5 pt-1.5">
+                <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Drag to reorder. First image is the cover.</span>
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 border border-border/40 p-1.5 sm:p-2 bg-background/50 rounded-none">
                   {previewItems.map((item, idx) => (
                     <div 
                       key={item.id} 
@@ -434,7 +433,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                       `}
                     >
                       {idx === 0 && (
-                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
+                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
                           Cover
                         </div>
                       )}
@@ -458,8 +457,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
               </div>
             )}
           </div>
-          <div className="space-y-3 pt-4 border-t border-border/20">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Method</label>
+          <div className="space-y-2.5 pt-3 border-t border-border/20">
+            <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Method</label>
             <div className="flex bg-muted/20 border border-border/40 p-1">
               <button 
                 type="button"
@@ -467,9 +466,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                   setUploadMode('hosted')
                   setExternalLink("")
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'hosted' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'hosted' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
               >
-                <FileArchive size={14} className="stroke-[1.8]" /> Hosted Archive
+                <FileArchive size={12} className="stroke-[1.8] sm:h-3.5 sm:w-3.5" /> Hosted Archive
               </button>
               <button 
                 type="button"
@@ -477,17 +476,17 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                   setUploadMode('external')
                   setProjectFile(null)
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'external' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all ${uploadMode === 'external' ? 'bg-background border border-border/80 shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
               >
-                <LinkIcon size={14} className="stroke-[1.8]" /> External Link
+                <LinkIcon size={12} className="stroke-[1.8] sm:h-3.5 sm:w-3.5" /> External Link
               </button>
             </div>
 
             {uploadMode === 'hosted' ? (
-              <div className={`border p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
-                <FileArchive size={18} className={projectFile ? "text-primary mb-2 stroke-[1.5]" : "text-muted-foreground mb-2 stroke-[1.5]"} />
-                <span className="text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
-                <span className="text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Archive core package (Max 300MB)"}</span>
+              <div className={`border p-4 sm:p-5 text-center flex flex-col items-center justify-center relative rounded-none transition-colors ${projectFile ? 'border-primary/40 bg-primary/5' : 'border-dashed border-border/80 bg-background hover:bg-accent/50'}`}>
+                <FileArchive size={16} className={projectFile ? "text-primary mb-1.5 stroke-[1.5]" : "text-muted-foreground mb-1.5 stroke-[1.5]"} />
+                <span className="text-[11px] sm:text-xs font-semibold text-foreground truncate max-w-full px-2 uppercase tracking-tight">{projectFile ? projectFile.name : "Secure Project Vault"}</span>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-medium tracking-wider">{projectFile ? `${(projectFile.size / (1024 * 1024)).toFixed(2)} MB` : "Archive core package (Max 300MB)"}</span>
                 {!projectFile && (
                   <input 
                     type="file" 
@@ -533,16 +532,16 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                     placeholder="https://..." 
                     value={externalLink}
                     onChange={e => setExternalLink(e.target.value)}
-                    className="w-full bg-background border border-border/60 py-3 pl-9 pr-3 text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors placeholder:text-muted-foreground/40"
+                    className="w-full bg-background border border-border/60 py-2.5 sm:py-3 pl-9 pr-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors placeholder:text-muted-foreground/40"
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Users will be redirected to this link to download the asset.</p>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Users will be redirected to this link to download the asset.</p>
               </div>
             )}
           </div>
 
-          <div className="pt-2">
-            <div className="flex items-start space-x-3 bg-muted/10 p-4 border border-border/40 rounded-none">
+          <div className="pt-1">
+            <div className="flex items-start space-x-2.5 sm:space-x-3 bg-muted/10 p-3 sm:p-4 border border-border/40 rounded-none">
               <Checkbox 
                 id="rights-confirm" 
                 checked={rightsConfirmed} 
@@ -552,7 +551,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
               />
               <Label 
                 htmlFor="rights-confirm" 
-                className="text-[11px] leading-relaxed text-muted-foreground font-medium cursor-pointer"
+                className="text-[10px] sm:text-[11px] leading-relaxed text-muted-foreground font-medium cursor-pointer"
               >
                 I confirm that I own the rights to distribute these files or have obtained the necessary licenses.
               </Label>
@@ -562,10 +561,10 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           <button 
             type="submit" 
             disabled={isSubmitDisabled} 
-            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-xs tracking-widest p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
+            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-[11px] sm:text-xs tracking-widest p-3.5 sm:p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
           >
             {isCreatingAsset ? (
-              <><Loader2 className="animate-spin h-3.5 w-3.5 text-primary-foreground" /> Initializing node upload...</>
+              <><Loader2 className="animate-spin h-3.5 w-3.5 text-primary-foreground" /> Initializing...</>
             ) : (
               "Deploy Asset Collection"
             )}

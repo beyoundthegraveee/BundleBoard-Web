@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import SplashScreen from "@/components/SplashScreen";
+import SplashScreen from "@/components/SplashScreen"; 
 
 export function SplashProvider({ children }: { children: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(false);
@@ -27,10 +27,10 @@ export function SplashProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {showSplash ? (
+      {children}
+      
+      {showSplash && (
         <SplashScreen onAnimationComplete={handleSplashComplete} />
-      ) : (
-        children
       )}
     </>
   );

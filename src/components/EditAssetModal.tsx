@@ -291,40 +291,40 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   const isWorking = isLoading || isUploading
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[110] flex items-center justify-center p-4 font-sans animate-in fade-in duration-150">
-      <div className="bg-card border border-border/60 w-full max-w-lg p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-4 font-sans animate-in fade-in duration-150">
+      <div className="bg-card border border-border/60 w-full max-w-lg p-4 sm:p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar">
         
-        <div className="mb-4 border-b border-border/40 pb-3 flex justify-between items-center sticky top-0 bg-card z-10">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
+        <div className="mb-4 border-b border-border/40 pb-3 flex justify-between items-center sticky top-0 bg-card z-10 pt-1">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
           <button 
             type="button" 
             onClick={handleClose} 
             disabled={isWorking}
-            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 p-1"
           >
-            <X size={14}/>
+            <X size={16}/>
           </button>
         </div>
 
         {validationError && (
-          <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 text-destructive text-[10px] font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
+          <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 text-destructive text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide rounded-none whitespace-pre-wrap">
             [ERROR]: {validationError}
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           
           <div className="space-y-2">
             <div className="flex justify-between items-end">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
-              <span className={`text-[9px] font-bold uppercase ${gallery.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <label className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Visual Payload (Max 10MB per image)</label>
+              <span className={`text-[8px] sm:text-[9px] font-bold uppercase ${gallery.length === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
                 {gallery.length} / 5 Images
               </span>
             </div>
             
             <div className="border border-border/40 bg-muted/10 p-2">
               {gallery.length > 0 && (
-                <div className="grid grid-cols-5 gap-2 mb-2">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-2">
                   {gallery.map((item, idx) => (
                     <div 
                       key={item.id} 
@@ -339,7 +339,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
                       `}
                     >
                       {idx === 0 && (
-                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
+                        <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
                           Cover
                         </div>
                       )}
@@ -363,10 +363,10 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
               )}
 
               {gallery.length < 5 && (
-                <label className={`flex flex-col items-center justify-center py-4 cursor-pointer transition-colors border border-dashed m-1 ${isWorking ? 'opacity-50 cursor-not-allowed border-border/40' : 'hover:bg-accent/50 border-border/60'}`}>
-                  <ImageIcon size={18} className="text-muted-foreground/60 mb-1" strokeWidth={1.5} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Add Images</span>
-                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest opacity-60">Drag to reorder</span>
+                <label className={`flex flex-col items-center justify-center py-3 sm:py-4 cursor-pointer transition-colors border border-dashed m-1 ${isWorking ? 'opacity-50 cursor-not-allowed border-border/40' : 'hover:bg-accent/50 border-border/60'}`}>
+                  <ImageIcon size={16} className="text-muted-foreground/60 mb-1" strokeWidth={1.5} />
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground">Add Images</span>
+                  <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-widest opacity-60 mt-0.5">Drag to reorder</span>
                   <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} disabled={isWorking} />
                 </label>
               )}
@@ -374,36 +374,36 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           </div>
 
           <div className="grid gap-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Name</label>
+            <label className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Name</label>
             <input 
               type="text" 
               required
               disabled={isWorking}
-              className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
+              className="w-full bg-background border border-border/60 p-2.5 sm:p-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
             />
           </div>
 
           <div className="grid gap-1">
-            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="flex justify-between text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <label>Description Package</label>
               <span className={form.description.length >= 100 ? "text-primary" : "text-amber-500 font-bold"}>
                 {form.description.length}/100 min
               </span>
             </div>
             <textarea 
-              rows={4}
+              rows={3}
               required
               disabled={isWorking}
-              className="w-full bg-background border border-border/60 p-2.5 text-xs text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors resize-none leading-relaxed disabled:opacity-50"
+              className="w-full bg-background border border-border/60 p-2.5 sm:p-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors resize-none leading-relaxed disabled:opacity-50 sm:rows-4"
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
             />
           </div>
 
           <div className="grid gap-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">External Link (Optional)</label>
+            <label className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">External Link (Optional)</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <LinkIcon size={14} className="text-muted-foreground" />
@@ -412,26 +412,26 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
                 type="url" 
                 disabled={isWorking}
                 placeholder="https://..."
-                className="w-full bg-background border border-border/60 py-2.5 pl-9 pr-3 text-xs text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
+                className="w-full bg-background border border-border/60 py-2.5 sm:py-3 pl-9 pr-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors disabled:opacity-50"
                 value={externalLink}
                 onChange={e => setExternalLink(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 select-none pt-4 border-t border-border/20 sticky bottom-0 bg-card">
+          <div className="mt-4 sm:mt-6 flex justify-end gap-2 sm:gap-3 select-none pt-3 sm:pt-4 border-t border-border/20 sticky bottom-0 bg-card pb-1">
             <button 
               type="button"
               onClick={handleClose}
               disabled={isWorking}
-              className="px-4 py-2 border border-border/80 text-foreground bg-background hover:bg-accent text-[10px] font-bold uppercase tracking-wider rounded-none transition-colors disabled:opacity-50"
+              className="px-3 py-2 sm:px-4 sm:py-2.5 border border-border/80 text-foreground bg-background hover:bg-accent text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-none transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button 
               type="submit"
               disabled={isWorking || gallery.length === 0}
-              className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 transition-opacity disabled:opacity-50"
+              className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary text-primary-foreground hover:opacity-90 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 transition-opacity disabled:opacity-50"
             >
               {isWorking ? <Loader2 className="animate-spin h-3 w-3" /> : <Upload className="h-3 w-3" />}
               {isUploading ? "Uploading Image..." : isLoading ? "Committing..." : "Commit Changes"}

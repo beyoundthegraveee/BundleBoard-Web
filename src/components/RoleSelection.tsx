@@ -53,8 +53,8 @@ export function RoleSelection({ email }: RoleSelectionProps) {
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="grid gap-8 p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <CardContent className="grid gap-6 sm:gap-8 p-4 sm:p-8">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6">
           {roles.map((role) => {
             const isSelected = selected === role.id;
             const Icon = role.icon;
@@ -63,27 +63,27 @@ export function RoleSelection({ email }: RoleSelectionProps) {
                 key={role.id}
                 onClick={() => !isLoading && setSelected(role.id)}
                 className={cn(
-                  "relative flex flex-col p-6 border cursor-pointer transition-all duration-300",
+                  "relative flex flex-col p-4 sm:p-6 border cursor-pointer transition-all duration-300",
                   isSelected ? "border-primary bg-primary/5" : "border-border/60 bg-background hover:border-primary/50"
                 )}
               >
-                <div className="flex justify-between items-center mb-6">
-                  <div className={cn("p-3 border", isSelected ? "border-primary text-primary bg-primary/10" : "border-border/60 text-muted-foreground")}>
-                    <Icon className="h-5 w-5" />
+                <div className="flex justify-between items-start sm:items-center mb-4 sm:mb-6 flex-col sm:flex-row gap-2 sm:gap-0">
+                  <div className={cn("p-2 sm:p-3 border", isSelected ? "border-primary text-primary bg-primary/10" : "border-border/60 text-muted-foreground")}>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
-                  <span className={cn("font-mono text-xs uppercase tracking-widest", isSelected ? "text-primary" : "text-muted-foreground")}>
+                  <span className={cn("absolute sm:relative top-4 right-4 sm:top-auto sm:right-auto font-mono text-[9px] sm:text-xs uppercase tracking-widest", isSelected ? "text-primary" : "text-muted-foreground")}>
                     {role.number}
                   </span>
                 </div>
-                <h3 className="font-semibold uppercase text-xs tracking-wider text-foreground mb-2">{role.title}</h3>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">{role.description}</p>
+                <h3 className="font-semibold uppercase text-[11px] sm:text-xs tracking-wider text-foreground mb-1.5 sm:mb-2">{role.title}</h3>
+                <p className="text-[9px] sm:text-[11px] leading-relaxed text-muted-foreground">{role.description}</p>
               </div>
             )
           })}
         </div>
 
         <Button 
-          className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-xs tracking-widest rounded-none py-6 transition-opacity mt-2"
+          className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[10px] sm:text-xs tracking-widest rounded-none py-6 transition-opacity mt-2"
           disabled={!selected || isLoading}
           onClick={() => selected && handleRoleConfirm(selected)}
         >

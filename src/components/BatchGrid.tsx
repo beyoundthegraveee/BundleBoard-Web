@@ -10,25 +10,34 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(containerRef);
+
+    mm.add({
+      isDesktop: "(min-width: 1280px)",
+      isMobile: "(max-width: 1279px)"
+    }, (context) => {
+      const { isDesktop } = context.conditions as { isDesktop: boolean; isMobile: boolean };
+      
+      const columns = isDesktop ? 3 : 2;
+
       gsap.set(".batch-item", { y: 100, opacity: 0 });
 
       ScrollTrigger.batch(".batch-item", {
         interval: 0.1,
-        batchMax: 3,
+        batchMax: columns,
         onEnter: (batch) => gsap.to(batch, {
           opacity: 1, 
           y: 0, 
-          stagger: { each: 0.15, grid: [1, 3] }, 
+          stagger: { each: 0.15, grid: [1, columns] },
           overwrite: true
         }),
-        onLeave: (batch) => gsap.set(batch, { opacity: 0, y: -100, overwrite: true }),
+        onLeave: (batch) => gsap.to(batch, { opacity: 0, y: -100, duration: 0.5, overwrite: true }),
         onEnterBack: (batch) => gsap.to(batch, { opacity: 1, y: 0, stagger: 0.15, overwrite: true }),
-        onLeaveBack: (batch) => gsap.set(batch, { opacity: 0, y: 100, overwrite: true })
+        onLeaveBack: (batch) => gsap.to(batch, { opacity: 0, y: 100, duration: 0.5, overwrite: true })
       });
-    }, containerRef);
+    });
 
-    return () => ctx.revert(); // Очистка при размонтировании
+    return () => mm.revert(); 
   }, []);
 
   return (

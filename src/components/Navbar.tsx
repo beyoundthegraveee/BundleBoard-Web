@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart, LogIn } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, LogIn, Menu, Heart } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation" 
@@ -84,13 +84,14 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/80 dark:bg-background/80 backdrop-blur-md font-sans transition-colors duration-200">
-        <div className="max-w-[1400px] mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-          <div className="flex w-[240px] items-center justify-start">
-            <Link href="/" className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
+        <div className="max-w-[1400px] mx-auto flex h-20 items-center justify-between px-4 md:px-8">
+          
+          <div className="flex w-auto lg:w-[240px] items-center justify-start shrink-0">
+            <Link href="/" className="flex items-center gap-2 font-display text-xs sm:text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
               <img 
                 src="/logo.png" 
                 alt="BundleBoard" 
-                className="w-9 h-9 object-cover rounded-full shadow-sm" 
+                className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full shadow-sm shrink-0" 
               />
               <div className="flex items-center">
                 <span>UNDLE</span>
@@ -148,10 +149,11 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          <div className="flex w-[240px] items-center justify-end gap-1.5 flex-shrink-0">
+          <div className="flex w-auto lg:w-[240px] items-center justify-end gap-1 sm:gap-1.5 shrink-0">
+            
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center transition-colors relative"
+              className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent items-center justify-center transition-colors relative"
               aria-label="Toggle inversion node"
             >
               {mounted ? (
@@ -166,15 +168,16 @@ export function Navbar() {
             </button>
 
             <button 
-              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
+              className="p-2 sm:p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
               onClick={() => setIsSearchOpen(true)}
             >
               <Search className="h-4 w-4 stroke-[1.8]" />
             </button>
+            
             {status === "authenticated" && (
               <Link 
                 href="/favorites" 
-                className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
+                className="hidden sm:flex p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative items-center justify-center"
                 aria-label="View favorite collections"
               >
                 <Heart className="h-4 w-4 stroke-[1.8]" />
@@ -183,25 +186,81 @@ export function Navbar() {
 
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
+              className="p-2 sm:p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none relative"
               aria-label="Open shopping cart drawer"
             >
               <ShoppingBagIcon className="h-4 w-4 stroke-[1.8]" />
-              <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
+              <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 bg-primary text-primary-foreground text-[9px] font-bold h-3.5 min-w-3.5 px-1 flex items-center justify-center rounded-none tracking-tight">
                 {cartCount}
               </span>
             </button>
 
+            {/* Обновленное мобильное меню-бургер */}
+            <div className="flex lg:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none">
+                    <Menu className="h-4 w-4 stroke-[1.8]" />
+                  </button>
+                </DropdownMenuTrigger>
+                {/* Добавлен max-h и скролл для маленьких экранов */}
+                <DropdownMenuContent className="w-56 max-h-[85vh] overflow-y-auto custom-scrollbar rounded-none border border-border/60 bg-popover p-1 shadow-2xl mt-2" align="end">
+                  
+                  {/* Секция бандлов */}
+                  <div className="px-2.5 py-1.5 text-[9px] font-bold text-primary uppercase tracking-widest mt-1">
+                    Directory
+                  </div>
+                  <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-bold text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                    <Link href="/bundles">All Bundles</Link>
+                  </DropdownMenuItem>
+                  
+                  {/* Выводим категории циклом со сдвигом (pl-6) */}
+                  {components.map((component) => (
+                    <DropdownMenuItem key={component.title} asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-[10px] p-2.5 pl-6 cursor-pointer uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                      <Link href={component.href}>{component.title}</Link>
+                    </DropdownMenuItem>
+                  ))}
+
+                  <DropdownMenuSeparator className="bg-border/40 my-1" />
+                  
+                  {/* Секция Learn & About */}
+                  <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                    <Link href="/tutorials">Tutorials</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                    <Link href="/hardware">Hardware Setup</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
+                    <Link href="/about">About</Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="bg-border/40 my-1" />
+                  
+                  {/* Переключатель темы */}
+                  <DropdownMenuItem 
+                    className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider flex justify-between items-center"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTheme(theme === "dark" ? "light" : "dark");
+                    }}
+                  >
+                    <span>Theme</span>
+                    {mounted ? (theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />) : null}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             {status === "authenticated" ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="relative h-9 w-9 border border-border/60 rounded-none overflow-hidden hover:bg-accent transition-colors">
+                  <button className="relative h-8 w-8 sm:h-9 sm:w-9 border border-border/60 rounded-none overflow-hidden hover:bg-accent transition-colors ml-1 sm:ml-0">
                     <div className="flex h-full w-full items-center justify-center bg-background text-muted-foreground hover:text-foreground">
                       <User className="h-4 w-4 stroke-[1.8]" />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 rounded-none border border-border/60 bg-popover p-1 shadow-2xl animate-in fade-in-50 duration-200" align="end">
+                <DropdownMenuContent className="w-56 rounded-none border border-border/60 bg-popover p-1 shadow-2xl animate-in fade-in-50 duration-200 mt-2" align="end">
                   <DropdownMenuLabel className="p-3 bg-muted/50 mb-1 border-b border-border/40">
                     <div className="flex flex-col space-y-0.5">
                       <p className="text-[9px] font-bold uppercase text-primary tracking-widest">Active Session</p>
@@ -233,10 +292,10 @@ export function Navbar() {
             ) : (
               <Link 
                 href="/login" 
-                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all ml-4"
+                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all ml-1 sm:ml-4 p-2 sm:p-0"
               >
                 <LogIn className="h-4 w-4 stroke-[1.8]" />
-                <span>Sign In</span>
+                <span className="hidden sm:inline">Sign In</span>
               </Link>
             )}
           </div>
