@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@apollo/client/react';
 import { GetSortedCollectionsDocument } from '@/graphql/generated';
@@ -16,21 +16,29 @@ interface SortCollectionGridProps {
 }
 
 export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProps) {
+  // 💡 1. Добавляем состояние для текущей страницы
+  const [page, setPage] = useState(0);
+
+  // 💡 2. Сбрасываем страницу на 0, если пользователь меняет сортировку или фильтры
+  useEffect(() => {
+    setPage(0);
+  }, [sortBy, mimeTypes]);
+
+  // 💡 3. Передаем `page` из стейта в переменные запроса
   const { data, loading, error, refetch } = useQuery(GetSortedCollectionsDocument, {
     variables: {
-      page: 0,
+      page: page,
       size: PAGE_SIZE,
       sortBy: sortBy,
-      mimeTypes: mimeTypes || null
+      mimeTypes: mimeTypes && mimeTypes.length > 0 ? mimeTypes : null
     },
     fetchPolicy: 'cache-and-network'
   });
 
-  useEffect(() => {
-    refetch({ page: 0, size: PAGE_SIZE, sortBy: sortBy, mimeTypes: mimeTypes && mimeTypes.length > 0 ? mimeTypes : null });
-  }, [sortBy, mimeTypes, refetch]);
-
   const collections = data?.getSortedCollections || [];
+  
+  // 💡 4. Определяем, есть ли следующая страница (если пришло ровно 12 элементов)
+  const hasNextPage = collections.length === PAGE_SIZE;
 
   if (error) {
     return (
@@ -49,6 +57,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
     );
   }
 
+  // Показываем спиннер только при первоначальной загрузке пустой страницы
   if (loading && collections.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center py-40 space-y-3 font-sans">
@@ -59,56 +68,85 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
-      {collections.map((item: any) => {
-        const fileName = item.galleryImages?.[0]?.filePath || "";
-        const imageUrl = fileName.startsWith('http') 
-          ? fileName 
-          : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
+    <div className="font-sans pb-12">
+      {/* СЕТКА КОЛЛЕКЦИЙ */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+        {collections.map((item: any) => {
+          const fileName = item.galleryImages?.[0]?.filePath || "";
+          const imageUrl = fileName.startsWith('http') 
+            ? fileName 
+            : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
-        return (
-          <Link 
-            href={`/collection/${item.id}`} 
-            key={item.id} 
-            className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
-          >
-            <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
-              <img 
-                src={imageUrl || FALLBACK_IMAGE} 
-                alt={item.name}
-                className="object-cover w-full h-full opacity-75 group-hover:opacity-100 transition-all duration-500 block"
-              />
-            </div>
+          return (
+            <Link 
+              href={`/collection/${item.id}`} 
+              key={item.id} 
+              className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
+            >
+              <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
+                <img 
+                  src={imageUrl || FALLBACK_IMAGE} 
+                  alt={item.name}
+                  className="object-cover w-full h-full opacity-75 group-hover:opacity-100 transition-all duration-500 block"
+                />
+              </div>
 
-            <div className="pt-5 flex-grow flex flex-col justify-between">
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-baseline gap-4">
-                  <h3 className="font-bold text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover:text-zinc-400">
-                    {item.name}
-                  </h3>
-                  <span className="font-bold text-[18px] text-foreground tracking-tight">
-                    {/* 💡 ИСПРАВЛЕНО: Выводим FREE вместо нулей */}
-                    {!item.price || item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
+              <div className="pt-5 flex-grow flex flex-col justify-between">
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-baseline gap-4">
+                    <h3 className="font-bold text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover:text-zinc-400">
+                      {item.name}
+                    </h3>
+                    <span className="font-bold text-[18px] text-foreground tracking-tight">
+                      {!item.price || item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
+                    {item.description || "No parameters or description data submitted for this catalog item."}
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <div>
+                    <span>Author: </span>
+                    <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
+                  </div>
+                  <span className="opacity-0 group-hover:opacity-100 group-hover:text-primary transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 font-semibold text-[12px]">
+                    Extract Node →
                   </span>
                 </div>
-                <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
-                  {item.description || "No parameters or description data submitted for this catalog item."}
-                </p>
               </div>
+            </Link>
+          );
+        })}
+      </div>
 
-              <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider">
-                <div>
-                  <span>Author: </span>
-                  <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
-                </div>
-                <span className="opacity-0 group-hover:opacity-100 group-hover:text-primary transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 font-semibold text-[12px]">
-                  Extract Node →
-                </span>
-              </div>
-            </div>
-          </Link>
-        );
-      })}
+      {/* 💡 5. ПАГИНАЦИЯ */}
+      {collections.length > 0 && (
+        <div className="flex items-center justify-between border-t border-border/40 mt-16 pt-6">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0 || loading}
+            className="flex items-center gap-2 px-5 py-3 border border-border/60 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-none"
+          >
+            <ChevronLeft size={14} className="stroke-[2]" />
+            Previous
+          </button>
+
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Page {page + 1}
+          </span>
+
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={!hasNextPage || loading}
+            className="flex items-center gap-2 px-5 py-3 border border-border/60 bg-background text-foreground text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-none"
+          >
+            Next
+            <ChevronRight size={14} className="stroke-[2]" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
