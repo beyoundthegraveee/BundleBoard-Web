@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery } from '@apollo/client/react';
 import { GetSortedCollectionsDocument } from '@/graphql/generated';
 import { FALLBACK_IMAGE } from '@/lib/constants';
+import { BatchGrid } from './BatchGrid';
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 12;
@@ -16,15 +17,11 @@ interface SortCollectionGridProps {
 }
 
 export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProps) {
-  // 💡 1. Добавляем состояние для текущей страницы
   const [page, setPage] = useState(0);
-
-  // 💡 2. Сбрасываем страницу на 0, если пользователь меняет сортировку или фильтры
   useEffect(() => {
     setPage(0);
   }, [sortBy, mimeTypes]);
 
-  // 💡 3. Передаем `page` из стейта в переменные запроса
   const { data, loading, error, refetch } = useQuery(GetSortedCollectionsDocument, {
     variables: {
       page: page,
@@ -36,8 +33,6 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
   });
 
   const collections = data?.getSortedCollections || [];
-  
-  // 💡 4. Определяем, есть ли следующая страница (если пришло ровно 12 элементов)
   const hasNextPage = collections.length === PAGE_SIZE;
 
   if (error) {
@@ -57,7 +52,6 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
     );
   }
 
-  // Показываем спиннер только при первоначальной загрузке пустой страницы
   if (loading && collections.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center py-40 space-y-3 font-sans">
@@ -69,8 +63,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
 
   return (
     <div className="font-sans pb-12">
-      {/* СЕТКА КОЛЛЕКЦИЙ */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+      <BatchGrid className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20">
         {collections.map((item: any) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
@@ -81,7 +74,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             <Link 
               href={`/collection/${item.id}`} 
               key={item.id} 
-              className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
+              className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground will-change-transform"
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <img 
@@ -119,9 +112,8 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             </Link>
           );
         })}
-      </div>
+      </BatchGrid>
 
-      {/* 💡 5. ПАГИНАЦИЯ */}
       {collections.length > 0 && (
         <div className="flex items-center justify-between border-t border-border/40 mt-16 pt-6">
           <button

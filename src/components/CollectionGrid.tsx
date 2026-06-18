@@ -10,7 +10,7 @@ import { GetCollectionsPagedDocument } from '@/graphql/generated'
 import { BatchGrid } from './BatchGrid'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 21;
 
 interface Collection {
   id: string;
