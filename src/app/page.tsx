@@ -88,7 +88,7 @@ export default function Home() {
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-10 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
             <Heart size={14} className="text-primary" />
-            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-foreground">Highest Rated Modules</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-foreground">Highest Rated</h2>
           </div>
           <span className="text-[10px] font-medium opacity-40 tracking-widest uppercase hidden sm:block">Community Verified / Auto-Scroll</span>
         </div>
