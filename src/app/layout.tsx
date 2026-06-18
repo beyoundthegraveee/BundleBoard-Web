@@ -32,11 +32,11 @@ export const metadata: Metadata = {
   
   authors: [
     { 
-      name: "Kiryl Kurzau", 
+      name: "Beyondheaven", 
       url: "https://github.com/beyoundthegraveee" 
     }
   ],
-  creator: "Kiryl Kurzau",
+  creator: "Beyondheaven",
   
   openGraph: {
     type: "website",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "BundleBoard",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/public/og_image.jpg",
         width: 1200,
         height: 630,
         alt: "BundleBoard Platform Preview",
