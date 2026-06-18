@@ -28,6 +28,8 @@
   background-color: var(--muted-foreground);
 }
 
+
+
 @theme inline {
   --font-sans: 'Space Grotesk', var(--font-sans), sans-serif;
   --font-display: 'Syncopate', sans-serif;
@@ -99,6 +101,22 @@
     to {
       background-position: 350% 50%, 350% 50%;
     }
+  }
+
+  --animate-bounce-spin: bounceAnim 1s cubic-bezier(.63,.09,.75,.46) infinite alternate, spinAnim 3s linear infinite;
+  --animate-pebbles: pebblesAnim 1s linear infinite;
+
+  @keyframes bounceAnim {
+    0%, 10% { bottom: 50%; }
+    100% { bottom: 0%; }
+  }
+  @keyframes spinAnim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pebblesAnim {
+    0% { right: -20%; }
+    100% { right: 110%; }
   }
 }
 
