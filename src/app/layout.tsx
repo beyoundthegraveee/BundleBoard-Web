@@ -7,6 +7,7 @@ import { Navbar } from "@/components/Navbar";
 import { SplashProvider } from "@/components/SplashProvider";
 import { ApolloWrapper } from "@/lib/apolloWrapper";
 import { Toaster } from "sonner";
+import type { Metadata } from "next";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -20,9 +21,59 @@ const syncopate = Syncopate({
   variable: "--font-display",
 });
 
-export const metadata = {
-  title: "BundleBoard",
-  description: "Asset platform",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://bundleboard.com"),
+  title: {
+    default: "BundleBoard | High-Fidelity Digital Assets",
+    template: "%s | BundleBoard",
+  },
+  description: "Unlock high-fidelity digital assets, custom vector graphs, and production-grade gradients optimized to enhance professional studio processing pipelines.",
+  keywords: ["digital assets", "vector graphs", "design resources", "gradients", "ui kits", "bundleboard"],
+  
+  authors: [
+    { 
+      name: "Kiryl Kurzau", 
+      url: "https://github.com/beyoundthegraveee" 
+    }
+  ],
+  creator: "Kiryl Kurzau",
+  
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://bundleboard.com",
+    title: "BundleBoard | Intelligent Data & Curated Supply",
+    description: "High-fidelity digital assets for professional studio processing pipelines.",
+    siteName: "BundleBoard",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "BundleBoard Platform Preview",
+      },
+    ],
+  },
+  
+  twitter: {
+    card: "summary_large_image",
+    title: "BundleBoard | Digital Assets",
+    description: "High-fidelity digital assets and production-grade gradients.",
+    images: ["/og-image.jpg"],
+  },
+  
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
