@@ -85,8 +85,6 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/80 dark:bg-background/80 backdrop-blur-md font-sans transition-colors duration-200">
         <div className="max-w-[1400px] mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-          
-          {/* Блок Логотипа */}
           <div className="flex w-[240px] items-center justify-start">
             <Link href="/" className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
               <img 
@@ -101,7 +99,6 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Центральное меню */}
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
@@ -151,7 +148,6 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          {/* Правый блок */}
           <div className="flex w-[240px] items-center justify-end gap-1.5 flex-shrink-0">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -237,9 +233,8 @@ export function Navbar() {
             ) : (
               <Link 
                 href="/login" 
-                className="border border-border/80 hover:border-foreground bg-background text-foreground px-4 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors rounded-none ml-2"
-              >
-                Access Account
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all ml-4">
+                Sign In
               </Link>
             )}
           </div>
