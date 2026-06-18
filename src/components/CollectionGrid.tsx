@@ -7,6 +7,7 @@ import Link from "next/link"
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionsPagedDocument } from '@/graphql/generated'
+import { BatchGrid } from './BatchGrid'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 12;
@@ -62,7 +63,7 @@ export function CollectionGrid() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 md:px-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20 font-sans">
+      <BatchGrid className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-14 gap-y-20">
         {collections.slice(0, 12).map((item) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
@@ -73,7 +74,7 @@ export function CollectionGrid() {
             <Link 
               href={`/collection/${item.id}`} 
               key={item.id} 
-              className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
+              className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground will-change-transform"
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <img 
@@ -86,10 +87,10 @@ export function CollectionGrid() {
               <div className="pt-5 flex-grow flex flex-col justify-between">
                 <div className="space-y-2.5">
                   <div className="flex justify-between items-baseline gap-4">
-                    <h3 className="font-bold text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover:text-zinc-400">
+                    <h3 className="font-display font-bold text-[16px] leading-tight tracking-widest uppercase text-foreground transition-colors group-hover:text-zinc-400">
                       {item.name}
                     </h3>
-                    <span className="font-bold text-[18px] text-foreground tracking-tight">
+                    <span className="font-display font-bold text-[14px] text-foreground tracking-tight">
                       {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
                     </span>
                   </div>
@@ -98,7 +99,7 @@ export function CollectionGrid() {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider">
+                <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-widest">
                   <div>
                     <span>Author: </span>
                     <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
@@ -111,7 +112,7 @@ export function CollectionGrid() {
             </Link>
           );
         })}
-      </div>
+      </BatchGrid>
     </div>
   )
 }
