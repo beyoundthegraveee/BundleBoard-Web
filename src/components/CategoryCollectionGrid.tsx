@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Layers } from "lucide-react"
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { GetCollectionsByTagQuery } from '@/graphql/generated'
+import { BatchGrid } from './BatchGrid'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 type CollectionNode = NonNullable<GetCollectionsByTagQuery['getCollectionsByTag']['collections']>[number];
@@ -26,7 +27,7 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 font-sans animate-in fade-in duration-300">
+    <BatchGrid className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 font-sans">
       {collections.map((item) => {
         const fileName = item.galleryImages?.[0]?.filePath || "";
         const imageUrl = fileName.startsWith('http') 
@@ -37,7 +38,7 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
           <Link 
             href={`/collection/${item.id}`} 
             key={item.id} 
-            className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground border border-border p-4 bg-card hover:border-foreground/30 transition-colors duration-300"
+            className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground border border-border p-4 bg-card hover:border-foreground/30 transition-colors duration-300 will-change-transform"
           >
             <div className="aspect-video relative overflow-hidden bg-muted border border-border/50">
               <img 
@@ -76,6 +77,6 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
           </Link>
         );
       })}
-    </div>
+    </BatchGrid>
   )
 }
