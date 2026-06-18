@@ -16,7 +16,7 @@ function SelectRolePageContent() {
 
   if (status === "loading" && !emailFromUrl) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4">
         <Loader2 className="animate-spin text-primary" size={24} />
       </div>
     )
@@ -24,10 +24,10 @@ function SelectRolePageContent() {
 
   if (!userEmail) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-sm border-destructive/20 bg-destructive/[0.02] rounded-none shadow-none text-center p-8">
-          <p className="font-mono text-xs uppercase tracking-widest text-destructive">
-            Access Denied: Session Invalid
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4 md:p-8">
+        <Card className="w-full max-w-sm border-destructive/20 bg-destructive/[0.02] rounded-none shadow-none text-center p-6 md:p-8">
+          <p className="font-mono text-[10px] md:text-xs uppercase tracking-widest text-destructive leading-relaxed">
+            Access Denied:<br className="md:hidden" /> Session Invalid
           </p>
         </Card>
       </div>
@@ -35,7 +35,7 @@ function SelectRolePageContent() {
   }
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center p-4">
+    <div className="flex min-h-[calc(100vh-5rem)] w-full items-center justify-center p-4 sm:p-6 md:p-8">
       <RoleSelection email={userEmail} />
     </div>
   )
@@ -44,7 +44,7 @@ function SelectRolePageContent() {
 export default function SelectRolePage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4">
         <Loader2 className="animate-spin text-primary" size={24} />
       </div>
     }>
