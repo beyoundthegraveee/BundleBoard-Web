@@ -22,7 +22,6 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
       containerClassName="py-0 w-full" 
       className="w-full"
     >
-      {/* 💡 Убрали aspect-video, добавили bg-muted/5 для прозрачных PNG */}
       <CardBody className="relative border border-border/60 bg-muted/5 w-full h-auto overflow-hidden rounded-none shadow-xl group/card">
         <CardItem 
           translateZ="40" 
@@ -31,7 +30,6 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
           <img 
             src={src} 
             alt={alt} 
-            // 💡 Заменили object-cover на object-contain + h-auto. Больше никакой обрезки!
             className="w-full h-auto max-h-[85vh] object-contain select-none opacity-95 transition-opacity duration-300"
             onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
           />
@@ -195,7 +193,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           </div>
           
           <div className="w-full">
-            {/* 💡 НОВАЯ ПРЕМИУМ-СЕТКА: первая картинка всегда занимает всю ширину */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 w-full">
               {galleryImages.map((img, index) => (
                 <div key={index} className={index === 0 ? "col-span-1 md:col-span-2" : "col-span-1"}>
