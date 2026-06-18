@@ -7,8 +7,7 @@ import { FALLBACK_IMAGE } from '@/lib/constants'
 import { GetCollectionsByTagQuery } from '@/graphql/generated'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
-type CollectionNode = GetCollectionsByTagQuery['getCollectionsByTag']['collections'][number];
-
+type CollectionNode = NonNullable<GetCollectionsByTagQuery['getCollectionsByTag']['collections']>[number];
 interface CategoryCollectionGridProps {
   collections: CollectionNode[];
 }
@@ -16,7 +15,6 @@ interface CategoryCollectionGridProps {
 export function CategoryCollectionGrid({ collections }: CategoryCollectionGridProps) {
   if (collections.length === 0) {
     return (
-      // Исправлено: border-white/[0.08] -> border-border, bg-[#111013]/30 -> bg-muted/10
       <div className="border border-dashed border-border p-16 text-center max-w-xl mx-auto rounded-none bg-muted/10 animate-in fade-in duration-300">
         <Layers className="mx-auto text-muted-foreground/30 mb-3 stroke-[1.3]" size={28} />
         <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Data Stream Terminal Empty</h3>
@@ -39,10 +37,8 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
           <Link 
             href={`/collection/${item.id}`} 
             key={item.id} 
-            // Исправлено: border-white/[0.04] -> border-border, bg-[#0d0c0e] -> bg-card, hover:border-white/[0.12] -> hover:border-foreground/30
             className="group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground border border-border p-4 bg-card hover:border-foreground/30 transition-colors duration-300"
           >
-            {/* Исправлено: bg-[#111013] -> bg-muted, border-white/[0.02] -> border-border/50 */}
             <div className="aspect-video relative overflow-hidden bg-muted border border-border/50">
               <img 
                 src={imageUrl || FALLBACK_IMAGE} 
@@ -67,13 +63,11 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
                 </p>
               </div>
 
-              {/* Исправлено: border-white/[0.03] -> border-border */}
               <div className="mt-4 pt-3 border-t border-border flex justify-between items-center text-[9px] text-muted-foreground uppercase tracking-wider">
                 <div>
                   <span>By </span>
                   <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
                 </div>
-                {/* Исправлено: text-white/40 -> text-muted-foreground */}
                 <span className="text-muted-foreground group-hover:text-primary transition-colors font-bold">
                   Extract →
                 </span>
