@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart } from "lucide-react"
+import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, Heart, LogIn } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation" 
@@ -233,8 +233,10 @@ export function Navbar() {
             ) : (
               <Link 
                 href="/login" 
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all ml-4">
-                Sign In
+                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all ml-4"
+              >
+                <LogIn className="h-4 w-4 stroke-[1.8]" />
+                <span>Sign In</span>
               </Link>
             )}
           </div>
