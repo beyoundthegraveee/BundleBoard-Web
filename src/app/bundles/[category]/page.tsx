@@ -7,6 +7,7 @@ import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid';
 import { useQuery } from '@apollo/client/react';
 import { GetCollectionsByTagDocument } from '@/graphql/generated';
+import { BackgroundGradient } from '@/components/BackgroundGradient';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 12;
@@ -47,9 +48,7 @@ export default function BundleCategoryPage() {
   return (
     <main className="relative min-h-screen text-foreground p-6 md:p-12 font-sans animate-in fade-in duration-300">
       
-      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
-        <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[400px] w-[400px] rounded-full bg-purple-900 opacity-40 blur-[120px]"></div>
-      </div>
+      <BackgroundGradient />
 
       <div className="relative z-10 max-w-[1600px] mx-auto space-y-10">
         <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
