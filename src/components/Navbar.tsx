@@ -41,6 +41,7 @@ const components = [
   { title: "Fonts", href: "/bundles/fonts", description: "Selection of typefaces." },
   { title: "Gradients", href: "/bundles/gradients", description: "Color transitions." },
   { title: "Graphics", href: "/bundles/graphics", description: "Graphic elements." },
+  { title: "Actions & Effects", href: "/bundles/actions-effects", description: "Professional presets." },
 ]
 
 export function Navbar() {
@@ -83,13 +84,24 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/80 dark:bg-background/80 backdrop-blur-md font-sans transition-colors duration-200">
-        <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6 md:px-8">
-          <div className="flex-shrink-0">
-            <Link href="/" className="font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
-              BUNDLE<span className="opacity-40 font-normal">BOARD</span>
+        <div className="max-w-[1400px] mx-auto flex h-20 items-center justify-between px-6 md:px-8">
+          
+          {/* Блок Логотипа */}
+          <div className="flex w-[240px] items-center justify-start">
+            <Link href="/" className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
+              <img 
+                src="/logo.png" 
+                alt="BundleBoard" 
+                className="w-9 h-9 object-cover rounded-full shadow-sm" 
+              />
+              <div className="flex items-center">
+                <span>UNDLE</span>
+                <span className="opacity-40 font-normal">BOARD</span>
+              </div>
             </Link>
           </div>
 
+          {/* Центральное меню */}
           <div className="hidden lg:flex flex-grow justify-center">
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
@@ -139,7 +151,8 @@ export function Navbar() {
             </NavigationMenu>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Правый блок */}
+          <div className="flex w-[240px] items-center justify-end gap-1.5 flex-shrink-0">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="h-9 w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center transition-colors relative"
@@ -224,7 +237,7 @@ export function Navbar() {
             ) : (
               <Link 
                 href="/login" 
-                className="border border-border/80 hover:border-foreground bg-background text-foreground px-4 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors rounded-none"
+                className="border border-border/80 hover:border-foreground bg-background text-foreground px-4 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors rounded-none ml-2"
               >
                 Access Account
               </Link>

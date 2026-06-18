@@ -22,15 +22,17 @@ const TiltCard = ({ src, alt }: { src: string, alt: string }) => {
       containerClassName="py-0 w-full" 
       className="w-full"
     >
-      <CardBody className="relative border border-border/60 bg-card aspect-video w-full h-auto overflow-hidden rounded-none shadow-xl group/card">
+      {/* 💡 Убрали aspect-video, добавили bg-muted/5 для прозрачных PNG */}
+      <CardBody className="relative border border-border/60 bg-muted/5 w-full h-auto overflow-hidden rounded-none shadow-xl group/card">
         <CardItem 
           translateZ="40" 
-          className="w-full h-full"
+          className="w-full h-full flex justify-center items-center"
         >
           <img 
             src={src} 
             alt={alt} 
-            className="w-full h-full object-cover select-none opacity-95 transition-opacity duration-300"
+            // 💡 Заменили object-cover на object-contain + h-auto. Больше никакой обрезки!
+            className="w-full h-auto max-h-[85vh] object-contain select-none opacity-95 transition-opacity duration-300"
             onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
           />
         </CardItem>
@@ -141,7 +143,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
               </div>
             </div>
             
-            {/* 💡 ПРИОРИТЕТ КНОПОК ИЗМЕНЕН */}
             {isExternal ? (
               <a 
                 href={externalLink}
@@ -181,7 +182,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           </div>
         </div>
 
-        {/* 💡 БЕЗОПАСНЫЙ ID */}
         <div className="absolute -top-3 right-0 opacity-20 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground hidden md:block">
           ID // {String(id).padStart(4, '0')}
         </div>
@@ -195,13 +195,15 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           </div>
           
           <div className="w-full">
-            <div className={`grid gap-6 ${galleryImages.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 max-w-2xl'}`}>
+            {/* 💡 НОВАЯ ПРЕМИУМ-СЕТКА: первая картинка всегда занимает всю ширину */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 w-full">
               {galleryImages.map((img, index) => (
-                <TiltCard 
-                  key={index} 
-                  src={getFullImageUrl(img?.filePath)} 
-                  alt={`${name} - preview ${index + 1}`} 
-                />
+                <div key={index} className={index === 0 ? "col-span-1 md:col-span-2" : "col-span-1"}>
+                  <TiltCard 
+                    src={getFullImageUrl(img?.filePath)} 
+                    alt={`${name} - preview ${index + 1}`} 
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -220,7 +222,6 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         </div>
       </div>
 
-      {/* 💡 КЛИКАБЕЛЬНАЯ ССЫЛКА В НИЖНЕМ БЛОКЕ */}
       {isExternal ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">

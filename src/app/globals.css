@@ -4,6 +4,30 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 0px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}
+
 @theme inline {
   --font-sans: 'Space Grotesk', var(--font-sans), sans-serif;
   --font-display: 'Syncopate', sans-serif;
@@ -49,12 +73,10 @@
   --radius-3xl: 0px;
   --radius-4xl: 0px;
 
-  /* Твои существующие анимации */
   --animate-splash-bg-exit: fadeOutBg 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   --animate-splash-logo: fadeInLogo 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) forwards, 
                          zoomLogo 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   
-  /* Добавлено: Анимация Aurora бэкграунда */
   --animate-aurora: aurora 60s linear infinite;
 
   @keyframes fadeInLogo {
@@ -70,7 +92,6 @@
     100% { opacity: 0; }
   }
 
-  /* Добавлено: Ключевые кадры для смещения градиентов Aurora */
   @keyframes aurora {
     from {
       background-position: 50% 50%, 50% 50%;
