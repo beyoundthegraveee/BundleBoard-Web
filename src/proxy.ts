@@ -13,7 +13,8 @@ export default withAuth(
         const publicPaths = [
           "/",
           "/about",
-          "/bundles"
+          "/bundles",
+          "/terms"
         ];
         const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
 
