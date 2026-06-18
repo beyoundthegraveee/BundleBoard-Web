@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "BundleBoard",
     images: [
       {
-        url: "/public/og_image.jpg",
+        url: "/og_image.jpg",
         width: 1200,
         height: 630,
         alt: "BundleBoard Platform Preview",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BundleBoard | Digital Assets",
     description: "High-fidelity digital assets and production-grade gradients.",
-    images: ["/og-image.jpg"],
+    images: ["/og_image.jpg"],
   },
   
   robots: {
