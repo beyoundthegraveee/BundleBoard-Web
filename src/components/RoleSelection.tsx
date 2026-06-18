@@ -4,7 +4,7 @@ import * as React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { User, PenTool, Loader2, Check } from "lucide-react"
+import { User, PenTool, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -43,16 +43,18 @@ export function RoleSelection({ email }: RoleSelectionProps) {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
-      <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
-        <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground">Select Identity</CardTitle>
-        <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
-          Choose your node access profile
+    <Card className="w-full max-w-2xl mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
+      <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6 pt-8">
+        <CardTitle className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground font-display">
+          Identity Setup
+        </CardTitle>
+        <CardDescription className="font-medium uppercase text-[10px] sm:text-xs tracking-widest text-muted-foreground mt-2">
+          Configure Access Profile
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="grid gap-5 p-8">
-        <div className="grid grid-cols-1 gap-4">
+      <CardContent className="grid gap-8 p-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {roles.map((role) => {
             const isSelected = selected === role.id;
             const Icon = role.icon;
@@ -61,17 +63,19 @@ export function RoleSelection({ email }: RoleSelectionProps) {
                 key={role.id}
                 onClick={() => !isLoading && setSelected(role.id)}
                 className={cn(
-                  "relative flex flex-col p-5 border cursor-pointer transition-all duration-300",
-                  isSelected ? "border-primary bg-accent/20" : "border-border/60 bg-background hover:border-primary/50"
+                  "relative flex flex-col p-6 border cursor-pointer transition-all duration-300",
+                  isSelected ? "border-primary bg-primary/5" : "border-border/60 bg-background hover:border-primary/50"
                 )}
               >
-                <div className="flex justify-between items-center mb-4">
-                  <div className={cn("p-2 border", isSelected ? "border-primary text-primary" : "border-border/60 text-muted-foreground")}>
-                    <Icon className="h-4 w-4" />
+                <div className="flex justify-between items-center mb-6">
+                  <div className={cn("p-3 border", isSelected ? "border-primary text-primary bg-primary/10" : "border-border/60 text-muted-foreground")}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <span className="font-mono text-[10px] uppercase text-muted-foreground">{role.number}</span>
+                  <span className={cn("font-mono text-xs uppercase tracking-widest", isSelected ? "text-primary" : "text-muted-foreground")}>
+                    {role.number}
+                  </span>
                 </div>
-                <h3 className="font-semibold uppercase text-[11px] tracking-wider text-foreground mb-1">{role.title}</h3>
+                <h3 className="font-semibold uppercase text-xs tracking-wider text-foreground mb-2">{role.title}</h3>
                 <p className="text-[11px] leading-relaxed text-muted-foreground">{role.description}</p>
               </div>
             )
@@ -79,7 +83,7 @@ export function RoleSelection({ email }: RoleSelectionProps) {
         </div>
 
         <Button 
-          className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity"
+          className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-xs tracking-widest rounded-none py-6 transition-opacity mt-2"
           disabled={!selected || isLoading}
           onClick={() => selected && handleRoleConfirm(selected)}
         >

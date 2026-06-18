@@ -58,9 +58,10 @@ export default function VerifyEmailPage() {
   }, [token, executeVerify])
 
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-background px-4 py-12 font-sans text-foreground relative overflow-hidden">
+    <div className="flex min-h-[80vh] items-center justify-center p-4 font-sans text-foreground relative overflow-hidden bg-background">
       
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none z-0" />
+      
       <Card className="w-full max-w-md border border-border/60 rounded-none shadow-2xl bg-card text-center relative z-10 overflow-hidden">
         
         {status === 'loading' && (

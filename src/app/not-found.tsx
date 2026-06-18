@@ -10,39 +10,43 @@ const imgDataURI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAA
 export default function NotFound() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
-      <Card className="w-full max-w-sm border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center">
-        <CardHeader className="space-y-1.5 border-b border-border/40 pb-6">
-          <div className="flex justify-center mb-4">
-            <div className="relative flex justify-center items-center h-[100px] w-[100px] border-b-2 border-border/40 overflow-visible">
+      <Card className="w-full max-w-md border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center">
+        
+        <CardHeader className="space-y-1.5 border-b border-border/40 pb-8 pt-8">
+          
+          <div className="flex justify-center mb-6 relative">
+            <div className="relative block text-center h-[120px] w-[160px] border-b-2 border-border/40 overflow-hidden shrink-0 mx-auto">
+              
               <div 
-                className="w-10 h-10 bg-contain bg-center bg-no-repeat animate-bounce-spin"
+                className="absolute bottom-0 left-1/2 w-12 h-12 -ml-6 mb-2 bg-contain bg-center bg-no-repeat animate-bounce-spin"
                 style={{ backgroundImage: `url(${imgDataURI})` }}
               />
-              <div className="absolute top-[80%] bg-foreground/80 w-[10px] h-[10px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:0s]" style={{ right: '-20%' }} />
-              <div className="absolute top-[85%] bg-foreground/80 w-[5px] h-[5px] rounded-[10px_10px_0_0] animate-pebbles [animation-delay:1s]" style={{ right: '-20%' }} />
-              <div className="absolute top-[90%] bg-foreground/80 w-[3px] h-[3px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:2s]" style={{ right: '-20%' }} />
+              
+              <div className="absolute bottom-[0px] bg-foreground/80 w-[10px] h-[10px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:0s]" style={{ right: '-20%' }} />
+              <div className="absolute bottom-[0px] bg-foreground/80 w-[5px] h-[5px] rounded-[10px_10px_0_0] animate-pebbles [animation-delay:1s]" style={{ right: '-20%' }} />
+              <div className="absolute bottom-[0px] bg-foreground/80 w-[3px] h-[3px] rounded-[20px_20px_0_0] animate-pebbles [animation-delay:2s]" style={{ right: '-20%' }} />
             </div>
           </div>
           
-          <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground font-display">
+          <CardTitle className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground font-display">
             0 results found
           </CardTitle>
-          <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
+          <CardDescription className="font-medium uppercase text-[10px] sm:text-xs tracking-widest text-muted-foreground mt-2">
             Error: 404
           </CardDescription>
         </CardHeader>
         
         <CardContent className="grid gap-6 p-8">
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Sorry! We couldn't find any results. The requested resource is currently unreachable.
           </p>
 
           <Button 
             asChild 
-            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity"
+            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-xs tracking-widest rounded-none py-6 transition-opacity"
           >
-            <Link href="/" className="flex items-center gap-2">
-              <ArrowLeft className="h-3.5 w-3.5" /> Return to primary node
+            <Link href="/" className="flex items-center justify-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Return to primary node
             </Link>
           </Button>
         </CardContent>
