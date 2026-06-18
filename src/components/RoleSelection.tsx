@@ -4,7 +4,7 @@ import * as React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { User, PenTool, Loader2, Check } from "lucide-react"
+import { User, PenTool, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useMutation } from "@apollo/client/react"
@@ -24,15 +24,17 @@ export function RoleSelection({ email }: RoleSelectionProps) {
   const roles = [
     {
       id: "client",
-      title: "Buyer Node",
+      title: "Client",
       description: "Access the curation platform to browse and acquire production-grade assets.",
       icon: User,
+      number: "01"
     },
     {
       id: "author",
-      title: "Author Node",
+      title: "Author",
       description: "Deploy digital products, license vector streams, and manage your brand pipeline.",
       icon: PenTool,
+      number: "02"
     },
   ] as const;
 
@@ -72,10 +74,8 @@ export function RoleSelection({ email }: RoleSelectionProps) {
   }
 
   return (
-    <div className="space-y-5">
-      {/* 5. Удалили блок с errorProtocol */}
-
-      <div className="grid gap-6 md:grid-cols-2 font-sans text-foreground">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="grid gap-6 md:grid-cols-2">
         {roles.map((role) => {
           const isSelected = selected === role.id;
           return (
@@ -83,60 +83,76 @@ export function RoleSelection({ email }: RoleSelectionProps) {
               key={role.id}
               onClick={() => !isLoading && setSelected(role.id)}
               className={cn(
-                "relative flex flex-col p-6 rounded-none border border-border/60 bg-card cursor-pointer select-none transition-all duration-200 shadow-md",
+                "group relative flex flex-col p-8 rounded-none border cursor-pointer select-none transition-all duration-300 bg-background/50 backdrop-blur-sm",
                 isSelected 
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
-                  : "hover:border-foreground/40 hover:bg-muted/10"
+                  ? "border-primary bg-primary/[0.03]" 
+                  : "border-border/40 hover:border-border"
               )}
             >
-              {isSelected && (
-                <div className="absolute top-4 right-4 h-5 w-5 rounded-none border border-primary bg-primary flex items-center justify-center text-primary-foreground">
-                  <Check className="h-3 w-3 stroke-[2.5]" />
-                </div>
-              )}
-
-              <div className={cn(
-                "mb-6 flex h-12 w-12 items-center justify-center rounded-none border border-border/60 transition-colors duration-200",
-                isSelected 
-                  ? "bg-primary text-primary-foreground border-primary" 
-                  : "bg-background text-muted-foreground"
-              )}>
-                <role.icon className="h-5 w-5 stroke-[1.5]" />
+              <div className="flex justify-between items-start mb-8">
+                <span className={cn(
+                  "font-mono text-[10px] tracking-widest uppercase transition-colors duration-300",
+                  isSelected ? "text-primary" : "text-muted-foreground/50"
+                )}>
+                  Seq // {role.number}
+                </span>
+                
+                {isSelected ? (
+                  <span className="font-mono text-[10px] text-primary uppercase tracking-widest bg-primary/10 px-2 py-1">
+                    Active
+                  </span>
+                ) : (
+                  <role.icon className="h-4 w-4 text-muted-foreground/40 transition-colors duration-300 group-hover:text-muted-foreground/80 stroke-[1.5]" />
+                )}
               </div>
 
-              <h3 className={cn(
-                "text-xl font-bold uppercase tracking-wider transition-colors",
-                isSelected ? "text-primary" : "text-foreground"
-              )}>
-                {role.title}
-              </h3>
-              <p className="text-xs leading-relaxed text-muted-foreground font-normal mt-2.5">
-                {role.description}
-              </p>
+              {/* Основной контент */}
+              <div className="mt-auto space-y-4">
+                <h3 className={cn(
+                  "font-display text-base md:text-lg font-bold uppercase tracking-widest transition-colors duration-300",
+                  isSelected ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {role.title}
+                </h3>
+                <p className="font-sans text-sm leading-relaxed text-muted-foreground opacity-80">
+                  {role.description}
+                </p>
+              </div>
+
+              <div className={cn(
+                "absolute bottom-0 left-0 h-[2px] transition-all duration-500",
+                isSelected ? "w-full bg-primary" : "w-0 bg-border group-hover:w-1/3"
+              )} />
             </div>
           );
         })}
-
-        <Button 
-          className={cn(
-            "md:col-span-2 mt-4 rounded-none font-semibold uppercase text-xs tracking-widest py-6 border transition-all duration-200 select-none shadow-sm",
-            selected
-              ? "bg-primary text-primary-foreground border-primary hover:opacity-90 cursor-pointer"
-              : "bg-muted/30 text-muted-foreground/40 border-border/40 cursor-not-allowed"
-          )}
-          disabled={!selected || isLoading}
-          onClick={() => selected && handleRoleConfirm(selected)}
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-foreground" />
-              <span>Initializing Protocol</span>
-            </div>
-          ) : (
-            "Confirm Platform Role"
-          )}
-        </Button>
       </div>
+
+      <Button 
+        className={cn(
+          "w-full h-14 rounded-none font-display font-bold uppercase text-xs md:text-sm tracking-[0.2em] transition-all duration-500 select-none overflow-hidden relative",
+          selected
+            ? "bg-foreground text-background hover:bg-foreground/90 cursor-pointer"
+            : "bg-transparent border border-border/40 text-muted-foreground/40 cursor-not-allowed hover:bg-transparent"
+        )}
+        disabled={!selected || isLoading}
+        onClick={() => selected && handleRoleConfirm(selected)}
+      >
+        {isLoading ? (
+          <div className="flex items-center gap-3 font-mono text-xs">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Transmitting Data...</span>
+          </div>
+        ) : (
+          <span className="relative z-10">
+            {selected ? "Initialize Session →" : "Select Node Identity"}
+          </span>
+        )}
+        
+        {selected && !isLoading && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent -translate-x-full animate-[shine_3s_infinite]" />
+        )}
+      </Button>
     </div>
   );
 }
