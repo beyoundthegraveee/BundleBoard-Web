@@ -44,7 +44,7 @@ export default function Home() {
             <div className="lg:col-span-8 space-y-6 lg:pr-16">
               <div className="inline-flex items-center gap-2 border border-border/80 px-3 py-1 bg-card/40 text-foreground text-[11px] font-semibold uppercase tracking-wider rounded-none">
                 <Activity size={12} className="text-primary" />
-                <span>Asset Deployment Protocol</span>
+                <span>Asset Deployment</span>
               </div>
               
               <h1 className="text-4xl md:text-[5.5rem] font-bold tracking-tight leading-[0.95] uppercase">
@@ -72,15 +72,6 @@ export default function Home() {
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution</span>
                   <span className="text-xs font-bold uppercase tracking-wide">EU CLUSTER</span>
                 </div>
-                
-                {status !== "authenticated" && (
-                  <div className="pt-6">
-                    <button className="group w-full h-12 bg-foreground text-background hover:bg-primary hover:text-white flex items-center justify-center gap-2 font-semibold transition-all duration-200 text-xs uppercase tracking-widest rounded-none">
-                      Initialize Registry 
-                      <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-                  </div>
-                )}
               </div>
               
               <div className="mt-12 lg:mt-auto pt-6 border-t border-dashed border-border/60">
