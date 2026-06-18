@@ -33,7 +33,6 @@ export function HighestRatedCarousel() {
 
   const fetchedCollections = (data?.getTopLikedCollections || []) as CollectionResponse[];
   const isMarquee = fetchedCollections.length >= 4;
- 
 
   if (loading) {
     return (
@@ -60,8 +59,8 @@ export function HighestRatedCarousel() {
     <div className="relative w-full overflow-hidden font-sans py-8">
       {isMarquee && (
         <>
-          <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
         </>
       )}
 
@@ -84,7 +83,12 @@ export function HighestRatedCarousel() {
         }} />
       )}
 
-      <div className={isMarquee ? "animate-marquee" : "flex flex-wrap items-center justify-center md:justify-start w-full"}>
+      {/* Адаптировали контейнер: на мобилках свайп (overflow-x-auto), на ПК сетка (md:flex-wrap) */}
+      <div className={
+        isMarquee 
+          ? "animate-marquee" 
+          : "flex overflow-x-auto snap-x snap-mandatory md:overflow-visible md:flex-wrap items-center justify-start md:justify-center w-full pb-4 md:pb-0 custom-scrollbar"
+      }>
         {carouselItems.map((item, index) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
@@ -92,8 +96,11 @@ export function HighestRatedCarousel() {
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
           return (
-            <div key={`${item.id}-${index}`} className="px-5 mb-6 md:mb-0">
-              <CardContainer containerClassName="py-0" className="w-[280px] md:w-[360px]">
+            // shrink-0 и snap-center нужны для правильного мобильного свайпа
+            <div key={`${item.id}-${index}`} className="px-3 sm:px-4 md:px-5 mb-6 md:mb-0 shrink-0 snap-center">
+              
+              {/* Сузили карточку: w-[240px] для телефонов, w-[280px] для планшетов, w-[360px] для ПК */}
+              <CardContainer containerClassName="py-0" className="w-[240px] sm:w-[280px] md:w-[360px]">
                 <CardBody className="relative group/card w-full h-auto rounded-none flex flex-col">
                   
                   <Link href={`/collection/${item.id}`} className="block w-full h-full" draggable={false}>
@@ -105,36 +112,37 @@ export function HighestRatedCarousel() {
                         className="object-cover w-full h-full opacity-75 group-hover/card:opacity-100 transition-all duration-500 block"
                       />
                       
-                      <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md px-2 py-1 border border-white/[0.08] z-10 rounded-none flex items-center gap-1.5 shadow-xl">
+                      <div className="absolute top-2 right-2 md:top-3 md:right-3 bg-background/80 backdrop-blur-md px-2 py-1 border border-white/[0.08] z-10 rounded-none flex items-center gap-1.5 shadow-xl">
                         <Heart size={10} className={item.isLiked ? 'fill-primary text-primary' : 'fill-none text-primary'} />
                         <span className="text-[10px] font-bold tracking-wider">{item.likesCount || 0}</span>
                       </div>
                       
                       {item.price === 0 && (
-                        <div className="absolute top-3 left-3 bg-primary/20 backdrop-blur-md px-2 py-1 border border-primary/50 z-10 rounded-none">
-                          <span className="text-primary text-[9px] font-bold uppercase tracking-widest">Free</span>
+                        <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-primary/20 backdrop-blur-md px-2 py-1 border border-primary/50 z-10 rounded-none">
+                          <span className="text-primary text-[8px] md:text-[9px] font-bold uppercase tracking-widest">Free</span>
                         </div>
                       )}
                     </CardItem>
-                    <CardItem translateZ="30" className="w-full pt-6 flex flex-col justify-between">
-                      <div className="space-y-2.5">
+                    
+                    <CardItem translateZ="30" className="w-full pt-4 md:pt-6 flex flex-col justify-between">
+                      <div className="space-y-2">
                         <div className="flex justify-between items-baseline gap-4">
-                          <h3 className="font-bold text-[17px] md:text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover/card:text-primary truncate">
+                          <h3 className="font-bold text-[15px] md:text-[19px] leading-tight tracking-tight uppercase text-foreground transition-colors group-hover/card:text-primary truncate">
                             {item.name}
                           </h3>
                         </div>
-                        <p className="text-muted-foreground text-[13px] md:text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
+                        <p className="text-muted-foreground text-[12px] md:text-[14px] leading-relaxed line-clamp-2 font-normal opacity-80">
                           {item.description || "No description data submitted."}
                         </p>
                       </div>
 
-                      <div className="mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider">
-                        <div>
+                      <div className="mt-4 md:mt-6 pt-4 border-t border-white/[0.03] flex justify-between items-center text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">
+                        <div className="truncate pr-2">
                           <span>Author: </span>
                           <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
                         </div>
-                        <span className="opacity-0 group-hover/card:opacity-100 group-hover/card:text-primary transform translate-x-2 group-hover/card:translate-x-0 transition-all duration-300 font-semibold text-[12px]">
-                          Extract Node →
+                        <span className="opacity-100 md:opacity-0 md:group-hover/card:opacity-100 md:group-hover/card:text-primary transform md:translate-x-2 md:group-hover/card:translate-x-0 transition-all duration-300 font-semibold text-[10px] md:text-[12px] shrink-0">
+                          Extract →
                         </span>
                       </div>
                     </CardItem>
