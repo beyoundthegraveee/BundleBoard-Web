@@ -189,8 +189,9 @@
     100% { transform: scale(1.03); }
   }
   @keyframes fadeOutBg {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
+  0% { opacity: 1; }
+  99% { opacity: 0; }
+  100% { opacity: 0; pointer-events: none; }
   }
   @keyframes bounceAnim {
     0%, 10% { bottom: 50%; }
