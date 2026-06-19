@@ -81,43 +81,9 @@
   
   --animate-aurora: aurora 60s linear infinite;
 
-  @keyframes fadeInLogo {
-    0% { opacity: 0; filter: blur(8px); }
-    100% { opacity: 1; filter: blur(0); }
-  }
-  @keyframes zoomLogo {
-    0% { transform: scale(0.95); }
-    100% { transform: scale(1.03); }
-  }
-  @keyframes fadeOutBg {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  @keyframes aurora {
-    from {
-      background-position: 50% 50%, 50% 50%;
-    }
-    to {
-      background-position: 350% 50%, 350% 50%;
-    }
-  }
-
   --animate-bounce-spin: bounceAnim 1s cubic-bezier(.63,.09,.75,.46) infinite alternate, spinAnim 3s linear infinite;
   --animate-pebbles: pebblesAnim 1s linear infinite;
 
-  @keyframes bounceAnim {
-    0%, 10% { bottom: 50%; }
-    100% { bottom: 0%; }
-  }
-  @keyframes spinAnim {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  @keyframes pebblesAnim {
-    0% { right: -20%; }
-    100% { right: 110%; }
-  }
 }
 
 :root {
@@ -199,6 +165,7 @@
 @layer base {
   * {
     @apply border-border/60 transition-colors duration-150 outline-none;
+    backface-visibility: hidden;
   }
   body {
     @apply bg-background text-foreground tracking-tight selection:bg-primary/25 selection:text-primary;
@@ -208,6 +175,36 @@
     @apply font-sans antialiased scroll-smooth;
   }
 }
+
+@keyframes aurora {
+    from { background-position: 50% 50%, 50% 50%; }
+    to { background-position: 350% 50%, 350% 50%; }
+  }
+  @keyframes fadeInLogo {
+    0% { opacity: 0; filter: blur(8px); }
+    100% { opacity: 1; filter: blur(0); }
+  }
+  @keyframes zoomLogo {
+    0% { transform: scale(0.95); }
+    100% { transform: scale(1.03); }
+  }
+  @keyframes fadeOutBg {
+  0% { opacity: 1; }
+  99% { opacity: 0; }
+  100% { opacity: 0; pointer-events: none; }
+  }
+  @keyframes bounceAnim {
+    0%, 10% { bottom: 50%; }
+    100% { bottom: 0%; }
+  }
+  @keyframes spinAnim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pebblesAnim {
+    0% { right: -20%; }
+    100% { right: 110%; }
+  }
 
 @layer utilities {
   .text-gradient {
