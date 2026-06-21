@@ -96,7 +96,17 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     } catch (error: any) {
       console.error("❌ Critical error during payment session initialization:", error)
-      toast.error(error.message || "Unable to process the request. Please try again later.")
+      
+      if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+        const errorMessage = error.graphQLErrors[0].message
+        toast.error(errorMessage)
+      } 
+      else if (error.networkError) {
+        toast.error("Network error. Please check your connection and try again.")
+      } 
+      else {
+        toast.error(error.message || "Unable to process the request. Please try again later.")
+      }
     }
   }
 
