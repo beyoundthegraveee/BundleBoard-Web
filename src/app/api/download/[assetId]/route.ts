@@ -28,7 +28,7 @@ export async function GET(
 
     const apolloClient = new ApolloClient({
       link: new HttpLink({
-        uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:8080/graphql',
+        uri: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/graphql',
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
         },
