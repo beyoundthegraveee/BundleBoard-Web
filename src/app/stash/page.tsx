@@ -32,20 +32,22 @@ export default function StashPage() {
 
   const handleDownload = async (assetId: string, assetName: string) => {
     if (downloadingId) return;
+    let toastId: string | number | undefined;
 
     try {
       setDownloadingId(assetId);
-      const toastId = toast.loading(`Decrypting ${assetName}...`);
+      toastId = toast.loading(`Decrypting ${assetName}...`);
 
       const response = await fetch(`/api/download/${assetId}`);
+      
       if (response.redirected && response.url.includes('/login')) {
-        toast.dismiss(toastId);
-        toast.error("[ACCESS_DENIED] Session expired. Please re-authenticate.");
+        toast.error("[ACCESS_DENIED] Session expired. Please re-authenticate.", { id: toastId });
         return;
       }
 
       if (!response.ok) {
-        throw new Error("Failed to retrieve the encrypted node.");
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to retrieve the encrypted node.");
       }
 
       const blob = await response.blob();
@@ -67,10 +69,11 @@ export default function StashPage() {
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
 
-      toast.dismiss(toastId);
-      toast.success("Transfer complete.");
+      toast.success("Transfer complete.", { id: toastId });
+
     } catch (error: any) {
-      toast.error(error.message || "Critical error during file transfer.");
+      console.error("Download pipeline error:", error);
+      toast.error(error.message || "Critical error during file transfer.", { id: toastId });
     } finally {
       setDownloadingId(null);
     }
