@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 
 export default function StashPage() {
   const { status } = useSession()
+  const [downloadingId, setDownloadingId] = React.useState<string | null>(null)
   
   const { data, loading, error } = useQuery(GetUserProfileDocument, {
     skip: status !== "authenticated",
@@ -28,6 +29,52 @@ export default function StashPage() {
   const totalAssetsCount = useMemo(() => {
     return purchases.reduce((acc: any, curr: any) => acc + (curr?.items?.length || 0), 0)
   }, [purchases])
+
+  const handleDownload = async (assetId: string, assetName: string) => {
+    if (downloadingId) return;
+
+    try {
+      setDownloadingId(assetId);
+      const toastId = toast.loading(`Decrypting ${assetName}...`);
+
+      const response = await fetch(`/api/download/${assetId}`);
+      if (response.redirected && response.url.includes('/login')) {
+        toast.dismiss(toastId);
+        toast.error("[ACCESS_DENIED] Session expired. Please re-authenticate.");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to retrieve the encrypted node.");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${assetName.replace(/\s+/g, '_')}_asset.zip`; 
+      if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+          filename = contentDisposition.split('filename=')[1].replace(/['"]/g, '');
+      }
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.dismiss(toastId);
+      toast.success("Transfer complete.");
+    } catch (error: any) {
+      toast.error(error.message || "Critical error during file transfer.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (status === "loading" || loading) {
     return (
@@ -86,7 +133,7 @@ export default function StashPage() {
                   if (!item.asset) {
                     return (
                       <div key={item.id} className="border border-dashed border-destructive/40 bg-destructive/5 flex flex-col justify-center items-center aspect-video p-4 md:p-6 text-center">
-                        <AlertTriangle size={18} md-size={20} className="text-destructive/60 mb-1.5 md:mb-2" />
+                        <AlertTriangle size={18} className="text-destructive/60 mb-1.5 md:mb-2" />
                         <div className="text-destructive font-bold uppercase tracking-wider text-[9px] md:text-[10px] mb-0.5">Asset Offline</div>
                         <div className="text-muted-foreground text-[7px] md:text-[8px] uppercase tracking-widest">Node destroyed by author</div>
                       </div>
@@ -118,13 +165,20 @@ export default function StashPage() {
                         </div>
 
                         {purchase.status === 'succeeded' ? (
-                          <a 
-                            href={`/api/download/${item.asset.id}`}
-                            download
-                            className="flex items-center justify-center gap-1.5 md:gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white p-2 md:p-2.5 font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-colors rounded-none"
+                          <button 
+                            onClick={() => handleDownload(item.asset.id, item.asset.name)}
+                            disabled={downloadingId === item.asset.id}
+                            className="flex items-center justify-center gap-1.5 md:gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white disabled:opacity-50 disabled:hover:bg-foreground disabled:hover:text-background p-2 md:p-2.5 font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-colors rounded-none"
                           >
-                            <Download size={12} className="shrink-0" /> <span className="truncate">Download Asset</span>
-                          </a>
+                            {downloadingId === item.asset.id ? (
+                              <Loader2 size={12} className="shrink-0 animate-spin" />
+                            ) : (
+                              <Download size={12} className="shrink-0" />
+                            )}
+                            <span className="truncate">
+                              {downloadingId === item.asset.id ? 'Extracting...' : 'Download Asset'}
+                            </span>
+                          </button>
                         ) : (
                           <div className="flex items-center justify-center gap-1.5 md:gap-2 w-full bg-muted text-muted-foreground p-2 md:p-2.5 font-bold text-[9px] md:text-[10px] uppercase tracking-widest border border-border/50 cursor-not-allowed">
                             <Clock size={12} className={`shrink-0 ${purchase.status === 'pending' ? "animate-pulse text-yellow-500" : ""}`} /> 
