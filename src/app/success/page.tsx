@@ -42,10 +42,10 @@ export default async function SuccessPage({
 
           <div className="p-4 border-t border-border/40 bg-muted/10">
             <Link 
-              href="/profile" 
+              href="/stash" 
               className="flex items-center justify-center gap-3 w-full bg-foreground text-background hover:bg-primary hover:text-primary-foreground p-4 font-bold text-xs uppercase tracking-widest transition-all duration-300 group rounded-none"
             >
-              Access Your Vault
+              Access Your Stash
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

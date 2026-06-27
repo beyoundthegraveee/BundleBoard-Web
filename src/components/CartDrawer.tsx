@@ -84,7 +84,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         setCartItems([]) 
         localStorage.removeItem("bundleboard_cart")
         window.dispatchEvent(new Event("cartUpdate"))
-        if (returnedUrl.startsWith('http')) {
+
+        if (returnedUrl.startsWith('https')) {
            window.location.href = returnedUrl
         } else {
            router.push(returnedUrl)
