@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://bundleboard.com",
+    url: "https://www.bundle-board.com",
     title: "BundleBoard | Intelligent Data & Curated Supply",
     description: "High-fidelity digital assets for professional studio processing pipelines.",
     siteName: "BundleBoard",
