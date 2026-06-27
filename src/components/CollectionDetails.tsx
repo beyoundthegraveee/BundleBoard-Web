@@ -6,6 +6,7 @@ import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, 
 import LikeButton from '@/components/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
+import BmacBanner from './BmacBanner'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";
@@ -252,6 +253,8 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             </p>
           </div>
         </div>
+
+        <BmacBanner/>
 
         {isExternal ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">

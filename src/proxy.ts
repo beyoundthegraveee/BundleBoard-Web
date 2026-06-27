@@ -14,11 +14,12 @@ export default withAuth(
           "/",
           "/about",
           "/bundles",
+          "/collection/*",
           "/terms",
           "/register",
           "/login",
-          "/mail/verify-email",
-          "/mail/verify",
+          "/auth/mail/verify-email",
+          "/auth/mail/verify",
           "/select-role"
         ];
         const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
@@ -35,6 +36,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!register|login|mail/verify-email|mail/verify|forgot-password|password/reset-password/*|select-role|api/auth|_next/static|_next/image|favicon.svg|logo.png).*)'
+    '/((?!register|login|collection/*|mail/verify-email|mail/verify|forgot-password|password/reset-password/*|select-role|api/auth|_next/static|_next/image|favicon.svg|logo.png).*)'
   ],
 };
