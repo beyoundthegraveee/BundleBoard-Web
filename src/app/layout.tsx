@@ -22,7 +22,7 @@ const syncopate = Syncopate({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://bundleboard.com"),
+  metadataBase: new URL("https://www.bundle-board.com"),
   title: {
     default: "BundleBoard | High-Fidelity Digital Assets",
     template: "%s | BundleBoard",
