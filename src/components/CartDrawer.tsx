@@ -85,13 +85,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         localStorage.removeItem("bundleboard_cart")
         window.dispatchEvent(new Event("cartUpdate"))
 
-        if (isFreeCart){
-          router.push('/stash')
-          onClose()
-          toast.success("Asset added to your stash!")
-          return
-        }
-
         if (returnedUrl.startsWith('https')) {
            window.location.href = returnedUrl
         } else {
