@@ -100,7 +100,15 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       
       if (error.graphQLErrors && error.graphQLErrors.length > 0) {
         const errorMessage = error.graphQLErrors[0].message
-        toast.error(errorMessage)
+        if (errorMessage.toLowerCase().includes("purchase your own collection")) {
+          toast.error("You cannot buy your own assets. Please remove them from the cart.", {
+            duration: 6000,
+            icon: "🛡️"
+          });
+        } 
+        else {
+          toast.error(errorMessage)
+        }
       } 
       else if (error.networkError) {
         toast.error("Network error. Please check your connection and try again.")

@@ -66,7 +66,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
   
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(likesCount);
-  const isOwnCollection = session?.user?.name === author?.username;
+  const isOwnCollection = session?.user?.name?.toLowerCase() === author?.username?.toLowerCase();
   const isExternal = !!externalLink;
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
