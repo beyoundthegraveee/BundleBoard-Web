@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
         "/$",
         "/about",
         "/bundles", 
-        "/terms"
+        "/terms",
+        "/collection/**"
       ],
       disallow: [
         "/login",
@@ -24,6 +25,6 @@ export default function robots(): MetadataRoute.Robots {
         "/api/"
       ],
     },
-    sitemap: "https://bundleboard.com/sitemap.xml",
+    sitemap: "https://www.bundle-board.com/sitemap.xml",
   };
 }

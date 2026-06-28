@@ -169,3 +169,21 @@ query GetSortedCollections($page: Int!, $size: Int!, $sortBy: String!, $mimeType
     }
   }
 }
+
+query GetRandomCollections($limit: Int!) {
+  getRandomCollections(limit: $limit) {
+    id
+    name
+    description
+    price
+    externalLink
+    likesCount
+    isLiked
+    author {
+      username
+    }
+    galleryImages {
+      filePath
+    }
+  }
+}
