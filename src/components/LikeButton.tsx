@@ -5,6 +5,7 @@ import { Heart } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useMutation } from "@apollo/client/react"
 import { ToggleFavoriteDocument } from "@/graphql/generated"
+import { toast } from "sonner"
 
 interface LikeButtonProps {
   collectionId: string;
@@ -23,9 +24,12 @@ export default function LikeButton({ collectionId, initialLiked = false, onToggl
     e.stopPropagation();
 
     if (!session) {
-      alert("System Notice: Authentication required to save to favorites.")
+      toast.error("System Notice", {
+        description: "Authentication required to save to favorites."
+      });
       return
     }
+
     const newLikedState = !isLiked;
     setIsLiked(newLikedState)
     setIsAnimating(true)
@@ -46,6 +50,9 @@ export default function LikeButton({ collectionId, initialLiked = false, onToggl
         onToggle(!newLikedState);
       }
       console.error("Failed to toggle like in database", error)
+      toast.error("Data Stream Error", {
+        description: "Failed to update favorites. Please try again."
+      });
     }
   }
 

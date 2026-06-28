@@ -4,25 +4,32 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function BatchGrid({ children, className }: { children: React.ReactNode, className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const mm = gsap.matchMedia(containerRef);
+    if (!containerRef.current) return;
+    const q = gsap.utils.selector(containerRef.current);
+    const mm = gsap.matchMedia(containerRef.current);
 
     mm.add({
       isDesktop: "(min-width: 1280px)",
       isMobile: "(max-width: 1279px)"
     }, (context) => {
       const { isDesktop } = context.conditions as { isDesktop: boolean; isMobile: boolean };
-      
       const columns = isDesktop ? 3 : 2;
 
-      gsap.set(".batch-item", { y: 100, opacity: 0 });
+      const items = q(".batch-item");
 
-      ScrollTrigger.batch(".batch-item", {
+      if (!items || items.length === 0) return;
+
+      gsap.set(items, { y: 100, opacity: 0 });
+
+      ScrollTrigger.batch(items, {
         interval: 0.1,
         batchMax: columns,
         onEnter: (batch) => gsap.to(batch, {
@@ -37,8 +44,11 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
       });
     });
 
-    return () => mm.revert(); 
-  }, []);
+    return () => {
+      mm.revert();
+      ScrollTrigger.refresh(); 
+    };
+  }, [children]);
 
   return (
     <div ref={containerRef} className={className}>
