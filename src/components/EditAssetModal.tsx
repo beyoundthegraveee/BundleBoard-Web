@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
-import { supabase } from '@/lib/supabaseClient'
+import { useSupabase } from '@/hooks/useSupabase'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
 import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
@@ -42,6 +42,7 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 };
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
+  const supabase = useSupabase();
   
   const [form, setForm] = useState(() => {
     if (typeof window !== 'undefined' && initialData?.id) {

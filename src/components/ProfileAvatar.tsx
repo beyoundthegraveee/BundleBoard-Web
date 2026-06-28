@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Loader2, User, Upload, Edit2, Check, X, Plus, Trash2, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
-import { supabase } from '@/lib/supabaseClient'
+import { useSupabase } from '@/hooks/useSupabase'
 import { useMutation } from "@apollo/client/react"
 import { UpdateAvatarDocument, UpdateProfileDetailsDocument, GetUserProfileQuery } from "@/graphql/generated"
 import { convertToWebP } from '@/lib/imageProcessor' 
@@ -15,6 +15,8 @@ interface ProfileAvatarProps {
 }
 
 export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
+  const supabase = useSupabase()
+
   const [isUploading, setIsUploading] = useState(false)
   const [executeUpdateAvatar] = useMutation(UpdateAvatarDocument)
   
@@ -66,7 +68,6 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
       setIsSaving(false)
     }
   }
-
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

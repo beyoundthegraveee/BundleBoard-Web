@@ -2,6 +2,7 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { print } from 'graphql'; 
+import jwt from 'jsonwebtoken';
 
 import {
   LoginMutation,
@@ -17,6 +18,7 @@ import {
   RefreshTokenDocument,
   LogoutDocument
 } from '@/graphql/generated';
+import Email from 'next-auth/providers/email';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
 const ACCESS_TOKEN_EXPIRY_MS = parseInt(process.env.JWT_ACCESS_EXPIRY_MS || "900000", 10);
@@ -173,6 +175,21 @@ export const authOptions: NextAuthOptions = {
         token.isNewUser = (user as any).isNewUser;
         token.roles = (user as any).roles || [];
         token.accessTokenExpires = Date.now() + ACCESS_TOKEN_EXPIRY_MS;
+
+        const supabasePayload = {
+          aud: "authenticated",
+          exp: Math.floor((Date.now() + ACCESS_TOKEN_EXPIRY_MS) / 1000),
+          sub: user.id,
+          email: user.email,
+          role: "authenticated"
+        };
+
+        token.supabaseToken = jwt.sign(
+          supabasePayload,
+          process.env.SUPABASE_JWT_SECRET!,
+          { algorithm: 'HS256'}
+        );
+
         return token;
       }
 
@@ -185,11 +202,28 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
+      const refreshedToken = await refreshAccessToken(token);
+      if(refreshedToken && !refreshedToken.error) {
+        const supabasePayload = {
+          aud: "authenticated",
+          exp: Math.floor((refreshedToken.accessTokenExpires as number) / 1000),
+          sub: refreshedToken.id,
+          email: refreshedToken.email,
+          role: "authenticated",
+        };
+        refreshedToken.supabaseToken = jwt.sign(
+          supabasePayload,
+          process.env.SUPABASE_JWT_SECRET!,
+          { algorithm: 'HS256'}
+        )
+      }
+
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
       const s = session as any;
       s.accessToken = token.accessToken;
+      s.supabaseToken = token.supabaseToken;
       s.isNewUser = token.isNewUser;
       s.error = token.error;
       s.refreshToken = token.refreshToken;
