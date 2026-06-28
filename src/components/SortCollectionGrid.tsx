@@ -75,7 +75,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             <Link 
               href={`/collection/${item.id}`} 
               key={item.id} 
-              className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground will-change-transform"
+              className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <img 

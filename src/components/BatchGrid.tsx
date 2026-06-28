@@ -10,6 +10,7 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const q = gsap.utils.selector(containerRef);
     const mm = gsap.matchMedia(containerRef);
 
     mm.add({
@@ -17,12 +18,15 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
       isMobile: "(max-width: 1279px)"
     }, (context) => {
       const { isDesktop } = context.conditions as { isDesktop: boolean; isMobile: boolean };
-      
       const columns = isDesktop ? 3 : 2;
 
-      gsap.set(".batch-item", { y: 100, opacity: 0 });
+      const items = q(".batch-item");
 
-      ScrollTrigger.batch(".batch-item", {
+      if (items.length === 0) return;
+
+      gsap.set(items, { y: 100, opacity: 0 });
+
+      ScrollTrigger.batch(items, {
         interval: 0.1,
         batchMax: columns,
         onEnter: (batch) => gsap.to(batch, {
@@ -38,7 +42,7 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
     });
 
     return () => mm.revert(); 
-  }, []);
+  }, [children]);
 
   return (
     <div ref={containerRef} className={className}>

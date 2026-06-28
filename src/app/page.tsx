@@ -1,6 +1,6 @@
 "use client"
 
-import { RandomCollectionGrid } from "@/components/RandomCollectionGrid";
+import { CollectionGrid } from "@/components/CollectionGrid";
 import { HighestRatedCarousel } from "@/components/HighestRatedCarousel";
 import { ArrowRight, Activity, Grid3X3, ExternalLink, Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -107,7 +107,7 @@ export default function Home() {
           <span className="text-[9px] md:text-[10px] font-medium opacity-40 tracking-widest uppercase shrink-0">Stream Vol 001</span>
         </div>
         
-        <RandomCollectionGrid />
+        <CollectionGrid />
         
         <div className="max-w-[1600px] mx-auto px-4 md:px-12 mt-8 md:mt-12 flex justify-center">
           <Link 
