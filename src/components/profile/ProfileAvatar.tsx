@@ -5,6 +5,7 @@ import { Loader2, User, Upload, Edit2, Check, X, Plus, Trash2, Link as LinkIcon 
 import { toast } from "sonner"
 import { useSupabase } from '@/hooks/useSupabase'
 import { useMutation } from "@apollo/client/react"
+import Image from "next/image"
 import { UpdateAvatarDocument, UpdateProfileDetailsDocument, GetUserProfileQuery } from "@/graphql/generated"
 import { convertToWebP } from '@/lib/imageProcessor' 
 import { ALLOWED_PLATFORMS, validateSocialUrl } from '@/lib/socialLinks'
@@ -61,7 +62,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
       setIsEditing(false)
       toast.success("Profile configuration updated successfully.");
       onUpdate()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("PROFILE_UPDATE_FAILURE:", err)
       toast.error("Failed to commit profile changes.");
     } finally {
@@ -96,8 +97,10 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
       })
       
       onUpdate()
-    } catch (err: any) {
-      console.error("AVATAR_UPLOAD_FAILURE:", err.message || err)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      console.error("AVATAR_UPLOAD_FAILURE:", errorMessage)
+      toast.error("Failed to upload avatar image.")
     } finally {
       setIsUploading(false)
     }
@@ -126,7 +129,13 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
       <div className="flex flex-col gap-3 w-full sm:w-40 shrink-0">
         <div className="relative w-full aspect-square border border-border/80 rounded-none bg-muted overflow-hidden shadow-sm">
           {userData?.avatarUrl ? (
-            <img src={userData.avatarUrl} alt="avatar" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+            <Image 
+              src={userData.avatarUrl} 
+              alt="avatar" 
+              fill
+              unoptimized
+              className="object-cover opacity-90" 
+            />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/60">
               <User size={48} strokeWidth={1.2} />
