@@ -1,6 +1,6 @@
-
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Layers } from "lucide-react"
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { GetCollectionsByTagQuery } from '@/graphql/generated'
@@ -41,11 +41,12 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
               className="batch-item group flex flex-col bg-card border border-border p-2 sm:p-4 hover:border-foreground/30 transition-colors duration-300 will-change-transform"
             >
               <div className="aspect-[4/3] relative overflow-hidden bg-muted border border-border/50">
-                <img 
-                  src={imageUrl || FALLBACK_IMAGE} 
+                <Image 
+                  src={imageUrl || FALLBACK_IMAGE || ""} 
                   alt={item.name}
-                  className="object-cover w-full h-full opacity-70 group-hover:opacity-100 transition-all duration-500 block"
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                  className="object-cover opacity-70 group-hover:opacity-100 transition-all duration-500 block"
                 />
               </div>
 

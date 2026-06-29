@@ -1,12 +1,12 @@
-"use client"; // Обязательно добавьте эту директиву в начало файла
+"use client";
 
-import React, { useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from "lucide-react"
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionsPagedDocument } from '@/graphql/generated'
 import { BatchGrid } from './BatchGrid'
-import { CollectionItem } from '../CollectionItem'
+import { CollectionItem } from '../collection-page/CollectionItem'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 21;
@@ -36,11 +36,18 @@ export function CollectionGrid() {
     fetchPolicy: 'cache-first'
   });
 
-  const collections = (data?.getAllCollections || []) as Collection[];
-  
-  const shuffledCollections = useMemo(() => {
-    return [...collections].sort(() => Math.random() - 0.5);
-  }, [collections]);
+  const [shuffledCollections, setShuffledCollections] = useState<Collection[]>([]);
+
+  useEffect(() => {
+    if (data?.getAllCollections) {
+      const shuffled = [...data.getAllCollections].sort(() => Math.random() - 0.5);
+      const timer = setTimeout(() => {
+        setShuffledCollections(shuffled as Collection[]);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+  }, [data?.getAllCollections]);
 
   if (loading) return (
     <div className="flex flex-col justify-center items-center py-40 space-y-3 font-sans">

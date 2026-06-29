@@ -8,13 +8,15 @@ export function CookieBanner() {
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    setHasMounted(true)
     const timer = setTimeout(() => {
+      setHasMounted(true)
+      
       const consent = localStorage.getItem("cookie-consent")
       if (!consent) {
         setIsVisible(true)
       }
     }, 400)
+    
     return () => clearTimeout(timer)
   }, [])
 

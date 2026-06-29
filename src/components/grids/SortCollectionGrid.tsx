@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useQuery } from '@apollo/client/react';
 import { GetSortedCollectionsDocument } from '@/graphql/generated';
 import { FALLBACK_IMAGE } from '@/lib/constants';
@@ -18,10 +19,13 @@ interface SortCollectionGridProps {
 
 export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProps) {
   const [page, setPage] = useState(0);
-  
-  useEffect(() => {
+  const filterKey = `${sortBy}_${(mimeTypes || []).join(',')}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setPage(0);
-  }, [sortBy, mimeTypes]);
+  }
 
   const { data, loading, error, refetch } = useQuery(GetSortedCollectionsDocument, {
     variables: {
@@ -65,7 +69,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
   return (
     <div className="font-sans pb-12 px-4 md:px-12">
       <BatchGrid className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-x-14 gap-y-12 md:gap-y-20">
-        {collections.map((item: any) => {
+        {collections.map((item) => {
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
             ? fileName 
@@ -78,10 +82,12 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
               className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
-                <img 
-                  src={imageUrl || FALLBACK_IMAGE} 
+                <Image 
+                  src={imageUrl || FALLBACK_IMAGE || ""} 
                   alt={item.name}
-                  className="object-cover w-full h-full opacity-75 group-hover:opacity-100 transition-all duration-500 block"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover opacity-75 group-hover:opacity-100 transition-all duration-500 block"
                 />
               </div>
 
@@ -122,7 +128,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             disabled={page === 0 || loading}
             className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 border border-border/60 bg-background text-foreground text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-none"
           >
-            <ChevronLeft size={12} md-size={14} className="stroke-[2]" />
+            <ChevronLeft size={12} className="stroke-[2]" />
             Prev
           </button>
 
@@ -136,7 +142,7 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 border border-border/60 bg-background text-foreground text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-none"
           >
             Next
-            <ChevronRight size={12} md-size={14} className="stroke-[2]" />
+            <ChevronRight size={12} className="stroke-[2]" />
           </button>
         </div>
       )}
