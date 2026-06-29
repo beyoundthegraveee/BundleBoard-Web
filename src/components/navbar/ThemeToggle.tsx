@@ -9,7 +9,11 @@ export function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    setMounted(true)
+    const frameId = requestAnimationFrame(() => {
+      setMounted(true)
+    })
+    
+    return () => cancelAnimationFrame(frameId)
   }, [])
 
   if (!mounted) {
