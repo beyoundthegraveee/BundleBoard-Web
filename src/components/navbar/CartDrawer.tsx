@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@apollo/client/react"
+import Image from "next/image"
 import { CreateCheckoutSessionDocument } from "@/graphql/generated"
 
 interface CartItem {
@@ -20,6 +21,21 @@ interface CartItem {
 interface CartDrawerProps {
   isOpen: boolean
   onClose: () => void
+}
+
+interface CustomSession {
+  user?: {
+    id?: string | number | null
+    name?: string | null
+    email?: string | null
+    image?: string | null
+  }
+}
+
+interface ApolloExtendedError {
+  graphQLErrors?: Array<{ message: string }>
+  networkError?: unknown
+  message?: string
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
@@ -67,7 +83,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
 
     try {
-      const currentSession = session as any;
+      const currentSession = session as CustomSession;
       const { data } = await executeCreateCheckout({
         variables: {
           input: {
@@ -95,11 +111,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         throw new Error("Target URL not found in response")
       }
 
-    } catch (error: any) {
-      console.error("❌ Critical error during payment session initialization:", error)
+    } catch (error: unknown) {
+      const err = error as ApolloExtendedError;
+      console.error("❌ Critical error during payment session initialization:", err)
       
-      if (error.graphQLErrors && error.graphQLErrors.length > 0) {
-        const errorMessage = error.graphQLErrors[0].message
+      if (err.graphQLErrors && err.graphQLErrors.length > 0) {
+        const errorMessage = err.graphQLErrors[0].message
         if (errorMessage.toLowerCase().includes("purchase your own collection")) {
           toast.error("You cannot buy your own assets. Please remove them from the cart.", {
             duration: 6000,
@@ -110,11 +127,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           toast.error(errorMessage)
         }
       } 
-      else if (error.networkError) {
+      else if (err.networkError) {
         toast.error("Network error. Please check your connection and try again.")
       } 
       else {
-        toast.error(error.message || "Unable to process the request. Please try again later.")
+        toast.error(err.message || "Unable to process the request. Please try again later.")
       }
     }
   }
@@ -155,8 +172,14 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   key={item.id} 
                   className="flex gap-3 sm:gap-4 p-2.5 sm:p-3 border border-border/40 bg-background rounded-none group relative overflow-hidden"
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none">
-                    <img src={item.previewImage} alt="" className="w-full h-full object-cover" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none relative">
+                    <Image 
+                      src={item.previewImage} 
+                      alt={item.name || "Preview"} 
+                      fill
+                      unoptimized
+                      className="object-cover" 
+                    />
                   </div>
 
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
