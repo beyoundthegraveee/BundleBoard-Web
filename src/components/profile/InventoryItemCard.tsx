@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { Edit3, Trash2 } from "lucide-react"
 import Link from 'next/link'
-import { DeleteConfirmModal } from './DeleteConfirmModal'
-import { EditAssetModal } from './EditAssetModal'
+import { DeleteConfirmModal } from './asset/DeleteConfirmModal'
+import { EditAssetModal } from './asset/EditAssetModal'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { 
@@ -22,6 +22,7 @@ export interface AuthoredCollection {
   price: number;
   description: string;
   galleryImages?: GalleryImage[];
+  [key: string]: unknown;
 }
 
 interface InventoryItemCardProps {

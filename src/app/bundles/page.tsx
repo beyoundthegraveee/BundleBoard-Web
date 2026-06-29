@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { SortCollectionGrid } from '@/components/SortCollectionGrid';
+import { SortCollectionGrid } from '@/components/grids/SortCollectionGrid';
 import { SortSidebar } from '@/components/SortSidebar';
-import { BackgroundGradient } from '@/components/BackgroundGradient';
+import { BackgroundGradient } from '@/components/backgrounds/BackgroundGradient';
 import { ChevronDown, Filter } from 'lucide-react';
 
 export default function BundlesPage() {
@@ -25,7 +25,6 @@ export default function BundlesPage() {
       <div className="p-4 md:p-12 font-sans animate-in fade-in duration-300">
         <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-10">
           
-          {/* Хлебные крошки */}
           <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
             <Link href="/" className="hover:text-foreground transition-colors">Core</Link>
             <span className="opacity-30">/</span>

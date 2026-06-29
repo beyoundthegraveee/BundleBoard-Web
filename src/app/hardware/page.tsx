@@ -1,6 +1,6 @@
 import React from "react";
 import { Cpu, HardDrive, Monitor, Zap, MemoryStick, Box, Fan, Laptop, ChevronsRight, LucideIcon} from "lucide-react";
-import WaveBackground from '@/components/WaveBackground';
+import WaveBackground from '@/components/backgrounds/WaveBackground';
 
 export const metadata = {
   title: "Hardware Setup | BundleBoard",

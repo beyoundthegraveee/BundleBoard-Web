@@ -1,6 +1,6 @@
 "use client"
 
-import { CollectionGrid } from "@/components/CollectionGrid";
+import { CollectionGrid } from "@/components/grids/CollectionGrid";
 import { HighestRatedCarousel } from "@/components/HighestRatedCarousel";
 import { ArrowRight, Activity, Grid3X3, ExternalLink, Heart } from "lucide-react";
 import Link from "next/link";

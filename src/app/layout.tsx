@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthSessionProvider } from "@/components/provider/SessionProvider";
 import { ThemeProvider } from "@/components/provider/ThemeProvider";
 import { CookieBanner } from "@/components/CookieBanner";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/navbar/Navbar";
 import { SplashProvider } from "@/components/SplashProvider";
 import { ApolloWrapper } from "@/lib/apolloWrapper";
 import { Toaster } from "sonner";
@@ -75,9 +75,12 @@ export const metadata: Metadata = {
   },
   
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [
+      {url: "/favicon.svg", type: "image/svg+xml" },
+      {url: "/logo.png", type: "image/png"}
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

@@ -5,12 +5,12 @@ import { useSession } from "next-auth/react"
 import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive, ChevronDown } from "lucide-react"
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
-import { ProfileAvatar } from '@/components/ProfileAvatar'
-import { PurchasedVault } from '@/components/PurchaseVault'
-import { BillingLedger } from '@/components/BillingLedger'
-import UserCommentsLog from '@/components/UserCommentsLog'
-import { DeployAssetModal } from '@/components/DeployAssetModal'
-import { InventoryItemCard } from '@/components/InventoryItemCard'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
+import { PurchasedVault } from '@/components/profile/PurchaseVault'
+import { BillingLedger } from '@/components/profile/BillingLedger'
+import UserCommentsLog from '@/components/collection-page/UserCommentsLog'
+import { DeployAssetModal } from '@/components/profile/asset/DeployAssetModal'
+import { InventoryItemCard } from '@/components/profile/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
@@ -203,7 +203,6 @@ export default function ProfilePage() {
             </section>
           )}
 
-          {/* ИСПРАВЛЕНИЕ 7: Заменяем небезопасный каст на массив наших интерфейсов Purchase */}
           <PurchasedVault purchases={(userData?.purchases || []) as Purchase[]} totalAssetsCount={totalAssetsCount} />
           <BillingLedger purchases={(userData?.purchases || []) as Purchase[]} totalSpent={totalSpent} />
         </div>
@@ -220,7 +219,6 @@ export default function ProfilePage() {
   )
 }
 
-// ИСПРАВЛЕНИЕ 8: Заменяем 'any[]' на 'AuthoredCollection[]'
 function CategoryGroup({ category, items, onRefreshNeeded }: { category: string, items: AuthoredCollection[], onRefreshNeeded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -247,7 +245,10 @@ function CategoryGroup({ category, items, onRefreshNeeded }: { category: string,
         {items.map((col: AuthoredCollection) => (
           <InventoryItemCard 
             key={col.id} 
-            collection={col} 
+            collection={{
+              ...col,
+              price: col.price ?? 0
+            }} 
             onRefreshNeeded={onRefreshNeeded} 
           />
         ))}
