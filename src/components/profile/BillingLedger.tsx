@@ -3,9 +3,22 @@
 import React from 'react'
 import { ShieldCheck, Receipt } from "lucide-react"
 
+interface LedgerItem {
+  id?: string | number;
+}
+
+interface PurchaseLedgerEntry {
+  id?: string | number;
+  createdAt?: string | number | Date;
+  status?: string;
+  amount?: number | string;
+  currency?: string;
+  items?: LedgerItem[];
+}
+
 interface BillingLedgerProps {
-  purchases: any[]
-  totalSpent: string
+  purchases: PurchaseLedgerEntry[] | null | undefined;
+  totalSpent: string;
 }
 
 export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
@@ -27,18 +40,16 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
             <thead>
               <tr className="border-b border-border/40 uppercase font-semibold text-muted-foreground tracking-wider">
                 <th className="pb-3">Date</th>
-                {/* Заменили Reference ID на Status / Details */}
                 <th className="pb-3 text-center">Status / Details</th>
                 <th className="pb-3 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="font-medium text-foreground uppercase tracking-wide">
-              {purchases.map((p: any, index: number) => (
+              {purchases.map((p, index) => (
                 <tr key={p.id || index} className="border-b border-border/10 last:border-0 text-xs hover:bg-muted/10 transition-colors">
                   <td className="py-3.5 font-semibold">
                     {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
-                  {/* Выводим статус и количество ассетов */}
                   <td className="py-3.5 text-center">
                     <div className="flex flex-col items-center justify-center space-y-0.5">
                       <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
@@ -50,7 +61,7 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
                     </div>
                   </td>
                   <td className="py-3.5 text-right font-bold text-foreground font-mono">
-                    {Number(p.amount || 0) === 0 ? "FREE" : `${Number(p.amount).toFixed(2)} ${p.currency}`}
+                    {Number(p.amount || 0) === 0 ? "FREE" : `${Number(p.amount).toFixed(2)} ${p.currency || ''}`}
                   </td>
                 </tr>
               ))}
@@ -62,6 +73,7 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
           No transactional entries recorded on this node.
         </div>
       )}
+      
       <div className="pt-4 border-t border-border/40 flex justify-between items-center">
         <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <ShieldCheck size={14} className="text-primary" /> Gateway Verified

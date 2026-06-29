@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Edit3, Trash2 } from "lucide-react"
 import Link from 'next/link'
+import Image from 'next/image'
 import { DeleteConfirmModal } from './asset/DeleteConfirmModal'
 import { EditAssetModal } from './asset/EditAssetModal'
 import { useMutation } from '@apollo/client/react'
@@ -106,9 +107,12 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
         <div className="flex gap-4 items-start w-full">
           <div className="w-16 h-16 border border-border/40 bg-muted flex-shrink-0 overflow-hidden select-none relative">
             {cardThumbnail && (
-              <img 
+              <Image 
                 src={cardThumbnail} 
                 alt={`${collection.name} thumbnail`}
+                width={64}
+                height={64}
+                unoptimized
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
               />
             )}
