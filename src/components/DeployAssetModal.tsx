@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
-import { supabase } from '@/lib/supabaseClient'
+import { useSupabase } from '@/hooks/useSupabase' 
 import { convertToWebP } from '@/lib/imageProcessor'
 import { 
   MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS 
@@ -54,6 +54,7 @@ interface DeployAssetModalProps {
 }
 
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
+  const supabase = useSupabase()
   const [isCreatingAsset, setIsCreatingAsset] = useState(false)
   
   const [newAsset, setNewAsset] = useState(() => {

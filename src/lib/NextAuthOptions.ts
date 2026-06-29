@@ -3,6 +3,7 @@ import CredentialProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { print } from 'graphql'; 
 import jwt from 'jsonwebtoken';
+import { formatIdToUUID } from '@/lib/utils';
 
 import {
   LoginMutation,
@@ -179,7 +180,7 @@ export const authOptions: NextAuthOptions = {
         const supabasePayload = {
           aud: "authenticated",
           exp: Math.floor((Date.now() + ACCESS_TOKEN_EXPIRY_MS) / 1000),
-          sub: user.id,
+          sub: formatIdToUUID(user.id),
           email: user.email,
           role: "authenticated"
         };
@@ -207,7 +208,7 @@ export const authOptions: NextAuthOptions = {
         const supabasePayload = {
           aud: "authenticated",
           exp: Math.floor((refreshedToken.accessTokenExpires as number) / 1000),
-          sub: refreshedToken.id,
+          sub: formatIdToUUID(refreshedToken.id),
           email: refreshedToken.email,
           role: "authenticated",
         };
@@ -218,7 +219,8 @@ export const authOptions: NextAuthOptions = {
         )
       }
 
-      return refreshAccessToken(token);
+      return refreshedToken
+
     },
     async session({ session, token }) {
       const s = session as any;
