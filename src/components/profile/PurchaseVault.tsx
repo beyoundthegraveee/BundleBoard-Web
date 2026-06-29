@@ -2,14 +2,40 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FolderLock, ExternalLink, AlertTriangle } from "lucide-react"
 import { FALLBACK_IMAGE } from '@/lib/constants'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 
+interface GalleryImage {
+  filePath: string;
+}
+
+interface AssetNode {
+  name: string;
+  galleryImages?: GalleryImage[];
+}
+
+interface PurchaseItem {
+  id: string | number;
+  snapshotPrice: number;
+  asset?: AssetNode;
+}
+
+interface Purchase {
+  amount: number;
+  status: string;
+  items?: PurchaseItem[];
+}
+
+interface PreviewItem extends PurchaseItem {
+  pStatus: string;
+}
+
 interface PurchasedVaultProps {
-  purchases: any[]
-  totalAssetsCount: number
+  purchases: Purchase[] | null | undefined;
+  totalAssetsCount: number;
 }
 
 export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultProps) {
@@ -18,12 +44,12 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
     return purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
   }, [purchases]);
 
-  const previewItems = React.useMemo(() => {
-    if (!purchases) return []
+  const previewItems = React.useMemo<PreviewItem[]>(() => {
+    if (!purchases) return [];
     return purchases
-      .flatMap(p => (p.items || []).map((item: any) => ({ ...item, pStatus: p.status })))
-      .slice(0, 3)
-  }, [purchases])
+      .flatMap(p => (p.items || []).map((item) => ({ ...item, pStatus: p.status })))
+      .slice(0, 3);
+  }, [purchases]);
 
   return (
     <section className="border border-border/60 bg-card p-6 rounded-none shadow-md space-y-6 font-sans text-foreground">
@@ -55,7 +81,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
       {totalAssetsCount > 0 ? (
         <div className="space-y-4">
           <div className="divide-y divide-border/20 border-b border-border/20">
-            {previewItems.map((item: any, idx: number) => {
+            {previewItems.map((item, idx) => {
               const assetData = item.asset;
 
               if (!assetData) {
@@ -79,10 +105,13 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
               return (
                 <div key={item.id || idx} className="py-3 flex items-center justify-between gap-4 group">
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 bg-background border border-border/40 shrink-0 overflow-hidden">
-                      <img 
-                        src={imageUrl} 
+                    <div className="w-10 h-10 bg-background border border-border/40 shrink-0 overflow-hidden relative">
+                      <Image 
+                        src={imageUrl || ""} 
                         alt={assetData.name || "Asset"} 
+                        width={40}
+                        height={40}
+                        unoptimized
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
                       />
                     </div>
