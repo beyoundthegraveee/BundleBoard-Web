@@ -1,25 +1,20 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
 import { useSupabase } from '@/hooks/useSupabase' 
 import { convertToWebP } from '@/lib/imageProcessor'
-import { 
-  MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS 
-} from '@/lib/constants'
-
+import {  MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS } from '@/lib/constants'
 import { useMutation } from "@apollo/client/react"
 import { CreateCollectionDocument } from '@/graphql/generated'
-import type { 
-  MimeType, 
-  ImageShortInput 
-} from '@/graphql/generated'
+import type { MimeType, ImageShortInput, CreateNewCollectionInput,MediaResourceInput,Provider } from '@/graphql/generated'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
 const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
-    const img = new Image();
+    const img = new window.Image();
     img.src = URL.createObjectURL(blob);
     img.onload = () => {
       resolve({ width: img.width, height: img.height });
@@ -53,14 +48,20 @@ interface DeployAssetModalProps {
   onSuccess: () => void;
 }
 
+interface AssetDraftState {
+  name: string;
+  description: string;
+  category: string;
+}
+
 export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModalProps) {
   const supabase = useSupabase()
-  const [isCreatingAsset, setIsCreatingAsset] = useState(false)
+  const [isCreatingAsset, setIsCreatingAsset] = useState<boolean>(false)
   
-  const [newAsset, setNewAsset] = useState(() => {
+  const [newAsset, setNewAsset] = useState<AssetDraftState>(() => {
     if (typeof window !== 'undefined') {
       const draft = sessionStorage.getItem("draft_newAsset");
-      if (draft) return JSON.parse(draft);
+      if (draft) return JSON.parse(draft) as AssetDraftState;
     }
     return { name: "", description: "", category: "gradients" };
   });
@@ -72,7 +73,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     return 'hosted';
   });
 
-  const [externalLink, setExternalLink] = useState(() => {
+  const [externalLink, setExternalLink] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem("draft_externalLink") || "";
     }
@@ -83,7 +84,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
   const [projectFile, setProjectFile] = useState<File | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
-  const [rightsConfirmed, setRightsConfirmed] = useState(false)
+  const [rightsConfirmed, setRightsConfirmed] = useState<boolean>(false)
 
   const [executeCreate] = useMutation(CreateCollectionDocument)
 
@@ -93,7 +94,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     sessionStorage.setItem("draft_externalLink", externalLink)
   }, [newAsset, uploadMode, externalLink])
 
-  const previewItemsRef = useRef(previewItems);
+  const previewItemsRef = useRef<PreviewFileItem[]>(previewItems);
   useEffect(() => {
     previewItemsRef.current = previewItems;
   }, [previewItems]);
@@ -120,21 +121,22 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       
       setPreviewItems((prev) => {
         const currentTotal = prev.length + incomingFiles.length;
+        const timestamp = Date.now();
+
         if (currentTotal > 5) {
           setValidationError("Maximum 5 gallery preview images are allowed. Please remove some files first.")
           const availableSlots = 5 - prev.length;
           const allowedFiles = incomingFiles.slice(0, availableSlots);
-          
-          const newItems = allowedFiles.map(file => ({
-            id: Math.random().toString(36).substring(7),
+          const newItems = allowedFiles.map((file, idx) => ({
+            id: `deploy-new-${file.name}-${file.size}-${timestamp}-${idx}`,
             file,
             previewUrl: URL.createObjectURL(file)
           }))
           return [...prev, ...newItems];
         }
 
-        const newItems = incomingFiles.map(file => ({
-          id: Math.random().toString(36).substring(7),
+        const newItems = incomingFiles.map((file, idx) => ({
+          id: `deploy-new-${file.name}-${file.size}-${timestamp}-${idx}`,
           file,
           previewUrl: URL.createObjectURL(file)
         }))
@@ -233,7 +235,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         return {
           fileName: previewFileName,
           filePath: publicUrl,
-          mimeType: "webp",
+          mimeType: "webp" as MimeType,
           width: width,
           height: height,
           fileSize: webpBlob.size
@@ -242,7 +244,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
       const uploadedImages = await Promise.all(uploadPreviewsPromises)
       
-      let mediaResourceData = null;
+      let mediaResourceData: MediaResourceInput | null = null;
       
       if (uploadMode === 'hosted' && projectFile) {
         const archivePath = `${category}/${folderId}/${projectFile.name}`
@@ -254,25 +256,25 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         
         const ext = projectFile.name.split('.').pop()?.toLowerCase();
         let calculatedMime: MimeType = "zip";
-        if (ext === "rar") calculatedMime = "rar" as MimeType;
-        else if (ext === "pdf") calculatedMime = "pdf" as MimeType;
-        else if (ext === "mp4") calculatedMime = "mp4" as MimeType;
-        else if (ext === "png") calculatedMime = "png" as MimeType;
-        else if (ext === "webp") calculatedMime = "webp" as MimeType;
-        else if (ext === "jpg" || ext === "jpeg") calculatedMime = "jpeg" as MimeType;
+        if (ext === "rar") calculatedMime = "rar";
+        else if (ext === "pdf") calculatedMime = "pdf";
+        else if (ext === "mp4") calculatedMime = "mp4";
+        else if (ext === "png") calculatedMime = "png";
+        else if (ext === "webp") calculatedMime = "webp";
+        else if (ext === "jpg" || ext === "jpeg") calculatedMime = "jpeg";
         
         mediaResourceData = {
           fileName: projectFile.name,
           filePath: archivePath,
           mimeType: calculatedMime,
-          provider: "local",
+          provider: "local" as Provider,
           fileSize: projectFile.size
         }
       }
 
       const selectedTagId = CATEGORY_TO_TAG_ID[newAsset.category] || "1";
       
-      const createInput: any = {
+      const createInput: CreateNewCollectionInput = {
         name: newAsset.name,
         description: newAsset.description,
         price: 0,
@@ -305,9 +307,10 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
 
       onSuccess()
       onClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("CATALOG_DEPLOYMENT_FAILURE:", err)
-      setValidationError(err.message || "An unexpected system variation occurred during asset compilation.")
+      const errorMessage = err instanceof Error ? err.message : "An unexpected system variation occurred during asset compilation.";
+      setValidationError(errorMessage)
     } finally {
       setIsCreatingAsset(false)
     }
@@ -387,7 +390,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
               required 
               rows={3} 
               maxLength={1000}
-              className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed sm:rows-4" 
+              className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40 resize-none leading-relaxed" 
               placeholder="Specify bundle details, file dimensions, and software compatibility versions..." 
               value={newAsset.description} 
               onChange={e => setNewAsset({...newAsset, description: e.target.value})} 
@@ -439,10 +442,12 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                         </div>
                       )}
 
-                      <img 
+                      <Image 
                         src={item.previewUrl} 
                         alt="" 
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" 
+                        fill
+                        unoptimized
+                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" 
                       />
                       
                       <button 
@@ -458,6 +463,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
               </div>
             )}
           </div>
+
           <div className="space-y-2.5 pt-3 border-t border-border/20">
             <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Method</label>
             <div className="flex bg-muted/20 border border-border/40 p-1">

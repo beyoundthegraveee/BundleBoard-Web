@@ -7,7 +7,7 @@ import { useSupabase } from '@/hooks/useSupabase'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
 import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
-import { GalleryItem } from '@/types/collections';
+import { GalleryItem } from '@/types/collections'
 
 interface EditAssetModalProps {
   isOpen: boolean;
@@ -38,56 +38,37 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
   const supabase = useSupabase();
+  const [isMounted, setIsMounted] = useState(false);
   
-  const [form, setForm] = useState(() => {
-    if (typeof window !== 'undefined' && initialData?.id) {
-      const draft = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
-      if (draft) return JSON.parse(draft);
-    }
-    return {
-      name: initialData.name || "",
-      description: initialData.description || ""
-    };
-  });
-  
-  const [externalLink, setExternalLink] = useState(() => {
-    if (typeof window !== 'undefined' && initialData?.id) {
-      const draft = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
-      if (draft !== null) return draft;
-    }
-    return initialData.externalLink || "";
-  });
-
-  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
-    if (initialData.galleryImages && initialData.galleryImages.length > 0) {
-      return initialData.galleryImages.map(img => ({
-        id: Math.random().toString(36).substring(7),
-        filePath: img.filePath,
-        file: null,
-        isNew: false
-      }));
-    }
-    return [];
-  });
+  const [form, setForm] = useState({ name: "", description: "" });
+  const [externalLink, setExternalLink] = useState("");
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
 
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
 
+  // Обеспечиваем безопасный запуск эффектов на клиенте
   useEffect(() => {
-    if (!isOpen) return;
-      
+    setIsMounted(true);
+  }, []);
+
+  // Синхронизация данных при открытии модалки или смене ассета
+  useEffect(() => {
+    if (!isOpen || !initialData?.id || !isMounted) return;
+
     const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
-    if (draftForm) setForm(JSON.parse(draftForm));
-    else setForm({ name: initialData.name || "", description: initialData.description || "" });
+    setForm(draftForm ? JSON.parse(draftForm) : {
+      name: initialData.name || "",
+      description: initialData.description || ""
+    });
 
     const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
-    if (draftLink !== null) setExternalLink(draftLink);
-    else setExternalLink(initialData.externalLink || "");
+    setExternalLink(draftLink !== null ? draftLink : (initialData.externalLink || ""));
 
-    if (initialData.galleryImages) {
-      setGallery(initialData.galleryImages.map(img => ({
-        id: Math.random().toString(36).substring(7),
+    if (initialData.galleryImages && initialData.galleryImages.length > 0) {
+      setGallery(initialData.galleryImages.map((img, idx) => ({
+        id: `existing-${initialData.id}-${idx}`,
         filePath: img.filePath,
         file: null,
         isNew: false
@@ -96,14 +77,15 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       setGallery([]);
     }
     setValidationError(null);
-  }, [isOpen, initialData.id, initialData.name, initialData.description, initialData.galleryImages, initialData.externalLink]);
+  }, [isOpen, initialData, isMounted]);
 
+  // Сохранение черновиков при изменении полей
   useEffect(() => {
-    if (isOpen && initialData.id) {
+    if (isOpen && initialData?.id && isMounted) {
       sessionStorage.setItem(`draft_editForm_${initialData.id}`, JSON.stringify(form))
       sessionStorage.setItem(`draft_editLink_${initialData.id}`, externalLink)
     }
-  }, [form, externalLink, isOpen, initialData.id])
+  }, [form, externalLink, isOpen, initialData?.id, isMounted])
 
   const galleryRef = useRef(gallery);
   useEffect(() => {
@@ -121,6 +103,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   }, [])
 
   const clearDrafts = () => {
+    if (!initialData?.id) return;
     sessionStorage.removeItem(`draft_editForm_${initialData.id}`)
     sessionStorage.removeItem(`draft_editLink_${initialData.id}`)
   }
@@ -130,7 +113,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     onClose()
   }
 
-  if (!isOpen) return null
+  if (!isOpen || !isMounted) return null
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -270,7 +253,8 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
       
-      await onSave(form.name, 0, form.description, finalGalleryImages, externalLink.trim() || null)
+      // Сохраняем оригинальную цену из initialData вместо принудительного хардкода нуля
+      await onSave(form.name, initialData.price, form.description, finalGalleryImages, externalLink.trim() || null)
       
       clearDrafts()
     } catch (err) {
@@ -289,7 +273,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       <div className="bg-card border border-border/60 w-full max-w-lg p-4 sm:p-6 relative rounded-none shadow-2xl animate-in zoom-in-95 duration-200 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar">
         
         <div className="mb-4 border-b border-border/40 pb-3 flex justify-between items-center sticky top-0 bg-card z-10 pt-1">
-          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">Modify Free Asset Manifest</h3>
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">Modify Asset Manifest</h3>
           <button 
             type="button" 
             onClick={handleClose} 
@@ -393,10 +377,10 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
               </span>
             </div>
             <textarea 
-              rows={3}
+              rows={4}
               required
               disabled={isWorking}
-              className="w-full bg-background border border-border/60 p-2.5 sm:p-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors resize-none leading-relaxed disabled:opacity-50 sm:rows-4"
+              className="w-full bg-background border border-border/60 p-2.5 sm:p-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors resize-none leading-relaxed disabled:opacity-50 min-h-[80px] sm:min-h-[110px]"
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
             />
