@@ -3,11 +3,12 @@
 import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, LogIn, Menu, Heart } from "lucide-react"
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation" 
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
-import { SearchOverlay } from "../SearchOverlay"
+import { SearchOverlay } from "../search/SearchOverlay"
 import { CartDrawer } from "./CartDrawer"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@apollo/client/react"
@@ -64,7 +65,10 @@ export function Navbar() {
   const currentEmail = meData?.me?.email || session?.user?.email || "";
 
   useEffect(() => {
-    setMounted(true);
+    const frameId = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+
     const updateCountFromStorage = () => {
       if (typeof window !== "undefined") {
         const items = JSON.parse(localStorage.getItem("bundleboard_cart") || "[]");
@@ -75,7 +79,9 @@ export function Navbar() {
     updateCountFromStorage();
     window.addEventListener("cartUpdate", updateCountFromStorage);
     window.addEventListener("cart_updated", updateCountFromStorage);
+    
     return () => {
+      cancelAnimationFrame(frameId);
       window.removeEventListener("cartUpdate", updateCountFromStorage);
       window.removeEventListener("cart_updated", updateCountFromStorage);
     };
@@ -88,9 +94,11 @@ export function Navbar() {
           
           <div className="flex w-auto lg:w-[240px] items-center justify-start shrink-0">
             <Link href="/" className="flex items-center gap-2 font-display text-xs sm:text-sm font-bold tracking-[0.25em] text-foreground uppercase transition-opacity hover:opacity-80">
-              <img 
+              <Image 
                 src="/logo.png" 
                 alt="BundleBoard" 
+                width={36}
+                height={36}
                 className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full shadow-sm shrink-0" 
               />
               <div className="flex items-center">
@@ -195,7 +203,6 @@ export function Navbar() {
               </span>
             </button>
 
-            {/* Обновленное мобильное меню-бургер */}
             <div className="flex lg:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -203,10 +210,8 @@ export function Navbar() {
                     <Menu className="h-4 w-4 stroke-[1.8]" />
                   </button>
                 </DropdownMenuTrigger>
-                {/* Добавлен max-h и скролл для маленьких экранов */}
                 <DropdownMenuContent className="w-56 max-h-[85vh] overflow-y-auto custom-scrollbar rounded-none border border-border/60 bg-popover p-1 shadow-2xl mt-2" align="end">
                   
-                  {/* Секция бандлов */}
                   <div className="px-2.5 py-1.5 text-[9px] font-bold text-primary uppercase tracking-widest mt-1">
                     Directory
                   </div>
@@ -214,7 +219,6 @@ export function Navbar() {
                     <Link href="/bundles">All Bundles</Link>
                   </DropdownMenuItem>
                   
-                  {/* Выводим категории циклом со сдвигом (pl-6) */}
                   {components.map((component) => (
                     <DropdownMenuItem key={component.title} asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-[10px] p-2.5 pl-6 cursor-pointer uppercase tracking-wider text-muted-foreground hover:text-foreground">
                       <Link href={component.href}>{component.title}</Link>
@@ -223,7 +227,6 @@ export function Navbar() {
 
                   <DropdownMenuSeparator className="bg-border/40 my-1" />
                   
-                  {/* Секция Learn & About */}
                   <DropdownMenuItem asChild className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider">
                     <Link href="/tutorials">Tutorials</Link>
                   </DropdownMenuItem>
@@ -236,7 +239,6 @@ export function Navbar() {
 
                   <DropdownMenuSeparator className="bg-border/40 my-1" />
                   
-                  {/* Переключатель темы */}
                   <DropdownMenuItem 
                     className="rounded-none focus:bg-accent focus:text-accent-foreground font-medium text-xs p-2.5 cursor-pointer uppercase tracking-wider flex justify-between items-center"
                     onClick={(e) => {
