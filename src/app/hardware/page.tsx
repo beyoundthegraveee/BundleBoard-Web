@@ -1,5 +1,5 @@
 import React from "react";
-import { Cpu, HardDrive, Monitor, Zap, MemoryStick, Box, Fan, Laptop, ChevronsRight } from "lucide-react";
+import { Cpu, HardDrive, Monitor, Zap, MemoryStick, Box, Fan, Laptop, ChevronsRight, LucideIcon} from "lucide-react";
 import WaveBackground from '@/components/WaveBackground';
 
 export const metadata = {
@@ -98,7 +98,15 @@ export default function HardwarePage() {
   );
 }
 
-function SpecCard({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
+function SpecCard({ 
+  icon: Icon, 
+  label, 
+  value 
+}: { 
+  icon: LucideIcon,
+  label: string, 
+  value: string 
+}) {
   return (
     <div className="p-4 md:p-6 border-[0.5px] border-border/50 flex flex-col justify-between group hover:bg-accent/20 transition-colors">
       <div className="flex items-center justify-between mb-4">

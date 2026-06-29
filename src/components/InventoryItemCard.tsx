@@ -6,19 +6,22 @@ import Link from 'next/link'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { EditAssetModal } from './EditAssetModal'
 import { useMutation } from '@apollo/client/react'
+import { toast } from 'sonner'
 import { 
   DeleteCollectionDocument, 
   UpdateCollectionDocument 
 } from '@/graphql/generated'
+
+export interface GalleryImage {
+  filePath: string;
+}
 
 export interface AuthoredCollection {
   id: string;
   name: string;
   price: number;
   description: string;
-  galleryImages?: {
-    filePath: string;
-  }[];
+  galleryImages?: GalleryImage[];
 }
 
 interface InventoryItemCardProps {
@@ -45,6 +48,7 @@ const extractFolderPath = (fileUrl: string | undefined): string | null => {
 export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItemCardProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  
   const [executeDelete, { loading: isDeleting }] = useMutation(DeleteCollectionDocument)
   const [executeUpdate, { loading: isUpdating }] = useMutation(UpdateCollectionDocument)
 
@@ -63,15 +67,16 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
 
       setIsDeleteOpen(false)
       onRefreshNeeded()
-    } catch (err: any) {
+      toast.success("Asset node successfully destroyed.")
+    } catch (err: unknown) {
       console.error("COLLECTION_DELETE_FAILURE:", err)
-      alert(err.message || "Failed to delete asset node.")
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete asset node."
+      toast.error(errorMessage)
     }
   }
 
-  const processUpdate = async (name: string, price: number, description: string, galleryImages: any[]) => {
+  const processUpdate = async (name: string, price: number, description: string, galleryImages: GalleryImage[]) => {
     try {
-      // 3. АНАЛОГИЧНО ДЛЯ ОБНОВЛЕНИЯ
       await executeUpdate({
         variables: {
           id: collection.id,
@@ -81,9 +86,11 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
 
       setIsEditOpen(false)
       onRefreshNeeded()
-    } catch (err: any) {
+      toast.success("Asset manifest updated successfully.")
+    } catch (err: unknown) {
       console.error("COLLECTION_UPDATE_FAILURE:", err)
-      alert(err.message || "Failed to update asset manifest.")
+      const errorMessage = err instanceof Error ? err.message : "Failed to update asset manifest."
+      toast.error(errorMessage)
     }
   }
 
@@ -98,14 +105,22 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
         <div className="flex gap-4 items-start w-full">
           <div className="w-16 h-16 border border-border/40 bg-muted flex-shrink-0 overflow-hidden select-none relative">
             {cardThumbnail && (
-              <img src={cardThumbnail} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <img 
+                src={cardThumbnail} 
+                alt={`${collection.name} thumbnail`}
+                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+              />
             )}
           </div>
           
           <div className="overflow-hidden flex-1 space-y-1">
             <div className="flex justify-between items-baseline gap-2">
-              <h4 className="font-bold text-sm uppercase truncate text-foreground group-hover:text-primary transition-colors">{collection.name}</h4>
-              <span className="text-xs font-bold text-primary font-mono shrink-0">${collection.price.toFixed(2)}</span>
+              <h4 className="font-bold text-sm uppercase truncate text-foreground group-hover:text-primary transition-colors">
+                {collection.name}
+              </h4>
+              <span className="text-xs font-bold text-primary font-mono shrink-0">
+                ${collection.price.toFixed(2)}
+              </span>
             </div>
             <p className="text-[11px] text-muted-foreground line-clamp-3 leading-relaxed opacity-70 font-normal">
               {collection.description || "No registry metadata parameters submitted."}
@@ -114,7 +129,9 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
         </div>
 
         <div className="mt-4 pt-3 border-t border-white/[0.04] flex justify-between items-center text-[9px] uppercase tracking-wider text-muted-foreground">
-          <span className="opacity-40 group-hover:opacity-100 group-hover:text-foreground transition-all">Inspect Node →</span>
+          <span className="opacity-40 group-hover:opacity-100 group-hover:text-foreground transition-all">
+            Inspect Node →
+          </span>
           <div className="flex gap-2">
             <button 
               onClick={(e) => {

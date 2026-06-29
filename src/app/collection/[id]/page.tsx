@@ -11,6 +11,14 @@ import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
 import { toast } from 'sonner'
 
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  previewImage: string;
+}
+
 export default function CollectionPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -33,25 +41,36 @@ export default function CollectionPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && collectionId) {
-      const savedCart = localStorage.getItem('bundleboard_cart')
-      if (savedCart) {
-        const items = JSON.parse(savedCart)
-        setIsInCart(items.some((item: any) => item.id === collectionId))
+      try{
+        const savedCart = localStorage.getItem('bundleboard_cart')
+          if (savedCart) {
+          const items: CartItem [] = JSON.parse(savedCart)
+          const isSaved = items.some((item) => item.id === collectionId)
+          setIsInCart((prev) => (prev === isSaved ? prev : isSaved))
+        }
+      }catch (error){
+        console.error("Failed to parse cart from localStorage", error);
       }
+      
     }
   }, [collectionId])
 
-  const handleAddToCart = (item: { id: string; name: string; price: number; category: string; previewImage: string }) => {
+  const handleAddToCart = (item: CartItem) => {
     if (typeof window !== 'undefined') {
-      const currentCart = localStorage.getItem('bundleboard_cart')
-      const items = currentCart ? JSON.parse(currentCart) : []
+      try{
+        const currentCart = localStorage.getItem('bundleboard_cart')
+        const items: CartItem[] = currentCart ? JSON.parse(currentCart) : []
       
-      if (!items.some((cartItem: any) => cartItem.id === item.id)) {
-        const updatedCart = [...items, item]
-        localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
-        setIsInCart(true)
-        window.dispatchEvent(new Event('cartUpdate'))
-        toast.success("Asset added to cart")
+        if (!items.some((cartItem) => cartItem.id === item.id)) {
+          const updatedCart = [...items, item]
+          localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
+          setIsInCart(true)
+          window.dispatchEvent(new Event('cartUpdate'))
+          toast.success("Asset added to cart")
+        }
+      } catch (error){
+        toast.error("Failed to add item to cart");
+        console.error("Failed to add item to cart", error)
       }
     }
   }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import type { Session } from 'next-auth'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Loader2, ArrowLeft, User, Mail, Lock, ShieldCheck, ShieldAlert, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,11 +17,18 @@ import {
   GetMeDocument
 } from '@/graphql/generated'
 
+interface GraphQLSystemError {
+  graphQLErrors?: Array<{ message: string }>;
+  message?: string;
+}
+
 export default function SettingsPage() {
   const { data: session, status, update: updateSession } = useSession()
   const router = useRouter()
   
-  const isGoogleAccount = (session as any)?.provider === "google" || (session as any)?.user?.image !== undefined;
+  const isGoogleAccount = 
+    (session as Session & { provider?: string })?.provider === "google" || 
+    session?.user?.image !== undefined;
   
   const [username, setUsername] = useState("")
   const [newEmail, setNewEmail] = useState("")
@@ -28,10 +36,6 @@ export default function SettingsPage() {
   const [passwordStep, setPasswordStep] = useState<'input' | 'verify'>('input')
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" })
   const [verificationCode, setVerificationCode] = useState("")
-
-  const [usernameStatus, setUsernameStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const { data: meData, loading: isMeLoading } = useQuery(GetMeDocument, {
     skip: status !== "authenticated",
@@ -44,18 +48,20 @@ export default function SettingsPage() {
   const [confirmPasswordChange, { loading: isPasswordConfirmLoading }] = useMutation(ConfirmPasswordChangeDocument)
 
   useEffect(() => {
-    if (meData?.me?.username) {
-      setUsername(meData.me.username)
-    } else if (session?.user?.name && !username) {
-      setUsername(session.user.name)
+    const fetchedUsername = meData?.me?.username;
+    const sessionName = session?.user?.name;
+
+    if (fetchedUsername) {
+      setUsername((prev) => prev === fetchedUsername ? prev : fetchedUsername);
+    } else if (sessionName) {
+      setUsername((prev) => prev ? prev : sessionName);
     }
-  }, [meData, session])
+  }, [meData?.me?.username, session?.user?.name]);
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
     e.preventDefault()
-    setUsernameStatus(null)
     
-    const userId = (session as any)?.user?.id || meData?.me?.id;
+    const userId = (session as Session & { user?: { id?: string } })?.user?.id || meData?.me?.id;
     if (!username.trim() || username === meData?.me?.username || !userId) return
 
     try {
@@ -69,10 +75,7 @@ export default function SettingsPage() {
       })
 
       if (data?.updateMe?.username) {
-        setUsernameStatus({ 
-          type: 'success', 
-          text: "Identity index and access tokens rotated successfully." 
-        })
+        toast.success("Identity index and access tokens rotated successfully.")
 
         await updateSession({ 
           ...session, 
@@ -84,20 +87,15 @@ export default function SettingsPage() {
           refreshToken: data.updateMe.refreshToken
         })
       }
-    } catch (err: any) {
-      const graphQLError = err.graphQLErrors?.[0];
-      const backendMessage = graphQLError?.message || err.message || "Pipeline failure.";
-
-      setUsernameStatus({ 
-        type: 'error', 
-        text: backendMessage 
-      })
+    } catch (err: unknown) {
+      const error = err as GraphQLSystemError;
+      const backendMessage = error.graphQLErrors?.[0]?.message || error.message || "Pipeline failure.";
+      toast.error(backendMessage)
     }
   }
 
   const handleRequestEmailChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    setEmailStatus(null)
     if (!newEmail.trim() || isGoogleAccount) return
 
     try {
@@ -105,29 +103,24 @@ export default function SettingsPage() {
       const result = data?.requestEmailChange
 
       if (result?.success) {
-        setEmailStatus({ type: 'success', text: `[TRANSMISSION_SUCCESS]: ${result.message}` })
+        toast.success(`[TRANSMISSION_SUCCESS]: ${result.message}`)
         setNewEmail("")
       } else {
-        setEmailStatus({ type: 'error', text: result?.message || "Rejected." })
+        toast.error(result?.message || "Rejected.")
       }
-    } catch (err: any) {
-      const graphQLError = err.graphQLErrors?.[0];
-      const backendMessage = graphQLError?.message || err.message || "Transmission interrupted.";
-
-      setEmailStatus({ 
-        type: 'error', 
-        text: backendMessage 
-      })
+    } catch (err: unknown) {
+      const error = err as GraphQLSystemError;
+      const backendMessage = error.graphQLErrors?.[0]?.message || error.message || "Transmission interrupted.";
+      toast.error(backendMessage)
     }
   }
 
   const handleRequestPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordStatus(null)
     if (isGoogleAccount) return
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordStatus({ type: 'error', text: "Validation failed: new ciphers do not match." })
+      toast.error("Validation failed: new ciphers do not match.")
       return
     }
 
@@ -144,19 +137,19 @@ export default function SettingsPage() {
 
       const result = data?.requestPasswordChange
       if (result?.success) {
-        setPasswordStatus({ type: 'success', text: "[SECURITY]: 6-digit confirmation key deployed to your email." })
+        toast.success("[SECURITY]: 6-digit confirmation key deployed to your email.")
         setPasswordStep('verify')
       } else {
-        setPasswordStatus({ type: 'error', text: result?.message || "Verification request rejected." })
+        toast.error(result?.message || "Verification request rejected.")
       }
-    } catch (err: any) {
-      setPasswordStatus({ type: 'error', text: err.message || "Secure sequence failed." })
+    } catch (err: unknown) {
+      const error = err as GraphQLSystemError;
+      toast.error(error.message || "Secure sequence failed.")
     }
   }
 
   const handleConfirmPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordStatus(null)
     if (!verificationCode.trim() || isGoogleAccount) return
 
     try {
@@ -166,18 +159,16 @@ export default function SettingsPage() {
 
       const result = data?.confirmPasswordChange
       if (result?.success) {
-        setPasswordStatus({ type: 'success', text: "Cryptographic key patch applied successfully." })
+        toast.success("Cryptographic key patch applied successfully.")
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" })
         setVerificationCode("")
         setPasswordStep('input')
       } else {
-        setPasswordStatus({ 
-          type: 'error', 
-          text: `${result?.message || "Invalid code."} ${result?.attemptsLeft ? `(Attempts left: ${result.attemptsLeft})` : ''}` 
-        })
+        toast.error(`${result?.message || "Invalid code."} ${result?.attemptsLeft ? `(Attempts left: ${result.attemptsLeft})` : ''}`)
       }
-    } catch (err: any) {
-      setPasswordStatus({ type: 'error', text: err.message || "Confirmation sequence broken." })
+    } catch (err: unknown) {
+      const error = err as GraphQLSystemError;
+      toast.error(error.message || "Confirmation sequence broken.")
     }
   }
 
@@ -245,14 +236,6 @@ export default function SettingsPage() {
               <User size={14} className="text-primary" /> Identity Parameters
             </div>
             
-            {usernameStatus && (
-              <div className={`p-2.5 md:p-3 text-[9px] md:text-[10px] font-mono font-semibold uppercase tracking-wide border rounded-none ${
-                usernameStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
-              }`}>
-                {usernameStatus.text}
-              </div>
-            )}
-            
             <form onSubmit={handleUpdateUsername} className="grid grid-cols-1 sm:grid-cols-4 gap-3 md:gap-4 items-end">
               <div className="grid gap-1 sm:col-span-3 w-full">
                 <label className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Public Username</label>
@@ -281,14 +264,6 @@ export default function SettingsPage() {
               <Mail size={14} className="text-primary" /> Communication Channel
             </div>
             
-            {emailStatus && (
-              <div className={`p-2.5 md:p-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-wide border rounded-none ${
-                emailStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
-              }`}>
-                {emailStatus.text}
-              </div>
-            )}
-            
             <div className="text-[9px] md:text-[10px] font-medium uppercase tracking-wider text-muted-foreground flex flex-col sm:flex-row justify-between sm:items-center gap-1 sm:gap-2 bg-muted/20 p-2.5 md:p-2 border border-border/20 font-mono">
               <span className="shrink-0">Current Route:</span>
               <span className="text-foreground break-all">{meData?.me?.email || session?.user?.email}</span>
@@ -296,7 +271,7 @@ export default function SettingsPage() {
             
             {isGoogleAccount ? (
               <div className="border border-dashed border-primary/30 bg-primary/[0.02] p-4 md:p-5 text-center space-y-2 animate-in fade-in duration-300">
-                <AlertTriangle size={18} md-size={20} className="text-primary/70 mx-auto" />
+                <AlertTriangle size={18} className="text-primary/70 mx-auto" />
                 <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-foreground">
                   Email Routing Anchored
                 </div>
@@ -334,18 +309,10 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-2">
               <Lock size={14} className="text-primary" /> Cryptographic Keys
             </div>
-            
-            {passwordStatus && (
-              <div className={`p-2.5 md:p-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-wide border rounded-none ${
-                passwordStatus.type === 'success' ? 'bg-primary/5 border-primary/20 text-primary' : 'border-destructive/30 bg-destructive/5 text-destructive'
-              }`}>
-                {passwordStatus.text}
-              </div>
-            )}
 
             {isGoogleAccount ? (
               <div className="border border-dashed border-primary/30 bg-primary/[0.02] p-4 md:p-5 text-center space-y-2 animate-in fade-in duration-300">
-                <AlertTriangle size={18} md-size={20} className="text-primary/70 mx-auto" />
+                <AlertTriangle size={18} className="text-primary/70 mx-auto" />
                 <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-foreground">
                   OAuth Provider Active
                 </div>
@@ -426,7 +393,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     disabled={isPasswordConfirmLoading}
-                    onClick={() => { setPasswordStep('input'); setPasswordStatus(null); }}
+                    onClick={() => setPasswordStep('input')}
                     className="w-full sm:w-auto text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 py-2 sm:py-0"
                   >
                     ← Back to input

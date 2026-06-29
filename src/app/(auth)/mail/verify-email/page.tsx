@@ -9,7 +9,6 @@ import { useMutation } from "@apollo/client/react"
 import { ResendVerificationDocument } from "@/graphql/generated"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 
 export default function VerifyRequestPage() {
   const searchParams = useSearchParams()
@@ -29,8 +28,9 @@ export default function VerifyRequestPage() {
       } else {
         toast.error(data?.resendVerificationEmail?.message || "Failed to resend.")
       }
-    } catch (e: any) {
-      toast.error("Connection failure.")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error("Connection failure." + errorMessage)
     }
   }
 

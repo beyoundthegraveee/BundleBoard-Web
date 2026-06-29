@@ -3,8 +3,18 @@
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import { useSession } from "next-auth/react";
+import { Session } from "next-auth";
 import { useMemo } from "react";
 import { ApolloProvider } from "@apollo/client/react";
+
+interface ExtendedSession extends Session {
+  accessToken?: string;
+}
+
+interface ApolloContext {
+  headers?: Record<string, string>;
+  skipAuth?: boolean;
+}
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
@@ -17,7 +27,7 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       CollectionResponse: {
         fields: {
           author: {
-            merge(existing = {}, incoming) {
+            merge(existing: Record<string, unknown> = {}, incoming: Record<string, unknown>) {
               return { ...existing, ...incoming };
             },
           },
@@ -31,47 +41,40 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
-    // Передаем два аргумента: дескриптор операции и объект предыдущего контекста
-    const authLink = new SetContextLink((operation: any, prevContext: any) => {
-      const prevHeaders = prevContext.headers || {};
+    const authLink = new SetContextLink((prevContext, _operation) => {
+    const context = prevContext as ApolloContext;
+    const prevHeaders = context.headers || {};
 
-      // 1. Автоматическая проверка: отключаем заголовки для публичных страниц
-      if (typeof window !== "undefined") {
-        const path = window.location.pathname;
-        
-        const isPublicPath = [
-          "/login",
-          "/register",
-          "/mail/verify-email",
-          "/mail/verify",
-          "/forgot-password",
-          "/select-role"
-        ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
-
-        if (isPublicPath) {
-          return {
-            headers: prevHeaders,
-          };
-        }
-      }
-
-      // 2. Ручная проверка: если у мутации/квери выставлен контекст context: { skipAuth: true }
-      if (prevContext.skipAuth) {
-        return {
-          headers: prevHeaders,
-        };
-      }
-
-      // Если страница приватная — подставляем JWT токен из сессии NextAuth
-      const token = (session as any)?.accessToken;
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
       
-      return {
-        headers: {
-          ...prevHeaders,
-          authorization: token ? `Bearer ${token}` : "",
-        },
-      };
-    });
+      const isPublicPath = [
+        "/login",
+        "/register",
+        "/mail/verify-email",
+        "/mail/verify",
+        "/forgot-password",
+        "/select-role"
+      ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
+
+      if (isPublicPath) {
+        return { headers: prevHeaders };
+      }
+    }
+
+    if (context.skipAuth) {
+      return { headers: prevHeaders };
+    }
+
+    const token = (session as ExtendedSession | null)?.accessToken;
+    
+    return {
+      headers: {
+        ...prevHeaders,
+        authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  });
 
     return new ApolloClient({
       link: authLink.concat(httpLink),

@@ -3,7 +3,9 @@ import { getServerSession } from 'next-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { VerifyAssetPurchaseDocument, VerifyAssetPurchaseQuery, VerifyAssetPurchaseQueryVariables } from '@/graphql/generated'
 import { authOptions } from "@/lib/NextAuthOptions" 
-import { print } from 'graphql'
+import { print, GraphQLError } from 'graphql'
+import { Session } from 'inspector/promises'
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,7 +22,7 @@ export async function GET(
 ) {
   try {
     const { assetId } = await params
-    const session: any = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as (Session & { accessToken?: string }) | null;
     
     if (!session?.accessToken) {
       return new NextResponse("[SECURE_ACCESS_DENIED]: Unauthorized or missing token", { status: 401 })
@@ -39,7 +41,10 @@ export async function GET(
       cache: 'no-store'
     });
 
-    const { data, errors } = await graphqlResponse.json();
+    const { data, errors } = (await graphqlResponse.json()) as {
+      data?: VerifyAssetPurchaseQuery;
+      errors?: GraphQLError[];
+    };
 
     if (errors || !data?.getPurchaseByAsset) {
       console.error("GraphQL Error:", errors);

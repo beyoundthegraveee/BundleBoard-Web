@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 
 export default withAuth(
-  function proxy(req) {
+  function proxy() {
     return NextResponse.next()
   },
   {
