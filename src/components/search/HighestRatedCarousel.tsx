@@ -7,6 +7,7 @@ import { FALLBACK_IMAGE } from '@/lib/constants';
 import { useQuery } from '@apollo/client/react';
 import { GetTopLikedCollectionsDocument } from '@/graphql/generated';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card'; 
+import Image from 'next/image';
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 
@@ -83,7 +84,6 @@ export function HighestRatedCarousel() {
         }} />
       )}
 
-      {/* Адаптировали контейнер: на мобилках свайп (overflow-x-auto), на ПК сетка (md:flex-wrap) */}
       <div className={
         isMarquee 
           ? "animate-marquee" 
@@ -96,17 +96,14 @@ export function HighestRatedCarousel() {
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
           return (
-            // shrink-0 и snap-center нужны для правильного мобильного свайпа
             <div key={`${item.id}-${index}`} className="px-3 sm:px-4 md:px-5 mb-6 md:mb-0 shrink-0 snap-center">
-              
-              {/* Сузили карточку: w-[240px] для телефонов, w-[280px] для планшетов, w-[360px] для ПК */}
               <CardContainer containerClassName="py-0" className="w-[240px] sm:w-[280px] md:w-[360px]">
                 <CardBody className="relative group/card w-full h-auto rounded-none flex flex-col">
                   
                   <Link href={`/collection/${item.id}`} className="block w-full h-full" draggable={false}>
                     <CardItem translateZ="50" className="w-full aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
-                      <img 
-                        src={imageUrl || FALLBACK_IMAGE}
+                      <Image 
+                        src={imageUrl || FALLBACK_IMAGE || ""}
                         alt={item.name}
                         draggable={false}
                         className="object-cover w-full h-full opacity-75 group-hover/card:opacity-100 transition-all duration-500 block"

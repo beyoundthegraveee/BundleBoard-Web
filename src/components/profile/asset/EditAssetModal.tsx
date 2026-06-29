@@ -2,17 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
+import Image from 'next/image'
 import { useSupabase } from '@/hooks/useSupabase'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
 import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
-
-interface GalleryItem {
-  id: string;
-  filePath: string;
-  file: File | null;
-  isNew: boolean;
-}
+import { GalleryItem } from '@/types/collections';
 
 interface EditAssetModalProps {
   isOpen: boolean;
@@ -31,7 +26,7 @@ interface EditAssetModalProps {
 
 const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
-    const img = new Image();
+    const img = new window.Image();
     img.src = URL.createObjectURL(blob);
     img.onload = () => {
       resolve({ width: img.width, height: img.height });
@@ -78,33 +73,30 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
-  const [currentEditId, setCurrentEditId] = useState(initialData.id);
 
   useEffect(() => {
-    if (isOpen && initialData.id !== currentEditId) {
-      setCurrentEditId(initialData.id);
+    if (!isOpen) return;
       
-      const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
-      if (draftForm) setForm(JSON.parse(draftForm));
-      else setForm({ name: initialData.name || "", description: initialData.description || "" });
+    const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+    if (draftForm) setForm(JSON.parse(draftForm));
+    else setForm({ name: initialData.name || "", description: initialData.description || "" });
 
-      const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
-      if (draftLink !== null) setExternalLink(draftLink);
-      else setExternalLink(initialData.externalLink || "");
+    const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+    if (draftLink !== null) setExternalLink(draftLink);
+    else setExternalLink(initialData.externalLink || "");
 
-      if (initialData.galleryImages) {
-        setGallery(initialData.galleryImages.map(img => ({
-          id: Math.random().toString(36).substring(7),
-          filePath: img.filePath,
-          file: null,
-          isNew: false
-        })));
-      } else {
-        setGallery([]);
-      }
-      setValidationError(null);
+    if (initialData.galleryImages) {
+      setGallery(initialData.galleryImages.map(img => ({
+        id: Math.random().toString(36).substring(7),
+        filePath: img.filePath,
+        file: null,
+        isNew: false
+      })));
+    } else {
+      setGallery([]);
     }
-  }, [isOpen, initialData, currentEditId]);
+    setValidationError(null);
+  }, [isOpen, initialData.id, initialData.name, initialData.description, initialData.galleryImages, initialData.externalLink]);
 
   useEffect(() => {
     if (isOpen && initialData.id) {
@@ -266,7 +258,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
           return {
             fileName: previewFileName,
             filePath: publicUrl, 
-            mimeType: "webp" as any, 
+            mimeType: "webp" as ImageShortInput["mimeType"], 
             width: width,
             height: height,
             fileSize: webpBlob.size
@@ -281,9 +273,10 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       await onSave(form.name, 0, form.description, finalGalleryImages, externalLink.trim() || null)
       
       clearDrafts()
-    } catch (err: any) {
+    } catch (err) {
       console.error("Update failed:", err)
-      setValidationError(err.message || "Failed to update asset.")
+      const msg = err instanceof Error ? err.message : "Failed to update asset."
+      setValidationError(msg)
     } finally {
       setIsUploading(false)
     }
@@ -344,7 +337,13 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
                           Cover
                         </div>
                       )}
-                      <img src={item.filePath} alt="" className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      <Image 
+                        src={item.filePath} 
+                        alt="Preview" 
+                        fill
+                        unoptimized
+                        className="object-cover opacity-85 group-hover:opacity-100 transition-opacity pointer-events-none" 
+                      />
                       
                       <button 
                         type="button" 

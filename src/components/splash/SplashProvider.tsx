@@ -1,20 +1,13 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import SplashScreen from "@/components/SplashScreen"; 
+import { useState } from "react";
+import SplashScreen from "@/components/splash/SplashScreen"; 
 
 export function SplashProvider({ children }: { children: React.ReactNode }) {
-  const [showSplash, setShowSplash] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const hasSeenSplash = sessionStorage.getItem("platform_splash_executed");
-    
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-    }
-    setIsReady(true);
-  }, []);
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem("platform_splash_executed");
+  });
+  const [isReady] = useState(true);
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("platform_splash_executed", "true");

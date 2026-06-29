@@ -4,9 +4,11 @@ import * as React from "react"
 import { motion, AnimatePresence, Variants } from "framer-motion"
 import { Search, X, ArrowRight, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { useLazyQuery, useQuery } from "@apollo/client/react" 
-import { SearchCollectionsDocument, GetLatestCollectionsDocument } from "@/graphql/generated" 
+import { useEffect, useRef, useState, useCallback } from "react"
+import { useLazyQuery, useQuery } from "@apollo/client/react"
+import { SearchCollectionsDocument, GetLatestCollectionsDocument } from "@/graphql/generated"
+import { CollectionItem } from "@/types/collections"
+import Image from "next/image"
 
 interface SearchOverlayProps {
   isOpen: boolean
@@ -17,12 +19,18 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+
   const [executeSearch, { loading: isSearching, data }] = useLazyQuery(SearchCollectionsDocument);
   const { data: latestData, loading: isLatestLoading } = useQuery(GetLatestCollectionsDocument, {
-    variables: { limit: 6 }, 
+    variables: { limit: 6 },
     skip: !isOpen || debouncedQuery.trim().length >= 2,
     fetchPolicy: 'cache-first'
   });
+
+  const handleClose = useCallback(() => {
+    setQuery("")
+    onClose()
+  }, [onClose])
 
   useEffect(() => {
     if (isOpen) {
@@ -30,7 +38,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       document.body.style.overflow = "hidden"
     } else {
       document.body.style.overflow = "auto"
-      setQuery("")
     }
   }, [isOpen])
 
@@ -45,12 +52,13 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     if (debouncedQuery.trim().length >= 2) {
       executeSearch({
         variables: { query: debouncedQuery, page: 0, size: 6 }
-      });
+      })
     }
   }, [debouncedQuery, executeSearch])
 
-  const searchResults = data?.searchCollections ?? [];
-  const latestCollections = latestData?.getLatestCollections ?? [];
+  const searchResults: CollectionItem[] = data?.searchCollections ?? []
+  const latestCollections: CollectionItem[] = latestData?.getLatestCollections ?? []
+
   const listVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
@@ -65,10 +73,10 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
           />
-          
+
           <motion.div
             initial={{ y: "-100%" }}
             animate={{ y: "0%" }}
@@ -88,12 +96,12 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     onChange={(e) => setQuery(e.target.value)}
                   />
                 </div>
-                
+
                 {isSearching ? (
                   <Loader2 className="h-5 w-5 text-primary animate-spin" />
                 ) : (
-                  <button 
-                    onClick={onClose}
+                  <button
+                    onClick={handleClose}
                     className="text-muted-foreground hover:text-foreground p-1 sm:p-2 transition-colors"
                   >
                     <X className="h-5 w-5 sm:h-6 sm:w-6 stroke-[1.5]" />
@@ -110,22 +118,22 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary">
                         Live Results
                       </h3>
-                      
+
                       {searchResults.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-                          {searchResults.map((item: any) => (
+                          {searchResults.map((item: CollectionItem) => (
                             <Link
                               key={item.id}
                               href={`/collection/${item.id}`}
-                              onClick={onClose}
+                              onClick={handleClose}
                               className="group flex items-center justify-between p-3 sm:p-4 md:p-5 border border-border/30 bg-background/60 hover:bg-accent/80 hover:border-border/80 transition-all duration-300 rounded-none shadow-sm"
                             >
                               <div className="flex items-center gap-4 sm:gap-5 md:gap-6 min-w-0">
                                 {item.galleryImages?.[0]?.filePath ? (
-                                  <img 
-                                    src={item.galleryImages[0].filePath} 
-                                    alt={item.name} 
-                                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover bg-muted border border-border/20 shrink-0" 
+                                  <Image
+                                    src={item.galleryImages[0].filePath}
+                                    alt={item.name}
+                                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover bg-muted border border-border/20 shrink-0"
                                   />
                                 ) : (
                                   <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-muted border border-border/20 flex items-center justify-center text-[10px] uppercase text-muted-foreground/50 tracking-widest font-bold shrink-0">
@@ -156,26 +164,24 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         </div>
                       )}
                     </motion.div>
-
                   ) : (
-
                     <motion.div key="default" variants={listVariants} initial="hidden" animate="visible" exit="exit" className="space-y-5 sm:space-y-6">
                       <div className="space-y-3 sm:space-y-4">
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <Sparkles className="h-3.5 w-3.5 stroke-[2] text-primary" /> New Arrivals
                         </h3>
-                        
+
                         {isLatestLoading ? (
-                           <div className="py-8 sm:py-12 flex justify-center">
-                             <Loader2 className="animate-spin text-muted-foreground h-5 w-5 sm:h-6 sm:w-6" />
-                           </div>
+                          <div className="py-8 sm:py-12 flex justify-center">
+                            <Loader2 className="animate-spin text-muted-foreground h-5 w-5 sm:h-6 sm:w-6" />
+                          </div>
                         ) : latestCollections.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {latestCollections.map((item: any) => (
+                            {latestCollections.map((item: CollectionItem) => (
                               <Link
                                 key={item.id}
                                 href={`/collection/${item.id}`}
-                                onClick={onClose}
+                                onClick={handleClose}
                                 className="group flex flex-col justify-between p-3 sm:p-5 border border-border/30 bg-background/40 hover:bg-accent hover:border-border/60 transition-all rounded-none"
                               >
                                 <div className="space-y-1 mb-3 sm:mb-5">
@@ -202,7 +208,6 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         )}
                       </div>
                     </motion.div>
-                    
                   )}
                 </AnimatePresence>
               </div>
