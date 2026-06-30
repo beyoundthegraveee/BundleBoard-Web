@@ -37,7 +37,8 @@ export function RoleSelection({ email }: RoleSelectionProps) {
       } else {
         toast.error(responseData?.message || "Configuration failed")
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Role confirmation error:", error)
       toast.error("Connection failure")
     }
   }
