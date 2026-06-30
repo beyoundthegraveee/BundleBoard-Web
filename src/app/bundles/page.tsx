@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { SortCollectionGrid } from '@/components/grids/SortCollectionGrid';
-import { SortSidebar } from '@/components/SortSidebar';
+import { SortSidebar } from '@/components/collection-page/SortSidebar';
 import { BackgroundGradient } from '@/components/backgrounds/BackgroundGradient';
 import { ChevronDown, Filter } from 'lucide-react';
 

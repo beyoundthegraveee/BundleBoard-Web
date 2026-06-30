@@ -106,9 +106,10 @@ export function HighestRatedCarousel() {
                         src={imageUrl || FALLBACK_IMAGE || ""}
                         alt={item.name}
                         draggable={false}
-                        className="object-cover w-full h-full opacity-75 group-hover/card:opacity-100 transition-all duration-500 block"
+                        fill
+                        sizes="(max-width: 640px) 240px, (max-width: 768px) 280px, 360px"
+                        className="object-cover opacity-75 group-hover/card:opacity-100 transition-all duration-500 block"
                       />
-                      
                       <div className="absolute top-2 right-2 md:top-3 md:right-3 bg-background/80 backdrop-blur-md px-2 py-1 border border-white/[0.08] z-10 rounded-none flex items-center gap-1.5 shadow-xl">
                         <Heart size={10} className={item.isLiked ? 'fill-primary text-primary' : 'fill-none text-primary'} />
                         <span className="text-[10px] font-bold tracking-wider">{item.likesCount || 0}</span>
