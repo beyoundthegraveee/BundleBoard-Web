@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller, useWatch } from "react-hook-form"
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -9,15 +9,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FaGoogle } from "react-icons/fa"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { signIn } from "next-auth/react"
 import { useMutation } from "@apollo/client/react"
 import { RegisterDocument, SocialRegisterDocument } from "@/graphql/generated"
 import { toast } from "sonner"
-import TermsDialog from "@/components/TermsDialog"
+import TermsDialog from "@/components/terms/TermsDialog"
+import { GoogleIcon } from "@/lib/socialLinks"
 
 const generateRandomPassword = () => Math.random().toString(36).slice(-10) + "A1!";
+
+interface RegisterFormInputs {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+  termsAccepted: boolean;
+}
 
 function RegisterFormContent() {
   const router = useRouter()
@@ -30,7 +38,7 @@ function RegisterFormContent() {
   
   const isLoading = isSocialLoading || isRegisterLoading;
 
-  const { register, handleSubmit, watch, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<RegisterFormInputs>({
     defaultValues: {
       username: "",
       email: "",
@@ -40,7 +48,7 @@ function RegisterFormContent() {
     }
   })
 
-  const password = watch("password");
+  const password = useWatch({ control, name: "password" });
 
   useEffect(() => {
     const mode = searchParams.get("mode")
@@ -68,9 +76,10 @@ function RegisterFormContent() {
           
           toast.success("Google account linked successfully")
           router.push(`/select-role?email=${encodeURIComponent(email)}`)
-        } catch (error: any) {
+        } catch (error) {
           setIsSocialSetupFailed(true)
-          toast.error(error.message || "Failed to initialize social record")
+          const errorMessage = error instanceof Error ? error.message : "Failed to initialize social record"
+          toast.error(errorMessage)
         }
       }
 
@@ -78,7 +87,7 @@ function RegisterFormContent() {
     }
   }, [searchParams, router, executeSocialRegister])
 
-  const onEmailSubmit = async (formData: any) => {
+  const onEmailSubmit = async (formData: RegisterFormInputs) => {
     try {
       const { data } = await executeRegister({
         variables: {
@@ -97,8 +106,9 @@ function RegisterFormContent() {
         toast.success("Identity registered. Proceeding to setup...")
         router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred.")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+      toast.error(errorMessage)
     }
   }
 
@@ -131,7 +141,7 @@ function RegisterFormContent() {
             onClick={() => signIn('google')} 
             disabled={isLoading}
           >
-            <FaGoogle className="mr-2 h-3.5 w-3.5 opacity-70" />
+            <GoogleIcon className="mr-2 h-4 w-4" />
             Continue with Google
           </Button>
         </div>
