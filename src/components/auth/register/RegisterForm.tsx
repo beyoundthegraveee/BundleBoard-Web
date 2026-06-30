@@ -76,10 +76,29 @@ function RegisterFormContent() {
           
           toast.success("Google account linked successfully")
           router.push(`/select-role?email=${encodeURIComponent(email)}`)
-        } catch (error) {
+        } catch (error: any) {
           setIsSocialSetupFailed(true)
-          const errorMessage = error instanceof Error ? error.message : "Failed to initialize social record"
-          toast.error(errorMessage)
+          console.error("🔴 Детальная ошибка регистрации через Google:", error)
+          let errorMessage = "Failed to initialize social record"
+          
+          if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+            // Ошибка пришла от GraphQL (например, валидация бэкенда или падение контроллера)
+            const gqlError = error.graphQLErrors[0]
+            const code = gqlError.extensions?.code || gqlError.extensions?.status
+            
+            errorMessage = `[${code || 'SERVER_ERROR'}]: ${gqlError.message}`
+          } else if (error.networkError) {
+            // Сервер вообще не ответил (упал, заблокирован Cloudflare, проблемы с сетью)
+            errorMessage = "Network error: Сan't connect to the backend server."
+          } else if (error instanceof Error) {
+            errorMessage = error.message
+          }
+          
+          toast.error(errorMessage, {
+            duration: 6000, // увеличим время показа, чтобы успеть прочитать
+          })
+          // const errorMessage = error instanceof Error ? error.message : "Failed to initialize social record"
+          // toast.error(errorMessage)
         }
       }
 
@@ -112,12 +131,38 @@ function RegisterFormContent() {
     }
   }
 
+  if (searchParams.get("mode") === "social-setup" && isSocialSetupFailed) {
+    return (
+      <Card className="w-full max-w-md mx-auto border border-destructive/40 bg-card rounded-none shadow-2xl font-sans text-center p-8">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold uppercase tracking-wider text-destructive">
+            Registration Failed
+          </CardTitle>
+          <CardDescription className="text-xs uppercase tracking-widest mt-2">
+            Something went wrong during Google Auth
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            We couldn't create your profile automatically. Please try again or use standard email registration.
+          </p>
+          <Button 
+            className="w-full bg-primary text-primary-foreground rounded-none uppercase text-[11px] tracking-wider py-4"
+            onClick={() => router.push('/register')}
+          >
+            Try Regular Registration
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (searchParams.get("mode") === "social-setup" && !isSocialSetupFailed) {
     return (
       <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center p-12">
         <Loader2 className="animate-spin text-primary mx-auto mb-4 stroke-[1.5]" size={36} />
         <span className="font-medium uppercase tracking-[0.2em] text-[11px] text-muted-foreground">
-          Registering Core Node via Google...
+          Registering Core via Google...
         </span>
       </Card>
     )
