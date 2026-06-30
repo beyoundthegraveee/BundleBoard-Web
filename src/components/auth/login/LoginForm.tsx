@@ -64,8 +64,9 @@ export function LoginForm() {
         router.push(callBackUrl)
         router.refresh()
       }
-    } catch (error: any) {
-      toast.error("An unexpected error occurred. Please try again.")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred. Please try again."
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -75,6 +76,7 @@ export function LoginForm() {
     try {
       await signIn(provider, { callbackUrl: callBackUrl })
     } catch (error) {
+      console.error(`Social login error for ${provider}:`, error)
       toast.error(`Failed to initialize ${provider} login.`)
     }
   }
