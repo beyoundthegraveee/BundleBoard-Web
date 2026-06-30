@@ -31,7 +31,7 @@ function RegisterFormContent() {
   const [executeRegister, { loading: isRegisterLoading }] = useMutation(RegisterDocument)
   const isLoading = status === "loading" || isRegisterLoading;
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<RegisterFormInputs>({
+  const { register, handleSubmit, control, formState: { errors }, setError } = useForm<RegisterFormInputs>({
     defaultValues: {
       username: "",
       email: "",
@@ -55,29 +55,47 @@ function RegisterFormContent() {
   }, [status, session, router])
 
   const onEmailSubmit = async (formData: RegisterFormInputs) => {
-    try {
-      const { data } = await executeRegister({
-        variables: {
-          input: {
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            role: "client",
-          }
+  try {
+    const { data } = await executeRegister({
+      variables: {
+        input: {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: "client",
         }
-      })
-
-      if (data?.register?.error) {
-        toast.error(data.register.error)
-      } else {
-        toast.success("Identity registered. Proceeding to setup...")
-        router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
-      toast.error(errorMessage)
+    })
+
+    if (data?.register?.error) {
+      const serverError = data.register.error.toLowerCase();
+
+      if (serverError.includes("email") && serverError.includes("already registered")) {
+        setError("email", { 
+          type: "manual", 
+          message: "This email is already registered" 
+        });
+        toast.error("Account already exists with this email.");
+      } 
+      else if (serverError.includes("username") && serverError.includes("already exists")) {
+        setError("username", { 
+          type: "manual", 
+          message: "This username is already taken" 
+        });
+        toast.error("Username is already taken.");
+      } 
+      else {
+        toast.error(data.register.error);
+      }
+    } else {
+      toast.success("Identity registered. Proceeding to setup...")
+      router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
     }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+    toast.error(errorMessage)
   }
+}
 
   return (
     <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
