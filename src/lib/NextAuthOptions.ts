@@ -37,6 +37,11 @@ async function gqlRequest<T, V>(queryDocument: DocumentNode | string, variables:
 }
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+  if (!token.refreshToken) {
+    console.warn("[NextAuth] Intercepted token refresh execution: missing refreshToken property.");
+    return { ...token, error: "RefreshAccessTokenError" };
+  }
+
   try {
     const data = await gqlRequest<RefreshTokenMutation, RefreshTokenMutationVariables>(
       RefreshTokenDocument,
@@ -93,6 +98,8 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
+          console.log(`[NextAuth] Initiating Google OAuth profile evaluation for: ${user.email}`);
+          
           const data = await gqlRequest<SocialLoginMutation, SocialLoginMutationVariables>(
             SocialLoginDocument,
             { input: { email: user.email || "", username: user.name || "", provider: account.provider } }
@@ -100,6 +107,7 @@ export const authOptions: NextAuthOptions = {
 
           const socialData = data?.socialLogin;
           if (socialData?.accessToken) {
+            console.log(`[NextAuth] Social sign-in authenticated for verified profile: ${user.email}`);
             const u = user as User;
             u.id = socialData.user?.id || user.id;
             u.accessToken = socialData.accessToken;
@@ -109,15 +117,21 @@ export const authOptions: NextAuthOptions = {
             return true;
           }
 
-          console.warn("[NextAuth] Backend did not return an accessToken for social login:");
+          console.warn("[NextAuth] Target system returned an unmapped state missing an access token.");
           return false;
         } catch (error: unknown) {
-          if (error instanceof Error && error.message === "User not found"){
-            try{
+          const errorMsg = error instanceof Error ? error.message : "Unknown verification workflow exception";
+          console.log(`[NextAuth] Core validation response for ${user.email}: ${errorMsg}`);
+
+          // Case-insensitive substring fallback evaluation
+          if (errorMsg.toLowerCase().includes("not found")) {
+            try {
+              console.log(`[NextAuth] Profile matching records not found. Initializing automated registration routing for: ${user.email}`);
+              
               const randomPassword = Math.random().toString(36).slice(-10) + "A1!";
               const fallbackUsername = user.name || user.email?.split('@')[0] || "google_user";
 
-              await gqlRequest<SocialRegisterMutation, SocialRegisterMutationVariables>(
+              const regData = await gqlRequest<SocialRegisterMutation, SocialRegisterMutationVariables>(
                 SocialRegisterDocument,
                 {
                   input: {
@@ -129,26 +143,28 @@ export const authOptions: NextAuthOptions = {
                 }
               );
               
-              const retryData = await gqlRequest<SocialLoginMutation, SocialLoginMutationVariables>(
-                SocialLoginDocument,
-                { input: { email: user.email || "", username: user.name || "", provider: account.provider } }
-              );
-
-              const retrySocialData = retryData?.socialLogin;
-              if (retrySocialData?.accessToken) {
+              const regSocialData = regData?.socialRegister;
+              if (regSocialData?.accessToken) {
+                console.log(`[NextAuth] Core profile successfully provisioned via automated mutation workflow for: ${user.email}`);
                 const u = user as User;
-                u.id = retrySocialData.user?.id || user.id;
-                u.accessToken = retrySocialData.accessToken;
-                u.refreshToken = retrySocialData.refreshToken ?? "";
-                u.isNewUser = true;
-                u.roles = retrySocialData.user?.roles || [];
+                
+                // FIX TS(2339): We directly assign properties safely without abusing 'any' or forcing unsafe casts
+                u.id = user.id; // Map the top-level identifier provided by the provider layer
+                u.accessToken = regSocialData.accessToken;
+                u.refreshToken = regSocialData.refreshToken ?? "";
+                u.isNewUser = true; // Downstream state instruction to force client-side /select-role navigation
+                u.roles = ['client']; // Reflect the assigned database role safely
+                
                 return true;
               }
-            }catch (regError){
-              console.error("Auth Google Error: " + regError);
-              return false
+              
+              console.warn("[NextAuth] Profile mutation process responded without delivering functional tokens.");
+              return false;
+            } catch (regError) {
+              console.error("[NextAuth] Processing exception raised during automatic inline registration runtime:", regError);
+              return false;
             }
-          };
+          }
           return false;
         }
       }
@@ -187,7 +203,7 @@ export const authOptions: NextAuthOptions = {
         if (session.roles) token.roles = session.roles;
       }
 
-      if (Date.now() < token.accessTokenExpires - 60 * 1000) return token;
+      if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 60 * 1000) return token;
 
       const refreshedToken = await refreshAccessToken(token);
       return refreshedToken;
