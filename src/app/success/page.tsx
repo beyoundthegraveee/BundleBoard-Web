@@ -6,8 +6,6 @@ export default async function SuccessPage({
 }: {
   searchParams: Promise<{ session_id?: string }>
 }) {
-  const resolvedParams = await searchParams
-  const sessionId = resolvedParams.session_id
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans flex items-center justify-center p-6 relative">

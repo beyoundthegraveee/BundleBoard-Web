@@ -51,11 +51,15 @@ export default function SettingsPage() {
     const fetchedUsername = meData?.me?.username;
     const sessionName = session?.user?.name;
 
-    if (fetchedUsername) {
-      setUsername((prev) => prev === fetchedUsername ? prev : fetchedUsername);
-    } else if (sessionName) {
-      setUsername((prev) => prev ? prev : sessionName);
-    }
+    const timer = setTimeout(() => {
+      if (fetchedUsername) {
+        setUsername((prev) => prev === fetchedUsername ? prev : fetchedUsername);
+      } else if (sessionName) {
+        setUsername((prev) => prev ? prev : sessionName);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [meData?.me?.username, session?.user?.name]);
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
@@ -396,7 +400,7 @@ export default function SettingsPage() {
                     onClick={() => setPasswordStep('input')}
                     className="w-full sm:w-auto text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 py-2 sm:py-0"
                   >
-                    ← Back to input
+                    {`← Back to input`}
                   </button>
                   <button 
                     type="submit"

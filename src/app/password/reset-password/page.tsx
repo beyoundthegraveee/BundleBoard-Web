@@ -36,15 +36,12 @@ export default function ResetPasswordPage() {
   const token = searchParams.get("token")
   
   const [isSuccess, setIsSuccess] = useState(false)
-  
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<ResetPasswordFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormData>({
     defaultValues: {
       newPassword: "",
       confirmPassword: ""
     }
   })
-
-  const newPassword = watch("newPassword")
 
   const [confirmReset, { loading: isLoading }] = useMutation<
     ConfirmPasswordResetMutation,
@@ -85,8 +82,9 @@ export default function ResetPasswordPage() {
       } else {
         toast.error(result?.message || "Invalid or expired recovery token.")
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred.")
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+      toast.error(errorMessage)
     }
   }
 
@@ -148,7 +146,7 @@ export default function ResetPasswordPage() {
                   disabled={isLoading}
                   {...register("confirmPassword", { 
                     required: "Please confirm your password",
-                    validate: (val) => val === newPassword || "Passwords do not match"
+                    validate: (val, formValues) => val === formValues.newPassword || "Passwords do not match"
                   })}
                 />
                 {errors.confirmPassword && (
