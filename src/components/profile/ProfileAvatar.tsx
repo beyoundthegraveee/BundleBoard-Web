@@ -158,7 +158,7 @@ export function ProfileAvatar({ userData, onUpdate }: ProfileAvatarProps) {
       <div className="flex flex-col flex-1 min-w-0 py-0.5 justify-start">
         <div className="mb-4 border-b border-border/30 pb-4">
           <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-none text-foreground font-display mb-1.5 truncate max-w-xs md:max-w-md block">
-            {userData?.username || "Guest Node"}
+            {userData?.username || "Guest"}
           </h2>
           <p className="text-[11px] font-medium tracking-tight text-muted-foreground/90 lowercase truncate block max-w-xs md:max-w-md">
             {userData?.email}

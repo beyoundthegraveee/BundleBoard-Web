@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, Link as LinkIcon, X, Maximize2 } from "lucide-react"
 import LikeButton from '@/components/navbar/LikeButton'
@@ -79,6 +78,7 @@ interface CollectionDetailsProps {
   collection: GetCollectionQuery['getCollectionById'];
   onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
   isInCart?: boolean;
+  isOwner?: boolean;
 }
 
 const formatBytes = (bytes: number) => {
@@ -89,9 +89,7 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
-  const { data: session } = useSession();
-
+export default function CollectionDetails({ collection, onAddToCart, isInCart = false, isOwner = false }: CollectionDetailsProps) {
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(collection?.likesCount ?? 0);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -138,9 +136,8 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
 
   if (!collection) return null;
 
-  const { name, description, price, mediaResource, externalLink, id, galleryImages, isLiked = false, author } = collection;
-  
-  const isOwnCollection = session?.user?.name?.toLowerCase() === author?.username?.toLowerCase();
+  const { name, description, price, mediaResource, externalLink, id, galleryImages, isLiked = false } = collection;
+  const isOwnCollection = isOwner; 
   const isExternal = !!externalLink;
 
   const handleAddToCartClick = () => {
