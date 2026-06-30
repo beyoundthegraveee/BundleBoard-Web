@@ -2,22 +2,20 @@
 
 import * as React from "react"
 import { useForm, Controller, useWatch } from "react-hook-form"
-import { useState, useEffect, Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useEffect, Suspense } from "react"
+import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { useMutation } from "@apollo/client/react"
-import { RegisterDocument, SocialRegisterDocument } from "@/graphql/generated"
+import { RegisterDocument } from "@/graphql/generated"
 import { toast } from "sonner"
 import TermsDialog from "@/components/terms/TermsDialog"
 import { GoogleIcon } from "@/lib/socialLinks"
-
-const generateRandomPassword = () => Math.random().toString(36).slice(-10) + "A1!";
 
 interface RegisterFormInputs {
   username: string;
@@ -29,14 +27,9 @@ interface RegisterFormInputs {
 
 function RegisterFormContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  
-  const [isSocialSetupFailed, setIsSocialSetupFailed] = useState(false)
-  
-  const [executeSocialRegister, { loading: isSocialLoading }] = useMutation(SocialRegisterDocument)
+  const { data: session, status } = useSession()
   const [executeRegister, { loading: isRegisterLoading }] = useMutation(RegisterDocument)
-  
-  const isLoading = isSocialLoading || isRegisterLoading;
+  const isLoading = status === "loading" || isRegisterLoading;
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<RegisterFormInputs>({
     defaultValues: {
@@ -51,60 +44,15 @@ function RegisterFormContent() {
   const password = useWatch({ control, name: "password" });
 
   useEffect(() => {
-    const mode = searchParams.get("mode")
-    const email = searchParams.get("email")
-    const username = searchParams.get("username")
-
-    if (mode === "social-setup" && email && username) {
-      const executeSocialRegistration = async () => {
-        setIsSocialSetupFailed(false)
-        try {
-          const { data } = await executeSocialRegister({
-            variables: {
-              input: {
-                username,
-                email,
-                password: generateRandomPassword(),
-                role: "client"
-              }
-            }
-          })
-
-          if (data?.socialRegister?.error) {
-            throw new Error(data.socialRegister.error)
-          }
-          
-          toast.success("Google account linked successfully")
-          router.push(`/select-role?email=${encodeURIComponent(email)}`)
-        } catch (error: any) {
-          setIsSocialSetupFailed(true)
-          console.error("🔴 Детальная ошибка регистрации через Google:", error)
-          let errorMessage = "Failed to initialize social record"
-          
-          if (error.graphQLErrors && error.graphQLErrors.length > 0) {
-            // Ошибка пришла от GraphQL (например, валидация бэкенда или падение контроллера)
-            const gqlError = error.graphQLErrors[0]
-            const code = gqlError.extensions?.code || gqlError.extensions?.status
-            
-            errorMessage = `[${code || 'SERVER_ERROR'}]: ${gqlError.message}`
-          } else if (error.networkError) {
-            // Сервер вообще не ответил (упал, заблокирован Cloudflare, проблемы с сетью)
-            errorMessage = "Network error: Сan't connect to the backend server."
-          } else if (error instanceof Error) {
-            errorMessage = error.message
-          }
-          
-          toast.error(errorMessage, {
-            duration: 6000, // увеличим время показа, чтобы успеть прочитать
-          })
-          // const errorMessage = error instanceof Error ? error.message : "Failed to initialize social record"
-          // toast.error(errorMessage)
-        }
+    if (status === "authenticated" && session) {
+      if (session.isNewUser) {
+        toast.success("Google account linked successfully!")
+        router.push(`/select-role?email=${encodeURIComponent(session.user?.email || "")}`)
+      } else {
+        router.push("/")
       }
-
-      executeSocialRegistration()
     }
-  }, [searchParams, router, executeSocialRegister])
+  }, [status, session, router])
 
   const onEmailSubmit = async (formData: RegisterFormInputs) => {
     try {
@@ -131,43 +79,6 @@ function RegisterFormContent() {
     }
   }
 
-  if (searchParams.get("mode") === "social-setup" && isSocialSetupFailed) {
-    return (
-      <Card className="w-full max-w-md mx-auto border border-destructive/40 bg-card rounded-none shadow-2xl font-sans text-center p-8">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold uppercase tracking-wider text-destructive">
-            Registration Failed
-          </CardTitle>
-          <CardDescription className="text-xs uppercase tracking-widest mt-2">
-            Something went wrong during Google Auth
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            We couldn't create your profile automatically. Please try again or use standard email registration.
-          </p>
-          <Button 
-            className="w-full bg-primary text-primary-foreground rounded-none uppercase text-[11px] tracking-wider py-4"
-            onClick={() => router.push('/register')}
-          >
-            Try Regular Registration
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (searchParams.get("mode") === "social-setup" && !isSocialSetupFailed) {
-    return (
-      <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans text-center p-12">
-        <Loader2 className="animate-spin text-primary mx-auto mb-4 stroke-[1.5]" size={36} />
-        <span className="font-medium uppercase tracking-[0.2em] text-[11px] text-muted-foreground">
-          Registering Core via Google...
-        </span>
-      </Card>
-    )
-  }
-
   return (
     <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
       <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
@@ -186,7 +97,11 @@ function RegisterFormContent() {
             onClick={() => signIn('google')} 
             disabled={isLoading}
           >
-            <GoogleIcon className="mr-2 h-4 w-4" />
+            {status === "loading" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <GoogleIcon className="mr-2 h-4 w-4" />
+            )}
             Continue with Google
           </Button>
         </div>
@@ -262,7 +177,7 @@ function RegisterFormContent() {
           </div>
 
           <Button className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm" type="submit" disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign Up"}
+            {isRegisterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign Up"}
           </Button>
         </form>
       </CardContent>
