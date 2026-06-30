@@ -10,6 +10,7 @@ import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
 import { toast } from 'sonner'
+import { useSession } from 'next-auth/react'
 
 interface CartItem {
   id: string;
@@ -17,6 +18,7 @@ interface CartItem {
   price: number;
   category: string;
   previewImage: string;
+  ownerId: string;
 }
 
 export default function CollectionPage() {
@@ -24,6 +26,8 @@ export default function CollectionPage() {
   const router = useRouter()
   const collectionId = Array.isArray(id) ? id[0] : id || "";
   const [isInCart, setIsInCart] = useState(false)
+  
+  const { data: session } = useSession()
   
   const { data, loading, error } = useQuery(GetCollectionDocument, {
     variables: { id: collectionId },
@@ -38,6 +42,11 @@ export default function CollectionPage() {
   }, [error]);
 
   const collection = data?.getCollectionById;
+
+  const isOwner = React.useMemo(() => {
+    if (!session?.user?.id || !collection?.author?.id) return false;
+    return String(session.user.id) === String(collection.author.id);
+  }, [session, collection]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -63,14 +72,24 @@ export default function CollectionPage() {
     }
   }, [collectionId])
 
-  const handleAddToCart = (item: CartItem) => {
+  const handleAddToCart = (item: Omit<CartItem, 'ownerId'>) => {
+    if (isOwner) {
+      toast.error("You cannot add your own collection to the cart.");
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       try {
         const currentCart = localStorage.getItem('bundleboard_cart')
         const items: CartItem[] = currentCart ? JSON.parse(currentCart) : []
       
         if (!items.some((cartItem) => cartItem.id === item.id)) {
-          const updatedCart = [...items, item]
+          const itemWithOwner: CartItem = {
+            ...item,
+            ownerId: String(collection?.author?.id || "")
+          }
+
+          const updatedCart = [...items, itemWithOwner]
           localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
           setIsInCart(true)
           window.dispatchEvent(new Event('cartUpdate'))
@@ -128,6 +147,7 @@ export default function CollectionPage() {
             collection={collection} 
             onAddToCart={handleAddToCart}
             isInCart={isInCart}
+            isOwner={isOwner} 
           />
         </div>
 
