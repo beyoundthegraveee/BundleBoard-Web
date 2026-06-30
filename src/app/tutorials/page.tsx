@@ -1,6 +1,6 @@
-
 import React from "react";
 import { PlayCircle, Clock, Zap } from "lucide-react";
+import Image from "next/image";
 
 export const metadata = {
   title: "Tutorials | BundleBoard",
@@ -34,7 +34,6 @@ export default function TutorialsPage() {
             <Zap size={10} className="fill-primary" />
             Knowledge Base
           </div>
-          {/* Адаптированный заголовок: меньше на мобилках */}
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold uppercase tracking-tight font-display text-foreground leading-none">
             Video <span className="text-muted-foreground">Tutorials</span>
           </h1>
@@ -42,8 +41,6 @@ export default function TutorialsPage() {
             Level up your creative workflow. Learn how to extract maximum value from BundleBoard assets, master new software tools, and streamline your entire process.
           </p>
         </div>
-
-        {/* Сетка: 2 колонки на мобайле, 3 на десктопе */}
         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8 lg:gap-10">
           {YOUTUBE_TUTORIALS.map((tutorial) => (
             <a 
@@ -54,9 +51,11 @@ export default function TutorialsPage() {
               className="group flex flex-col border border-border/50 bg-card hover:border-primary transition-all duration-300 rounded-none overflow-hidden shadow-sm hover:shadow-primary/5"
             >
               <div className="aspect-video bg-[#111013] relative flex items-center justify-center overflow-hidden border-b border-border/20">
-                <img 
+                <Image 
                   src={`https://img.youtube.com/vi/${tutorial.youtubeId}/maxresdefault.jpg`} 
                   alt={tutorial.title} 
+                  fill
+                  unoptimized
                   className="object-cover w-full h-full opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
                 />
                 
@@ -78,7 +77,6 @@ export default function TutorialsPage() {
               </div>
               
               <div className="p-3 md:p-6 flex flex-col flex-1 justify-between gap-2 md:gap-4 bg-card/40 backdrop-blur-sm">
-                {/* Адаптированный заголовок туториала */}
                 <h3 className="font-bold text-[11px] sm:text-[13px] md:text-xl leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {tutorial.title}
                 </h3>
