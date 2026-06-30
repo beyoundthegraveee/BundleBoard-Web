@@ -26,7 +26,7 @@ export default function TermsPage() {
               1. Introduction and Company Details
             </h2>
             <p>
-              Welcome to BundleBoard ({&quot;we,&quot;} {&quot;our,&quot;} or {&quot;us&quot;}). These Terms of Service govern your use of our digital asset marketplace. 
+              Welcome to BundleBoard (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). These Terms of Service govern your use of our digital asset marketplace. 
               BundleBoard is registered and operates at Centralna 17/5, 02-271 Warsaw, Masovian, Poland. By accessing our platform, 
               creating an account, or downloading/uploading assets, you agree to be bound by these Terms.
             </p>
