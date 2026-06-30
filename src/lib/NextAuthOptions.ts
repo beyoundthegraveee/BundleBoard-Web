@@ -12,7 +12,8 @@ import {
   LoginMutation, LoginMutationVariables,
   SocialLoginMutation, SocialLoginMutationVariables,
   RefreshTokenMutation, RefreshTokenMutationVariables,
-  LoginDocument, SocialLoginDocument, RefreshTokenDocument
+  LoginDocument, SocialLoginDocument, RefreshTokenDocument, 
+  SocialRegisterDocument, SocialRegisterMutation, SocialRegisterMutationVariables
 } from '@/graphql/generated';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql";
@@ -111,7 +112,43 @@ export const authOptions: NextAuthOptions = {
           console.warn("[NextAuth] Backend did not return an accessToken for social login:");
           return false;
         } catch (error: unknown) {
-          if (error instanceof Error && error.message === "User not found") return true;
+          if (error instanceof Error && error.message === "User not found"){
+            try{
+              const randomPassword = Math.random().toString(36).slice(-10) + "A1!";
+              const fallbackUsername = user.name || user.email?.split('@')[0] || "google_user";
+
+              await gqlRequest<SocialRegisterMutation, SocialRegisterMutationVariables>(
+                SocialRegisterDocument,
+                {
+                  input: {
+                    username: fallbackUsername,
+                    email: user.email || "",
+                    password: randomPassword,
+                    role: "client"
+                  }
+                }
+              );
+              
+              const retryData = await gqlRequest<SocialLoginMutation, SocialLoginMutationVariables>(
+                SocialLoginDocument,
+                { input: { email: user.email || "", username: user.name || "", provider: account.provider } }
+              );
+
+              const retrySocialData = retryData?.socialLogin;
+              if (retrySocialData?.accessToken) {
+                const u = user as User;
+                u.id = retrySocialData.user?.id || user.id;
+                u.accessToken = retrySocialData.accessToken;
+                u.refreshToken = retrySocialData.refreshToken ?? "";
+                u.isNewUser = true;
+                u.roles = retrySocialData.user?.roles || [];
+                return true;
+              }
+            }catch (regError){
+              console.error("Auth Google Error: " + regError);
+              return false
+            }
+          };
           return false;
         }
       }
