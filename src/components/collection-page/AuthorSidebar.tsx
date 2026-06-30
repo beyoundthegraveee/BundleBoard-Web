@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import Image from "next/image"
 import { User, Star, ShoppingCart, Share2, ExternalLink, Download } from "lucide-react"
 import { GetCollectionQuery } from '@/graphql/generated'
 import { ALLOWED_PLATFORMS } from '@/lib/socialLinks'
@@ -20,7 +21,7 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
     socialLinks 
   } = author;
 
-  const downloadCount = (author as any).downloadCount || 0;
+  const downloadCount = (author as AuthorData & { downloadCount?: number | null })?.downloadCount || 0;
 
   return (
     <div className="border border-border/60 bg-card text-foreground rounded-none shadow-xl font-sans overflow-hidden">
@@ -40,10 +41,12 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-background border border-border/40 rounded-none relative overflow-hidden flex-shrink-0">
             {avatarUrl ? (
-              <img 
+              <Image 
                 src={avatarUrl} 
                 alt={username} 
-                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300" 
+                fill
+                sizes="64px"
+                className="object-cover opacity-80 hover:opacity-100 transition-opacity duration-300" 
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
