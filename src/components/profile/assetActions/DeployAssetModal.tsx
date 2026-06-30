@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon } from "lucide-react"
+import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon, DollarSign, Gift, Hash } from "lucide-react"
 import { useSupabase } from '@/hooks/useSupabase' 
 import { convertToWebP } from '@/lib/imageProcessor'
-import {  MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS } from '@/lib/constants'
+import { MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS } from '@/lib/constants'
 import { useMutation } from "@apollo/client/react"
 import { CreateCollectionDocument } from '@/graphql/generated'
-import type { MimeType, ImageShortInput, CreateNewCollectionInput,MediaResourceInput,Provider } from '@/graphql/generated'
+import type { MimeType, ImageShortInput, CreateNewCollectionInput, MediaResourceInput, Provider } from '@/graphql/generated'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { cn } from '@/lib/utils'
 
 const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
@@ -58,6 +59,19 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
   const supabase = useSupabase()
   const [isCreatingAsset, setIsCreatingAsset] = useState<boolean>(false)
   
+  const [isFree, setIsFree] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem("draft_isFree") === "true";
+    }
+    return false;
+  });
+  const [price, setPrice] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem("draft_price") || "";
+    }
+    return "";
+  });
+
   const [newAsset, setNewAsset] = useState<AssetDraftState>(() => {
     if (typeof window !== 'undefined') {
       const draft = sessionStorage.getItem("draft_newAsset");
@@ -92,7 +106,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     sessionStorage.setItem("draft_newAsset", JSON.stringify(newAsset))
     sessionStorage.setItem("draft_uploadMode", uploadMode)
     sessionStorage.setItem("draft_externalLink", externalLink)
-  }, [newAsset, uploadMode, externalLink])
+    sessionStorage.setItem("draft_isFree", String(isFree))
+    sessionStorage.setItem("draft_price", price)
+  }, [newAsset, uploadMode, externalLink, isFree, price])
 
   const previewItemsRef = useRef<PreviewFileItem[]>(previewItems);
   useEffect(() => {
@@ -173,6 +189,12 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
   const handleDeployCollection = async (e: React.FormEvent) => {
     e.preventDefault()
     setValidationError(null)
+
+    const finalPrice = isFree ? 0 : parseFloat(price);
+    if (!isFree && (isNaN(finalPrice) || finalPrice < 5)) {
+      setValidationError("Pricing protocol violation: Minimum commercial value is $5.00 USD.");
+      return;
+    }
 
     if (newAsset.description.length < 100 || newAsset.description.length > 1000) {
       setValidationError(`Description length must be between 100 and 1000 characters (${newAsset.description.length}/1000).`)
@@ -277,7 +299,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       const createInput: CreateNewCollectionInput = {
         name: newAsset.name,
         description: newAsset.description,
-        price: 0,
+        price: finalPrice,
         videoTutorialUrl: `https://youtube.com/watch?v=placeholder-${timestamp}`,
         tagIds: [selectedTagId],
         galleryImages: uploadedImages
@@ -296,6 +318,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       })
 
       setNewAsset({ name: "", description: "", category: "gradients" })
+      setPrice("")
+      setIsFree(false)
       setPreviewItems([])
       setProjectFile(null)
       setExternalLink("")
@@ -304,6 +328,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       sessionStorage.removeItem("draft_newAsset")
       sessionStorage.removeItem("draft_uploadMode")
       sessionStorage.removeItem("draft_externalLink")
+      sessionStorage.removeItem("draft_isFree")
+      sessionStorage.removeItem("draft_price")
 
       onSuccess()
       onClose()
@@ -320,7 +346,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                            previewItems.length === 0 || 
                            !rightsConfirmed || 
                            (uploadMode === 'hosted' && !projectFile) || 
-                           (uploadMode === 'external' && !externalLink.trim());
+                           (uploadMode === 'external' && !externalLink.trim()) ||
+                           (!isFree && !price);
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 font-sans">
@@ -334,8 +361,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         </button>
         
         <div className="mb-5 sm:mb-6 border-b border-border/40 pb-3 sm:pb-4 pr-6">
-          <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground uppercase">Deploy Free Asset</h3>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-normal">Submit asset components to initialize public catalog.</p>
+          <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground uppercase">Deploy Asset Manifest</h3>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-normal">Submit asset components to initialize public directory node.</p>
         </div>
         
         {validationError && (
@@ -345,6 +372,60 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         )}
         
         <form onSubmit={handleDeployCollection} className="space-y-4 sm:space-y-5">
+          
+          <div className="space-y-2">
+            <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pricing Protocol</label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-muted/10 border border-border/40">
+              <button
+                type="button"
+                onClick={() => setIsFree(false)}
+                className={cn(
+                  "py-2.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all rounded-none",
+                  !isFree ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <DollarSign size={12} /> Commercial
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFree(true)}
+                className={cn(
+                  "py-2.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all rounded-none",
+                  isFree ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Gift size={12} /> Open Source
+              </button>
+            </div>
+          </div>
+
+          {!isFree ? (
+            <div className="grid gap-1 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-baseline">
+                <label htmlFor="modal-price" className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Price (USD)</label>
+                <span className="text-[8px] font-bold text-destructive uppercase tracking-wide">Min Limit: $5.00</span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">$</span>
+                <input 
+                  type="number"
+                  id="modal-price"
+                  step="0.01"
+                  min="5"
+                  required={!isFree}
+                  placeholder="5.00"
+                  value={price}
+                  onChange={e => setPrice(e.target.value)}
+                  className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 pl-7 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/30"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="p-2.5 bg-muted/5 border border-dashed border-border/40 text-center text-[9px] font-bold text-primary uppercase tracking-widest animate-in fade-in duration-200">
+              🛡️ Zero-Value Asset Bypass Active. Direct distribution setup.
+            </div>
+          )}
+
           <div className="grid gap-1">
             <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Category</label>
             <select 
@@ -431,10 +512,11 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                       onDragStart={() => handleDragStart(idx)}
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(idx)}
-                      className={`relative aspect-square rounded-none overflow-hidden border transition-all cursor-grab active:cursor-grabbing group
-                        ${dragItemIndex === idx ? 'opacity-40 border-primary scale-95' : 'border-border/40 hover:border-primary/50'}
-                        ${idx === 0 ? 'ring-1 ring-primary ring-offset-1 ring-offset-background' : ''}
-                      `}
+                      className={cn(
+                        "relative aspect-square rounded-none overflow-hidden border transition-all cursor-grab active:cursor-grabbing group",
+                        dragItemIndex === idx ? 'opacity-40 border-primary scale-95' : 'border-border/40 hover:border-primary/50',
+                        idx === 0 ? 'ring-1 ring-primary ring-offset-1 ring-offset-background' : ''
+                      )}
                     >
                       {idx === 0 && (
                         <div className="absolute top-0 inset-x-0 bg-primary text-primary-foreground text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-center py-0.5 z-10 pointer-events-none shadow-sm">
@@ -571,9 +653,9 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase text-[11px] sm:text-xs tracking-widest p-3.5 sm:p-4 transition-opacity flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed rounded-none shadow-sm"
           >
             {isCreatingAsset ? (
-              <><Loader2 className="animate-spin h-3.5 w-3.5 text-primary-foreground" /> Initializing...</>
+              <><Loader2 className="animate-spin h-3.5 w-3.5 text-primary-foreground" /> Deploying Node Payload...</>
             ) : (
-              "Deploy Asset Collection"
+              "Commit Changes & Execute Deployment"
             )}
           </button>
         </form>
