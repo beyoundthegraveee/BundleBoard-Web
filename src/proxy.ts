@@ -18,8 +18,8 @@ export default withAuth(
           "/terms",
           "/register",
           "/login",
-          "/auth/mail/verify-email",
-          "/auth/mail/verify",
+          "/mail/verify-email",
+          "/mail/verify",
           "/select-role"
         ];
         const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
