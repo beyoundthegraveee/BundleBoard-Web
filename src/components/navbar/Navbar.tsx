@@ -4,7 +4,7 @@ import { ShoppingBagIcon, User, Search, LogOut, Sun, Moon, LogIn, Menu, Heart } 
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation" 
+import { useRouter, usePathname } from "next/navigation"
 import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
@@ -50,6 +50,7 @@ export function Navbar() {
   const { terminateSession } = useAuthActions();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -57,9 +58,17 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
 
   const { data: meData } = useQuery(GetMeDocument, {
-    skip: status !== "authenticated",
-    fetchPolicy: 'cache-first'
-  });
+  skip: 
+    status !== "authenticated" || 
+    !mounted ||
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/register") || 
+    pathname?.includes("verify") ||
+    pathname?.includes("confirm"),
+  
+  fetchPolicy: 'cache-first',
+  errorPolicy: 'all'         
+});
 
   const currentUsername = meData?.me?.username || session?.user?.name || "User";
   const currentEmail = meData?.me?.email || session?.user?.email || "";

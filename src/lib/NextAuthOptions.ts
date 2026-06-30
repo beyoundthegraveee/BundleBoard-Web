@@ -123,7 +123,6 @@ export const authOptions: NextAuthOptions = {
           const errorMsg = error instanceof Error ? error.message : "Unknown verification workflow exception";
           console.log(`[NextAuth] Core validation response for ${user.email}: ${errorMsg}`);
 
-          // Case-insensitive substring fallback evaluation
           if (errorMsg.toLowerCase().includes("not found")) {
             try {
               console.log(`[NextAuth] Profile matching records not found. Initializing automated registration routing for: ${user.email}`);
@@ -147,14 +146,11 @@ export const authOptions: NextAuthOptions = {
               if (regSocialData?.accessToken) {
                 console.log(`[NextAuth] Core profile successfully provisioned via automated mutation workflow for: ${user.email}`);
                 const u = user as User;
-                
-                // FIX TS(2339): We directly assign properties safely without abusing 'any' or forcing unsafe casts
-                u.id = user.id; // Map the top-level identifier provided by the provider layer
+                u.id = user.id;
                 u.accessToken = regSocialData.accessToken;
                 u.refreshToken = regSocialData.refreshToken ?? "";
-                u.isNewUser = true; // Downstream state instruction to force client-side /select-role navigation
-                u.roles = ['client']; // Reflect the assigned database role safely
-                
+                u.isNewUser = true;
+                u.roles = ['client'];
                 return true;
               }
               
