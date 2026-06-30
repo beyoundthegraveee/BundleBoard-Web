@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useState } from "react"
 import { useMutation } from "@apollo/client/react"
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
@@ -32,11 +32,11 @@ export function ForgotPasswordForm() {
   const [isSent, setIsSent] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<ForgotFormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<ForgotFormData>({
     defaultValues: { email: "" }
   })
 
-  const userEmail = watch("email")
+  const userEmail = useWatch({ control, name: "email" })
 
   const [requestReset, { loading: isLoading }] = useMutation<
     RequestPasswordResetMutation,
@@ -59,8 +59,9 @@ export function ForgotPasswordForm() {
       } else {
         setServerError(result?.message || "Something went wrong.")
       }
-    } catch (error: any) {
-      setServerError(error.message || "An unexpected error occurred.")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+      setServerError(errorMessage)
     }
   }
 
