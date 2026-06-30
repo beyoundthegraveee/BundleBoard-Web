@@ -107,6 +107,8 @@ export const authOptions: NextAuthOptions = {
             u.roles = socialData.user?.roles || [];
             return true;
           }
+
+          console.warn("[NextAuth] Backend did not return an accessToken for social login:");
           return false;
         } catch (error: unknown) {
           if (error instanceof Error && error.message === "User not found") return true;
