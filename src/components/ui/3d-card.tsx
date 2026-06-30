@@ -121,16 +121,16 @@ export const CardItem = ({
   const ref = useRef<HTMLDivElement>(null);
   const [isMouseEnter] = useMouseEnter();
 
-  const handleAnimations = () => {
-    if (!ref.current) return;
-    if (isMouseEnter) {
-      ref.current.style.transform = `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
-    } else {
-      ref.current.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)`;
-    }
-  };
-
   useEffect(() => {
+    const handleAnimations = () => {
+      if (!ref.current) return;
+      if (isMouseEnter) {
+        ref.current.style.transform = `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+      } else {
+        ref.current.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)`;
+      }
+    };
+
     handleAnimations();
   }, [isMouseEnter, translateX, translateY, translateZ, rotateX, rotateY, rotateZ]);
 

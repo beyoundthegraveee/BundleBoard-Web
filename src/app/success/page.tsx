@@ -1,12 +1,7 @@
 import Link from 'next/link'
 import { CheckCircle, ArrowRight, ShieldCheck } from 'lucide-react'
 
-export default async function SuccessPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ session_id?: string }>
-}) {
-
+export default async function SuccessPage() {
   return (
     <main className="min-h-screen bg-background text-foreground font-sans flex items-center justify-center p-6 relative">
       

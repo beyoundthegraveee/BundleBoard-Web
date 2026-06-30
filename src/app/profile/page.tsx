@@ -202,9 +202,19 @@ export default function ProfilePage() {
               </div>
             </section>
           )}
-
-          <PurchasedVault purchases={(userData?.purchases || []) as Purchase[]} totalAssetsCount={totalAssetsCount} />
-          <BillingLedger purchases={(userData?.purchases || []) as Purchase[]} totalSpent={totalSpent} />
+            <PurchasedVault 
+              purchases={
+                (userData?.purchases || []) as React.ComponentProps<typeof PurchasedVault>['purchases']
+              } 
+              totalAssetsCount={totalAssetsCount} 
+            />
+            
+            <BillingLedger 
+              purchases={
+                (userData?.purchases || []) as React.ComponentProps<typeof BillingLedger>['purchases']
+              } 
+              totalSpent={totalSpent} 
+            />
         </div>
       </div>
 
