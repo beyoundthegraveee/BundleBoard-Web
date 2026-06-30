@@ -9,8 +9,8 @@ export interface AddCommentRequest {
 }
 
 export interface AuthRequest {
+  identifier: string;
   password: string;
-  username: string;
 }
 
 export interface CollectionFilterInput {

@@ -65,20 +65,20 @@ export const authOptions: NextAuthOptions = {
     CredentialProvider({
       name: "Sign In",
       credentials: {
-        username: { label: "Username", type: "text" },
+        identifier: { label: "Username or Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
         const data = await gqlRequest<LoginMutation, LoginMutationVariables>(
           LoginDocument,
-          { input: { username: credentials?.username || "", password: credentials?.password || "" } }
+          { input: { identifier: credentials?.identifier || "", password: credentials?.password || "" } }
         );
 
         const authData = data?.login;
         if (!authData || authData.error) throw new Error(authData?.error || "Invalid credentials");
         return {
           id: authData.user.id,
-          name: credentials?.username || null,
+          name: authData.user.username || null,
           email: authData.user.email,
           accessToken: authData.accessToken,
           refreshToken: authData.refreshToken,
