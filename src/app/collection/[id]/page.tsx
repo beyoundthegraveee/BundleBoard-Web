@@ -40,24 +40,32 @@ export default function CollectionPage() {
   const collection = data?.getCollectionById;
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
     if (typeof window !== 'undefined' && collectionId) {
-      try{
+      try {
         const savedCart = localStorage.getItem('bundleboard_cart')
-          if (savedCart) {
-          const items: CartItem [] = JSON.parse(savedCart)
+        if (savedCart) {
+          const items: CartItem[] = JSON.parse(savedCart)
           const isSaved = items.some((item) => item.id === collectionId)
-          setIsInCart((prev) => (prev === isSaved ? prev : isSaved))
+          
+          timer = setTimeout(() => {
+            setIsInCart((prev) => (prev === isSaved ? prev : isSaved))
+          }, 0)
         }
-      }catch (error){
+      } catch (error) {
         console.error("Failed to parse cart from localStorage", error);
       }
-      
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [collectionId])
 
   const handleAddToCart = (item: CartItem) => {
     if (typeof window !== 'undefined') {
-      try{
+      try {
         const currentCart = localStorage.getItem('bundleboard_cart')
         const items: CartItem[] = currentCart ? JSON.parse(currentCart) : []
       
@@ -68,7 +76,7 @@ export default function CollectionPage() {
           window.dispatchEvent(new Event('cartUpdate'))
           toast.success("Asset added to cart")
         }
-      } catch (error){
+      } catch (error) {
         toast.error("Failed to add item to cart");
         console.error("Failed to add item to cart", error)
       }
