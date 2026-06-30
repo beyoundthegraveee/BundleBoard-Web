@@ -28,20 +28,34 @@ export function RoleSelection({ email }: RoleSelectionProps) {
   ] as const;
 
   const handleRoleConfirm = async (role: "client" | "author") => {
-    try {
-      const { data } = await executeUpdateRole({ variables: { input: { email, role } } })
-      const responseData = data?.updateUserRole
-      if (responseData?.success) {
-        if (session) await updateSession({ ...session, roles: role === "author" ? ["client", "author"] : ["client"] })
-        router.push(`/mail/verify-email?email=${encodeURIComponent(email)}`)
+  try {
+    const { data } = await executeUpdateRole({ variables: { input: { email, role } } })
+    const responseData = data?.updateUserRole
+    
+    if (responseData?.success) {
+      const targetRoles = role === "author" ? ["client", "author"] : ["client"];
+
+      if (session) {
+        await updateSession({ 
+          ...session, 
+          isNewUser: false,
+          roles: targetRoles 
+        })
+        
+        toast.success("Profile setup complete!")
+        router.push("/")
       } else {
-        toast.error(responseData?.message || "Configuration failed")
+        toast.success("Identity configured. Please check your email to verify account.")
+        router.push(`/mail/verify-email?email=${encodeURIComponent(email)}`)
       }
-    } catch (error) {
-      console.error("Role confirmation error:", error)
-      toast.error("Connection failure")
+    } else {
+      toast.error(responseData?.message || "Configuration failed")
     }
+  } catch (error) {
+    console.error("Role confirmation error:", error)
+    toast.error("Connection failure")
   }
+}
 
   return (
     <Card className="w-full max-w-2xl mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
