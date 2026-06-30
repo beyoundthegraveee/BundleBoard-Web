@@ -126,11 +126,22 @@ export const authOptions: NextAuthOptions = {
         token.roles = (user as User).roles;
         token.accessTokenExpires = Date.now() + ACCESS_TOKEN_EXPIRY_MS;
 
-        token.supabaseToken = jwt.sign(
-          { aud: "authenticated", sub: formatIdToUUID(user.id), email: user.email, role: "authenticated" },
-          process.env.SUPABASE_JWT_SECRET!,
-          { algorithm: 'HS256' }
-        );
+        const supabaseSecret = process.env.SUPABASE_JWT_SECRET;
+    
+        if (supabaseSecret && supabaseSecret.trim() !== "") {
+          try {
+            token.supabaseToken = jwt.sign(
+              { aud: "authenticated", sub: formatIdToUUID(user.id), email: user.email, role: "authenticated" },
+              supabaseSecret,
+              { algorithm: 'HS256' }
+            );
+          } catch (jwtError) {
+            console.error("Supabase JWT signing failed error:", jwtError);
+          }
+        } else {
+          console.warn("Supabase JWT is missing! Skipping Supabase token generation.");
+        }
+
         return token;
       }
 
