@@ -174,6 +174,7 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
       />
 
       <EditAssetModal 
+        key={collection.id}
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         onSave={processUpdate}

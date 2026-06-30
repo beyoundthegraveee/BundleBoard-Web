@@ -38,48 +38,46 @@ const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number
 
 export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData }: EditAssetModalProps) {
   const supabase = useSupabase();
-  const [isMounted, setIsMounted] = useState(false);
   
-  const [form, setForm] = useState({ name: "", description: "" });
-  const [externalLink, setExternalLink] = useState("");
-  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 1. Инициализация формы (с проверкой черновика)
+  const [form, setForm] = useState(() => {
+    if (typeof window !== "undefined" && initialData?.id) {
+      const draft = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
+      if (draft) return JSON.parse(draft);
+    }
+    return { name: initialData?.name || "", description: initialData?.description || "" };
+  });
+
+  // 2. Инициализация ссылки (с проверкой черновика)
+  const [externalLink, setExternalLink] = useState(() => {
+    if (typeof window !== "undefined" && initialData?.id) {
+      const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
+      if (draftLink !== null) return draftLink;
+    }
+    return initialData?.externalLink || "";
+  });
+
+  // 3. Инициализация галереи картинок
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
+    return initialData?.galleryImages?.map((img, idx) => ({
+      id: `existing-${initialData.id}-${idx}`,
+      filePath: img.filePath,
+      file: null,
+      isNew: false
+    })) || [];
+  });
 
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
 
-  // Обеспечиваем безопасный запуск эффектов на клиенте
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Синхронизация данных при открытии модалки или смене ассета
-  useEffect(() => {
-    if (!isOpen || !initialData?.id || !isMounted) return;
-
-    const draftForm = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
-    setForm(draftForm ? JSON.parse(draftForm) : {
-      name: initialData.name || "",
-      description: initialData.description || ""
-    });
-
-    const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
-    setExternalLink(draftLink !== null ? draftLink : (initialData.externalLink || ""));
-
-    if (initialData.galleryImages && initialData.galleryImages.length > 0) {
-      setGallery(initialData.galleryImages.map((img, idx) => ({
-        id: `existing-${initialData.id}-${idx}`,
-        filePath: img.filePath,
-        file: null,
-        isNew: false
-      })));
-    } else {
-      setGallery([]);
-    }
-    setValidationError(null);
-  }, [isOpen, initialData, isMounted]);
-
-  // Сохранение черновиков при изменении полей
+  // Эффект для автоматического сохранения изменений в sessionStorage (черновик)
   useEffect(() => {
     if (isOpen && initialData?.id && isMounted) {
       sessionStorage.setItem(`draft_editForm_${initialData.id}`, JSON.stringify(form))
@@ -92,6 +90,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     galleryRef.current = gallery;
   }, [gallery]);
 
+  // Очистка Blob-ссылок при размонтировании
   useEffect(() => {
     return () => {
       galleryRef.current.forEach(item => {
@@ -252,10 +251,7 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
       });
 
       const finalGalleryImages = await Promise.all(finalGalleryPromises)
-      
-      // Сохраняем оригинальную цену из initialData вместо принудительного хардкода нуля
       await onSave(form.name, initialData.price, form.description, finalGalleryImages, externalLink.trim() || null)
-      
       clearDrafts()
     } catch (err) {
       console.error("Update failed:", err)
