@@ -1,14 +1,11 @@
 "use client"
 
-import { CollectionGrid } from "@/components/CollectionGrid";
-import { HighestRatedCarousel } from "@/components/HighestRatedCarousel";
+import { CollectionGrid } from "@/components/grids/CollectionGrid";
+import { HighestRatedCarousel } from "@/components/search/HighestRatedCarousel";
 import { ArrowRight, Activity, Grid3X3, ExternalLink, Heart } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function Home() {
-  const { status } = useSession();
-
   return (
     <main className="min-h-screen bg-background text-foreground antialiased font-sans">
       <div 

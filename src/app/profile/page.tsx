@@ -2,22 +2,32 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
-import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive, ChevronDown } from "lucide-react" // Добавили ChevronDown
+import { Loader2, Settings, LogOut, Plus, BarChart3, Cpu, Download, Archive, ChevronDown } from "lucide-react"
 import Link from 'next/link'
 import { useAuthActions } from '@/lib/useAuthActions'
-import { ProfileAvatar } from '@/components/ProfileAvatar'
-import { PurchasedVault } from '@/components/PurchaseVault'
-import { BillingLedger } from '@/components/BillingLedger'
-import UserCommentsLog from '@/components/UserCommentsLog'
-import { DeployAssetModal } from '@/components/DeployAssetModal'
-import { InventoryItemCard } from '@/components/InventoryItemCard'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
+import { PurchasedVault } from '@/components/profile/PurchaseVault'
+import { BillingLedger } from '@/components/profile/BillingLedger'
+import UserCommentsLog from '@/components/collectionActions/UserCommentsLog'
+import { DeployAssetModal } from '@/components/profile/asset/DeployAssetModal'
+import { InventoryItemCard } from '@/components/profile/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
 import { toast } from 'sonner'
 
+interface AuthoredCollection {
+  id: string;
+  name: string;
+  description: string;
+  downloadCount?: number | null; 
+  price?: number | null; 
+  tags?: ({ name: string } | null)[] | null;
+  [key: string]: unknown; 
+}
+
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const { terminateSession } = useAuthActions()
   const [isModalOpen, setIsModalOpen] = useState(false)
   
@@ -44,11 +54,12 @@ export default function ProfilePage() {
   }
 
   const isAuthor = userData?.roles?.includes("author")
+
+  const totalSpent = userData?.purchases?.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
   
-  const totalSpent = userData?.purchases?.reduce((acc: number, curr: any) => acc + Number(curr?.amount || 0), 0).toFixed(2) || "0.00"
   let totalAssetsCount = 0;
   if (userData?.purchases) {
-    userData.purchases.forEach((purchase: any) => {
+    userData.purchases.forEach((purchase) => {
       totalAssetsCount += purchase?.items?.length || 0;
     });
   }
@@ -58,7 +69,7 @@ export default function ProfilePage() {
   const authorCollectionsCount = userData?.authoredCollections?.length || 0;
 
   if (userData?.authoredCollections) {
-    userData.authoredCollections.forEach((col: any) => {
+    userData.authoredCollections.forEach((col) => {
       if (col) {
         const downloads = col.downloadCount || 0;
         authorTotalDownloads += downloads;
@@ -68,14 +79,14 @@ export default function ProfilePage() {
     });
   }
 
-  const groupedCollections = userData?.authoredCollections?.reduce((acc: Record<string, any[]>, col: any) => {
+  const groupedCollections = userData?.authoredCollections?.reduce((acc: Record<string, AuthoredCollection[]>, col: AuthoredCollection) => {
     if (!col) return acc;
-    const categoryName = col.tags && col.tags.length > 0 ? col.tags[0].name : "Uncategorized";
+    const categoryName = col.tags && col.tags.length > 0 && col.tags[0]?.name ? col.tags[0].name : "Uncategorized";
     
     if (!acc[categoryName]) {
       acc[categoryName] = [];
     }
-    acc[categoryName].push(col);
+    acc[categoryName].push(col as AuthoredCollection);
     return acc;
   }, {});
 
@@ -168,7 +179,6 @@ export default function ProfilePage() {
                 <div className="overflow-y-visible md:overflow-y-auto pr-0 md:pr-2 pb-2 space-y-6 md:space-y-8 flex-1 min-h-0 md:custom-scrollbar">
                   {groupedCollections && Object.keys(groupedCollections).length > 0 ? (
                     Object.entries(groupedCollections).map(([category, items]) => (
-                      // 💡 Заменили старый код на новый умный компонент CategoryGroup
                       <CategoryGroup 
                         key={category} 
                         category={category} 
@@ -185,9 +195,19 @@ export default function ProfilePage() {
               </div>
             </section>
           )}
+            <PurchasedVault 
+              purchases={
+                (userData?.purchases || []) as React.ComponentProps<typeof PurchasedVault>['purchases']
+              } 
+              totalAssetsCount={totalAssetsCount} 
+            />
 
-          <PurchasedVault purchases={userData?.purchases as any} totalAssetsCount={totalAssetsCount} />
-          <BillingLedger purchases={userData?.purchases as any} totalSpent={totalSpent} />
+            <BillingLedger 
+              purchases={
+                (userData?.purchases || []) as React.ComponentProps<typeof BillingLedger>['purchases']
+              } 
+              totalSpent={totalSpent} 
+            />
         </div>
       </div>
 
@@ -202,13 +222,11 @@ export default function ProfilePage() {
   )
 }
 
-// 💡 НОВЫЙ КОМПОНЕНТ: Сворачиваемая категория (Аккордеон)
-function CategoryGroup({ category, items, onRefreshNeeded }: { category: string, items: any[], onRefreshNeeded: () => void }) {
+function CategoryGroup({ category, items, onRefreshNeeded }: { category: string, items: AuthoredCollection[], onRefreshNeeded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Шапка категории: кликабельна только на мобилках */}
       <div 
         className="flex items-center justify-between gap-3 border-b border-border/20 pb-2 cursor-pointer md:cursor-default select-none"
         onClick={() => setIsOpen(!isOpen)}
@@ -221,22 +239,19 @@ function CategoryGroup({ category, items, onRefreshNeeded }: { category: string,
             {items.length} ASSETS
           </span>
         </div>
-        {/* Иконка стрелочки видна только на телефонах */}
         <ChevronDown 
           size={14} 
           className={`md:hidden text-muted-foreground transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
         />
       </div>
-      
-      {/* САМАЯ ВАЖНАЯ СТРОКА ДЛЯ CSS: 
-        Если isOpen = true, ставим 'grid'.
-        Если isOpen = false, ставим 'hidden md:grid' (на телефоне скроется, на ПК md:grid перебьет hidden).
-      */}
       <div className={`grid-cols-1 sm:grid-cols-2 gap-3 ${isOpen ? 'grid' : 'hidden md:grid'}`}>
-        {items.map((col: any) => (
+        {items.map((col: AuthoredCollection) => (
           <InventoryItemCard 
             key={col.id} 
-            collection={col} 
+            collection={{
+              ...col,
+              price: col.price ?? 0
+            }} 
             onRefreshNeeded={onRefreshNeeded} 
           />
         ))}

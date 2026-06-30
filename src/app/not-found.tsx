@@ -38,7 +38,7 @@ export default function NotFound() {
         
         <CardContent className="grid gap-5 sm:gap-6 p-6 sm:p-8">
           <p className="text-[11px] sm:text-xs leading-relaxed text-muted-foreground">
-            Sorry! We couldn't find any results. The requested resource is currently unreachable.
+            Sorry! We could not find any results. The requested resource is currently unreachable.
           </p>
 
           <Button 

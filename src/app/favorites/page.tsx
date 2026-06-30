@@ -4,10 +4,10 @@ import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { Loader2, Heart, ShieldAlert } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid'
+import { CategoryCollectionGrid } from '@/components/grids/CategoryCollectionGrid'
 import { useQuery } from '@apollo/client/react'
 import { GetLikedCollectionsDocument } from '@/graphql/generated'
-import WaveBackground from '@/components/WaveBackground'
+import WaveBackground from '@/components/backgrounds/WaveBackground'
 import { toast } from 'sonner'
 
 export default function FavoritesPage() {

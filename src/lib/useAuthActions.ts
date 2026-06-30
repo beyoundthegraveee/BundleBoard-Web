@@ -3,6 +3,12 @@
 import { signOut, useSession } from "next-auth/react";
 import { useMutation, useApolloClient } from "@apollo/client/react";
 import { LogoutDocument } from "@/graphql/generated";
+import { Session } from "next-auth";
+
+
+interface ExtendedSession extends Session {
+  refreshToken?: string;
+}
 
 export function useAuthActions() {
   const { data: session } = useSession();
@@ -10,17 +16,17 @@ export function useAuthActions() {
   const client = useApolloClient();
 
   const terminateSession = async () => {
-    const safeExecute = async (promise: Promise<any>) => {
+    const safeExecute = async (promise: Promise<unknown>) => {
       try {
         await promise;
-      } catch (e: any) {
-        if (e.name !== 'AbortError') {
-          console.error("Action failed:", e);
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error("Action failed:", error);
         }
       }
     };
 
-    const sessionData = session as any;
+    const sessionData = session as ExtendedSession | null;
     const refreshToken = sessionData?.refreshToken;
 
     if (refreshToken) {

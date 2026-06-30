@@ -26,7 +26,7 @@ export default function TermsPage() {
               1. Introduction and Company Details
             </h2>
             <p>
-              Welcome to BundleBoard ("we," "our," or "us"). These Terms of Service govern your use of our digital asset marketplace. 
+              Welcome to BundleBoard (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). These Terms of Service govern your use of our digital asset marketplace. 
               BundleBoard is registered and operates at Centralna 17/5, 02-271 Warsaw, Masovian, Poland. By accessing our platform, 
               creating an account, or downloading/uploading assets, you agree to be bound by these Terms.
             </p>
@@ -62,7 +62,7 @@ export default function TermsPage() {
             </h2>
             <p>
               When you download a free or paid asset, you receive a license granted directly by the author of the asset, not by BundleBoard. 
-              Unless explicitly stated otherwise by the author's attached license, you may not resell, redistribute, or share the original 
+              Unless explicitly stated otherwise by the author&apos;s attached license, you may not resell, redistribute, or share the original 
               source files under any circumstances.
             </p>
           </section>

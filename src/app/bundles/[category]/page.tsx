@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { CategoryCollectionGrid } from '@/components/CategoryCollectionGrid';
+import { CategoryCollectionGrid } from '@/components/grids/CategoryCollectionGrid';
 import { useQuery } from '@apollo/client/react';
 import { GetCollectionsByTagDocument } from '@/graphql/generated';
-import { BackgroundGradient } from '@/components/BackgroundGradient';
+import { BackgroundGradient } from '@/components/backgrounds/BackgroundGradient';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 12;

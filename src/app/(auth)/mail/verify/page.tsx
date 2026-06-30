@@ -14,18 +14,22 @@ export default function VerifyEmailPage() {
   const router = useRouter()
   const token = searchParams.get("token")
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
-  const [errorMsg, setErrorMsg] = useState("")
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    token ? 'loading' : 'error'
+  )
+  const [errorMsg, setErrorMsg] = useState(
+    token ? "" : "Invalid or missing verification token"
+  )
   const hasVerified = useRef(false)
   const [executeVerify] = useMutation(VerifyEmailDocument)
 
   useEffect(() => {
+    if (hasVerified.current) return;
+    hasVerified.current = true;
+
     if (!token) {
-      setStatus('error')
-      const msg = "Invalid or missing verification token"
-      setErrorMsg(msg)
-      toast.error(msg)
-      return
+      toast.error("Invalid or missing verification token")
+      return;
     }
 
     if (hasVerified.current) return;
@@ -46,9 +50,9 @@ export default function VerifyEmailPage() {
           setErrorMsg(msg)
           toast.error(msg)
         }
-      } catch (e: any) {
+      } catch (error) {
         setStatus('error')
-        const msg = e.message || "Secure connection terminated"
+        const msg = error instanceof Error ? error.message : "Secure connection terminated"
         setErrorMsg(msg)
         toast.error(msg)
       }

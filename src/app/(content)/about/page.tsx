@@ -1,10 +1,9 @@
 "use client"
-
 import React from 'react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import Link from 'next/link';
 import { ExternalLink, MessageCircle } from 'lucide-react';
-import WaveBackground from '@/components/WaveBackground';
+import WaveBackground from '@/components/backgrounds/WaveBackground';
 
 export default function AboutPage() {
   return (

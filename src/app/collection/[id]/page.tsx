@@ -3,13 +3,21 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft, AlertTriangle } from "lucide-react"
-import CollectionDetails from '@/components/CollectionDetails'
-import AuthorSidebar from '@/components/AuthorSidebar'
-import CommentsSection from '@/components/CommentSection'
+import CollectionDetails from '@/components/collectionActions/CollectionDetails'
+import AuthorSidebar from '@/components/collectionActions/AuthorSidebar'
+import CommentsSection from '@/components/collectionActions/CommentSection'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
 import { toast } from 'sonner'
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  previewImage: string;
+}
 
 export default function CollectionPage() {
   const { id } = useParams()
@@ -32,26 +40,45 @@ export default function CollectionPage() {
   const collection = data?.getCollectionById;
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
     if (typeof window !== 'undefined' && collectionId) {
-      const savedCart = localStorage.getItem('bundleboard_cart')
-      if (savedCart) {
-        const items = JSON.parse(savedCart)
-        setIsInCart(items.some((item: any) => item.id === collectionId))
+      try {
+        const savedCart = localStorage.getItem('bundleboard_cart')
+        if (savedCart) {
+          const items: CartItem[] = JSON.parse(savedCart)
+          const isSaved = items.some((item) => item.id === collectionId)
+          
+          timer = setTimeout(() => {
+            setIsInCart((prev) => (prev === isSaved ? prev : isSaved))
+          }, 0)
+        }
+      } catch (error) {
+        console.error("Failed to parse cart from localStorage", error);
       }
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [collectionId])
 
-  const handleAddToCart = (item: { id: string; name: string; price: number; category: string; previewImage: string }) => {
+  const handleAddToCart = (item: CartItem) => {
     if (typeof window !== 'undefined') {
-      const currentCart = localStorage.getItem('bundleboard_cart')
-      const items = currentCart ? JSON.parse(currentCart) : []
+      try {
+        const currentCart = localStorage.getItem('bundleboard_cart')
+        const items: CartItem[] = currentCart ? JSON.parse(currentCart) : []
       
-      if (!items.some((cartItem: any) => cartItem.id === item.id)) {
-        const updatedCart = [...items, item]
-        localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
-        setIsInCart(true)
-        window.dispatchEvent(new Event('cartUpdate'))
-        toast.success("Asset added to cart")
+        if (!items.some((cartItem) => cartItem.id === item.id)) {
+          const updatedCart = [...items, item]
+          localStorage.setItem('bundleboard_cart', JSON.stringify(updatedCart))
+          setIsInCart(true)
+          window.dispatchEvent(new Event('cartUpdate'))
+          toast.success("Asset added to cart")
+        }
+      } catch (error) {
+        toast.error("Failed to add item to cart");
+        console.error("Failed to add item to cart", error)
       }
     }
   }

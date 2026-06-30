@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
-import { VerifyAssetPurchaseDocument } from '@/graphql/generated'
+import { VerifyAssetPurchaseDocument, VerifyAssetPurchaseQuery, VerifyAssetPurchaseQueryVariables } from '@/graphql/generated'
 import { authOptions } from "@/lib/NextAuthOptions" 
+import { print, GraphQLError } from 'graphql'
+import { Session } from 'inspector/promises'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createSupabaseClient(
-  supabaseUrl || '',
-  supabaseServiceKey || '',
+  supabaseUrl,
+  supabaseServiceKey,
   { auth: { persistSession: false, autoRefreshToken: false } }
 )
 
@@ -20,31 +22,32 @@ export async function GET(
 ) {
   try {
     const { assetId } = await params
-    const session: any = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as (Session & { accessToken?: string }) | null;
     
     if (!session?.accessToken) {
       return new NextResponse("[SECURE_ACCESS_DENIED]: Unauthorized or missing token", { status: 401 })
     }
 
-    const apolloClient = new ApolloClient({
-      link: new HttpLink({
-        uri: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/graphql',
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
+    const graphqlResponse = await fetch(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.accessToken}`,
+      },
+      body: JSON.stringify({
+        query: print(VerifyAssetPurchaseDocument),
+        variables: { assetId } satisfies VerifyAssetPurchaseQueryVariables
       }),
-      cache: new InMemoryCache(),
-      ssrMode: true,
-    })
+      cache: 'no-store'
+    });
 
-    const { data, error } = await apolloClient.query({
-      query: VerifyAssetPurchaseDocument,
-      variables: { assetId },
-      fetchPolicy: 'no-cache' 
-    })
+    const { data, errors } = (await graphqlResponse.json()) as {
+      data?: VerifyAssetPurchaseQuery;
+      errors?: GraphQLError[];
+    };
 
-    if (error || !data?.getPurchaseByAsset) {
-      console.error("GraphQL Error:", error)
+    if (errors || !data?.getPurchaseByAsset) {
+      console.error("GraphQL Error:", errors);
       return new NextResponse("[ACCESS_DENIED]: Pipeline error", { status: 403 })
     }
 
@@ -62,7 +65,7 @@ export async function GET(
 
     const { data: storageData, error: storageError } = await supabaseAdmin.storage
       .from('vault') 
-      .createSignedUrl(filePath, 60, {
+      .createSignedUrl(filePath, 300, { 
         download: true,
       })
 
