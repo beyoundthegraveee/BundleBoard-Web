@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, Link as LinkIcon, X, Maximize2 } from "lucide-react"
-import LikeButton from '@/components/LikeButton'
+import LikeButton from '@/components/navbar/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
 import BmacBanner from './BmacBanner'
@@ -18,22 +19,30 @@ const getFullImageUrl = (path: string | undefined) => {
 };
 
 const TiltCard = ({ src, alt, onClick }: { src: string, alt: string, onClick?: () => void }) => {
+  const [prevSrc, setPrevSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(src);
+
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setImgSrc(src);
+  }
+
   return (
-    <CardContainer 
-      containerClassName="py-0 w-full" 
-      className="w-full"
-    >
+    <CardContainer containerClassName="py-0 w-full" className="w-full">
       <CardBody className="relative border border-border/60 bg-muted/5 w-full h-auto overflow-hidden rounded-none shadow-xl">
         <CardItem 
           translateZ="40" 
           className="w-full h-full flex justify-center items-center relative group/zoom cursor-zoom-in"
           onClick={onClick}
         >
-          <img 
-            src={src} 
+          <Image 
+            src={imgSrc} 
             alt={alt} 
+            width={1200}
+            height={800}
+            unoptimized
             className="w-full h-auto max-h-[60vh] md:max-h-[75vh] object-contain select-none opacity-95 transition-opacity duration-300"
-            onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
+            onError={() => setImgSrc(PLACEHOLDER_IMG)}
           />
           <div className="absolute inset-0 bg-background/0 group-hover/zoom:bg-background/20 transition-colors duration-300 flex items-center justify-center">
             <Maximize2 className="text-white opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-300 drop-shadow-xl" size={48} strokeWidth={1.5} />
@@ -41,6 +50,28 @@ const TiltCard = ({ src, alt, onClick }: { src: string, alt: string, onClick?: (
         </CardItem>
       </CardBody>
     </CardContainer>
+  );
+};
+
+const ThumbnailImage = ({ src, alt }: { src: string, alt: string }) => {
+  const [prevSrc, setPrevSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(src);
+
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setImgSrc(src);
+  }
+
+  return (
+    <Image 
+      src={imgSrc} 
+      alt={alt} 
+      width={112}
+      height={112}
+      unoptimized
+      className="w-full h-full object-cover"
+      onError={() => setImgSrc(PLACEHOLDER_IMG)}
+    />
   );
 };
 
@@ -61,18 +92,16 @@ const formatBytes = (bytes: number) => {
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false }: CollectionDetailsProps) {
   const { data: session } = useSession();
 
-  if (!collection) return null;
-  const { name, description, price, mediaResource, externalLink, id, galleryImages, likesCount = 0, isLiked = false, author } = collection;
-  
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
-  const [localLikesCount, setLocalLikesCount] = useState(likesCount);
-  const isOwnCollection = session?.user?.name?.toLowerCase() === author?.username?.toLowerCase();
-  const isExternal = !!externalLink;
+  const [localLikesCount, setLocalLikesCount] = useState(collection?.likesCount ?? 0);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
 
   useEffect(() => {
-    setLocalIsInCart(isInCart);
+    const timer = setTimeout(() => {
+      setLocalIsInCart(isInCart);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [isInCart]);
 
   useEffect(() => {
@@ -83,6 +112,36 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isZoomModalOpen]);
+
+  const collectionId = collection?.id;
+  useEffect(() => {
+    if (!collectionId) return;
+
+    const checkCartStatus = () => {
+      if (typeof window !== 'undefined') {
+        const savedCart = localStorage.getItem('bundleboard_cart')
+        if (savedCart) {
+          const items = JSON.parse(savedCart)
+          setLocalIsInCart(items.some((item: { id: string }) => item.id === collectionId))
+        } else {
+          setLocalIsInCart(false)
+        }
+      }
+    }
+
+    checkCartStatus()
+    window.addEventListener('cartUpdate', checkCartStatus)
+    return () => {
+      window.removeEventListener('cartUpdate', checkCartStatus)
+    }
+  }, [collectionId])
+
+  if (!collection) return null;
+
+  const { name, description, price, mediaResource, externalLink, id, galleryImages, isLiked = false, author } = collection;
+  
+  const isOwnCollection = session?.user?.name?.toLowerCase() === author?.username?.toLowerCase();
+  const isExternal = !!externalLink;
 
   const handleAddToCartClick = () => {
     if (localIsInCart || isOwnCollection || isExternal) return;
@@ -100,30 +159,9 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
     setLocalLikesCount(prev => newIsLiked ? prev + 1 : Math.max(0, prev - 1));
   };
 
-  useEffect(() => {
-    const checkCartStatus = () => {
-      if (typeof window !== 'undefined') {
-        const savedCart = localStorage.getItem('bundleboard_cart')
-        if (savedCart) {
-          const items = JSON.parse(savedCart)
-          setLocalIsInCart(items.some((item: any) => item.id === id))
-        } else {
-          setLocalIsInCart(false)
-        }
-      }
-    }
-
-    checkCartStatus()
-    window.addEventListener('cartUpdate', checkCartStatus)
-    return () => {
-      window.removeEventListener('cartUpdate', checkCartStatus)
-    }
-  }, [id])
-
   return (
     <>
       <div className="font-sans text-foreground space-y-10">
-        
         <div className="border-b border-border/40 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-primary">
@@ -228,11 +266,9 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
                           : 'border-transparent opacity-50 hover:opacity-100 hover:border-border/60'
                       }`}
                     >
-                      <img 
+                      <ThumbnailImage 
                         src={getFullImageUrl(img?.filePath)} 
                         alt={`Thumbnail ${index + 1}`} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG }}
                       />
                     </button>
                   ))}
@@ -330,9 +366,12 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             <X size={24} strokeWidth={1.5} />
           </button>
           
-          <img 
+          <Image 
             src={getFullImageUrl(galleryImages?.[activeImageIdx]?.filePath)} 
             alt="Fullscreen preview" 
+            width={1920}
+            height={1080}
+            unoptimized
             className="max-w-full max-h-full object-contain drop-shadow-2xl select-none"
             onClick={(e) => e.stopPropagation()}
           />
