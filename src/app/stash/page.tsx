@@ -52,7 +52,7 @@ export default function StashPage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || "Failed to retrieve the encrypted node.");
+        throw new Error(errorText || "Failed to retrieve the encrypted info.");
       }
 
       const blob = await response.blob();
@@ -112,7 +112,7 @@ export default function StashPage() {
         <div className="flex flex-wrap items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] font-bold tracking-widest text-muted-foreground uppercase select-none">
           <Link href="/" className="hover:text-foreground transition-colors shrink-0">Core</Link>
           <span className="opacity-30 shrink-0">/</span>
-          <span className="text-muted-foreground shrink-0">Node Control</span>
+          <span className="text-muted-foreground shrink-0">Panel Control</span>
           <span className="opacity-30 shrink-0">/</span>
           <span className="text-primary flex items-center gap-1 shrink-0">
             <FolderLock size={10} className="text-primary" /> Secure Stash
@@ -129,7 +129,7 @@ export default function StashPage() {
             </p>
           </div>
           <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 bg-muted text-muted-foreground border border-border/40 font-mono shrink-0">
-            {totalAssetsCount} Nodes Decrypted
+            {totalAssetsCount} Collections Decrypted
           </span>
         </header>
         

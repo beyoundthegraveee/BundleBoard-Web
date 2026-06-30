@@ -8,8 +8,8 @@ import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { PurchasedVault } from '@/components/profile/PurchaseVault'
 import { BillingLedger } from '@/components/profile/BillingLedger'
-import UserCommentsLog from '@/components/collectionActions/UserCommentsLog'
-import { DeployAssetModal } from '@/components/profile/asset/DeployAssetModal'
+import UserCommentsLog from '@/components/collectionComponents/UserCommentsLog'
+import { DeployAssetModal } from '@/components/profile/assetActions/DeployAssetModal'
 import { InventoryItemCard } from '@/components/profile/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                     ))
                   ) : (
                     <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[9px] md:text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
-                      No product nodes submitted by this station.
+                      No products submitted by this station.
                     </div>
                   )}
                 </div>

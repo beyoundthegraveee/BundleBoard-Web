@@ -20,9 +20,10 @@ import { signIn } from "next-auth/react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { GoogleIcon } from "@/lib/socialLinks"
 import { toast } from "sonner"
+import { EMAIL_REGEX } from "@/lib/constants"
 
 interface LoginFormData {
-  username: string;
+  identifier: string;
   password: string;
   rememberMe: boolean;
 }
@@ -35,7 +36,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const { register, handleSubmit, control, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
-      username: "",
+      identifier: "",
       password: "",
       rememberMe: false
     }
@@ -46,7 +47,7 @@ export function LoginForm() {
     
     try {
       const result = await signIn("credentials", {
-        username: data.username,
+        identifier: data.identifier,
         password: data.password,
         remember: data.rememberMe,
         redirect: false,
@@ -55,7 +56,7 @@ export function LoginForm() {
 
       if (result?.error) {
         if (result.error === "CredentialsSignin") {
-          toast.error("Invalid username or password")
+          toast.error("Invalid credentials or password")
         } else {
           toast.error(result.error)
         }
@@ -88,7 +89,7 @@ export function LoginForm() {
           Sign In
         </CardTitle>
         <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
-          Authorization Node Key Required
+          Authorization Key Required
         </CardDescription>
       </CardHeader>
       
@@ -116,21 +117,30 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">          
+          
           <div className="grid gap-1.5">
-            <Label htmlFor="username" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Username</Label>
+            <Label htmlFor="identifier" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">
+              Username or Email
+            </Label>
             <Input
-              id="username"
+              id="identifier"
+              type="text"
               className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50"
-              placeholder="Enter username"
+              placeholder="Enter username or email"
               disabled={isLoading}
-              {...register("username", { 
-                required: "Username is required",
-                minLength: { value: 3, message: "Min length is 3" }
+              {...register("identifier", { 
+                required: "Username or Email is required",
+                validate: (value) => {
+                  if (value.includes("@")) {
+                    return EMAIL_REGEX.test(value) || "Invalid email format";
+                  }
+                  return value.length >= 3 || "Username must be at least 3 characters";
+                }
               })}
             />
-            {errors.username && (
+            {errors.identifier && (
               <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">
-                {errors.username.message}
+                {errors.identifier.message}
               </p>
             )}
           </div>

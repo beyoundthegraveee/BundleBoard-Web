@@ -335,7 +335,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
         
         <div className="mb-5 sm:mb-6 border-b border-border/40 pb-3 sm:pb-4 pr-6">
           <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground uppercase">Deploy Free Asset</h3>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-normal">Submit asset components to initialize public catalog node.</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-normal">Submit asset components to initialize public catalog.</p>
         </div>
         
         {validationError && (

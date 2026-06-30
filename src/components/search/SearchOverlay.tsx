@@ -145,7 +145,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                     {item.name}
                                   </div>
                                   <div className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                    Asset Node
+                                    Assets
                                   </div>
                                 </div>
                               </div>
@@ -160,7 +160,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         </div>
                       ) : (
                         <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-muted-foreground py-12 sm:py-16 text-center border border-dashed border-border/40 bg-muted/10">
-                          No matching nodes found in the registry.
+                          No matching assets found in the registry.
                         </div>
                       )}
                     </motion.div>
@@ -203,7 +203,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                           </div>
                         ) : (
                           <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-muted-foreground py-10 sm:py-12 text-center border border-dashed border-border/40">
-                            No recent nodes found.
+                            No recent assets found.
                           </div>
                         )}
                       </div>

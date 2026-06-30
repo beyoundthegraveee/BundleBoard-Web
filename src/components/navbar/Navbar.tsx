@@ -61,7 +61,7 @@ export function Navbar() {
     fetchPolicy: 'cache-first'
   });
 
-  const currentUsername = meData?.me?.username || session?.user?.name || "User Node";
+  const currentUsername = meData?.me?.username || session?.user?.name || "User";
   const currentEmail = meData?.me?.email || session?.user?.email || "";
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export function Navbar() {
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 border border-border/60 rounded-none text-muted-foreground hover:text-foreground hover:bg-accent items-center justify-center transition-colors relative"
-              aria-label="Toggle inversion node"
+              aria-label="Toggle inversion"
             >
               {mounted ? (
                 theme === "dark" ? (

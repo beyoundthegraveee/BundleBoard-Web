@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft, AlertTriangle } from "lucide-react"
-import CollectionDetails from '@/components/collectionActions/CollectionDetails'
-import AuthorSidebar from '@/components/collectionActions/AuthorSidebar'
-import CommentsSection from '@/components/collectionActions/CommentSection'
+import CollectionDetails from '@/components/collectionComponents/CollectionDetails'
+import AuthorSidebar from '@/components/collectionComponents/AuthorSidebar'
+import CommentsSection from '@/components/collectionComponents/CommentSection'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'
@@ -95,7 +95,7 @@ export default function CollectionPage() {
       <div className="border border-dashed border-border/60 p-12 text-center bg-card/20 backdrop-blur-sm max-w-md w-full flex flex-col items-center relative z-10 rounded-none shadow-xl">
         <AlertTriangle size={24} className="text-muted-foreground/50 mb-4" />
         <div className="font-semibold uppercase text-muted-foreground text-xs tracking-widest mb-6">
-          Asset node offline or destroyed
+          Asset offline or destroyed
         </div>
         <button 
           onClick={() => router.back()}

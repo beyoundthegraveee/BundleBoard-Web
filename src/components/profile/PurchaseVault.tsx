@@ -74,7 +74,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
           </div>
         </div>
         <span className="text-[10px] font-bold bg-muted px-2 py-0.5 border border-border/40 text-muted-foreground font-mono rounded-none tracking-wider">
-          {totalAssetsCount} NODES
+          {totalAssetsCount} ASSETS
         </span>
       </div>
 
@@ -91,7 +91,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
                       <AlertTriangle size={14} className="text-destructive" />
                     </div>
                     <div className="min-w-0 flex-1 text-xs font-bold text-destructive uppercase tracking-wider">
-                      Offline Node
+                      Offline
                     </div>
                   </div>
                 )
@@ -117,7 +117,7 @@ export function PurchasedVault({ purchases, totalAssetsCount }: PurchasedVaultPr
                     </div>
                     <div className="min-w-0 space-y-1">
                       <h4 className="text-sm font-bold uppercase tracking-tight truncate text-foreground group-hover:text-primary transition-colors">
-                        {assetData.name || `Asset Node #${item.id || "Unknown"}`}
+                        {assetData.name || `Asset #${item.id || "Unknown"}`}
                       </h4>
                       <div className="flex items-center gap-2.5">
                         {item.snapshotPrice === 0 ? (

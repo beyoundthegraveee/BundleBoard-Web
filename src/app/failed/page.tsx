@@ -51,7 +51,7 @@ export default function FailedPage() {
             href="/profile" 
             className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
-            Go to Node Control
+            Go to Profile Control
           </Link>
         </div>
       </div>

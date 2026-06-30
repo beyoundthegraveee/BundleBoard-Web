@@ -17,7 +17,17 @@ export function BackgroundGradient() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px] animate-float" style={{ animationDelay: '-5s' }} />
       <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-purple-500/5 blur-[100px] animate-float" style={{ animationDelay: '-10s' }} />
       
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03]" />
+      <div 
+        className="absolute inset-0 opacity-[0.15] dark:opacity-[0.05] pointer-events-none" 
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(128, 128, 128, 0.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(128, 128, 128, 0.2) 1px, transparent 1px)
+          `,
+          backgroundSize: '24px 24px',
+          backgroundPosition: 'center center'
+        }}
+      />
     </div>
   );
 }

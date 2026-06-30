@@ -190,7 +190,7 @@ export default function SettingsPage() {
         <ShieldAlert size={48} className="text-destructive/50 mb-4" />
         <h1 className="text-lg md:text-xl font-bold uppercase tracking-widest mb-2">Access Denied</h1>
         <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-6 max-w-sm">
-          System requires valid authentication token to access node configuration.
+          System requires valid authentication token to access configuration.
         </p>
         <Link href="/login" className="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
           Initialize Auth Sequence

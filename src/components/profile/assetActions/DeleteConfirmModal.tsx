@@ -41,7 +41,7 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, collectionName,
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed">
-          You are initializing a purge sequence on asset node{" "}
+          You are initializing a purge sequence on assets{" "}
           <span className="text-foreground font-semibold break-words">
             &quot;{collectionName}&quot;
           </span>
