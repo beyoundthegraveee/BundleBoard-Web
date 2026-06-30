@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useSyncExternalStore } from 'react'
 import { Loader2, AlertTriangle, X } from "lucide-react"
 
 interface DeleteConfirmModalProps {
@@ -10,12 +10,14 @@ interface DeleteConfirmModalProps {
   isLoading: boolean;
 }
 
-export function DeleteConfirmModal({ isOpen, onClose, onConfirm, collectionName, isLoading }: DeleteConfirmModalProps) {
-  const [isMounted, setIsMounted] = useState(false);
+const subscribe = () => () => {};
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+export function DeleteConfirmModal({ isOpen, onClose, onConfirm, collectionName, isLoading }: DeleteConfirmModalProps) {
+  const isMounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false
+  );
 
   if (!isOpen || !isMounted) return null
 
@@ -41,7 +43,7 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, collectionName,
         <p className="text-xs text-muted-foreground leading-relaxed">
           You are initializing a purge sequence on asset node{" "}
           <span className="text-foreground font-semibold break-words">
-            "{collectionName}"
+            &quot;{collectionName}&quot;
           </span>
           . This routine will permanently unlink files from database matrices.
         </p>

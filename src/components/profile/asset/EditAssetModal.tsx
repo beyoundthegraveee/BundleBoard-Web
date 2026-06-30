@@ -45,7 +45,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     return () => clearTimeout(timer);
   }, []);
 
-  // 1. Инициализация формы (с проверкой черновика)
   const [form, setForm] = useState(() => {
     if (typeof window !== "undefined" && initialData?.id) {
       const draft = sessionStorage.getItem(`draft_editForm_${initialData.id}`);
@@ -54,7 +53,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     return { name: initialData?.name || "", description: initialData?.description || "" };
   });
 
-  // 2. Инициализация ссылки (с проверкой черновика)
   const [externalLink, setExternalLink] = useState(() => {
     if (typeof window !== "undefined" && initialData?.id) {
       const draftLink = sessionStorage.getItem(`draft_editLink_${initialData.id}`);
@@ -63,7 +61,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     return initialData?.externalLink || "";
   });
 
-  // 3. Инициализация галереи картинок
   const [gallery, setGallery] = useState<GalleryItem[]>(() => {
     return initialData?.galleryImages?.map((img, idx) => ({
       id: `existing-${initialData.id}-${idx}`,
@@ -77,7 +74,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
   const [validationError, setValidationError] = useState<string | null>(null)
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null)
 
-  // Эффект для автоматического сохранения изменений в sessionStorage (черновик)
   useEffect(() => {
     if (isOpen && initialData?.id && isMounted) {
       sessionStorage.setItem(`draft_editForm_${initialData.id}`, JSON.stringify(form))
@@ -90,7 +86,6 @@ export function EditAssetModal({ isOpen, onClose, onSave, isLoading, initialData
     galleryRef.current = gallery;
   }, [gallery]);
 
-  // Очистка Blob-ссылок при размонтировании
   useEffect(() => {
     return () => {
       galleryRef.current.forEach(item => {
