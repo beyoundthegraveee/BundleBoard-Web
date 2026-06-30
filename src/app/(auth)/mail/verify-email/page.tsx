@@ -64,7 +64,7 @@ export default function VerifyRequestPage() {
 
           <div className="border border-border/50 bg-muted/30 p-4 text-center">
             <p className="text-xs sm:text-sm font-medium tracking-wide text-foreground/80">
-              Didn't receive it? Please check your <span className="font-semibold text-foreground">spam</span> or <span className="font-semibold text-foreground">junk</span> folder.
+              Didn not receive it? Please check your <span className="font-semibold text-foreground">spam</span> or <span className="font-semibold text-foreground">junk</span> folder.
             </p>
           </div>
 
