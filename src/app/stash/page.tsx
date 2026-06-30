@@ -1,9 +1,10 @@
 "use client"
 
-import React, { useMemo, useEffect } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
-import { Loader2, FolderLock, Download, AlertTriangle, Clock } from 'lucide-react'
+import { Loader2, FolderLock, Download, Clock } from 'lucide-react'
 import { FALLBACK_IMAGE } from '@/lib/constants'
 import { useQuery } from '@apollo/client/react'
 import { GetUserProfileDocument } from '@/graphql/generated'
@@ -11,7 +12,7 @@ import { toast } from 'sonner'
 
 export default function StashPage() {
   const { status } = useSession()
-  const [downloadingId, setDownloadingId] = React.useState<string | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   
   const { data, loading, error } = useQuery(GetUserProfileDocument, {
     skip: status !== "authenticated",
@@ -24,10 +25,14 @@ export default function StashPage() {
     }
   }, [error])
 
-  const userData = data?.getUserProfile
-  const purchases = userData?.purchases || []
+  const purchases = useMemo(() => {
+    const rawPurchases = data?.getUserProfile?.purchases;
+    if (!rawPurchases) return [];
+    return rawPurchases.filter((p): p is NonNullable<typeof p> => p !== null);
+  }, [data]);
+  
   const totalAssetsCount = useMemo(() => {
-    return purchases.reduce((acc: any, curr: any) => acc + (curr?.items?.length || 0), 0)
+    return purchases.reduce((acc, curr) => acc + (curr.items?.length || 0), 0)
   }, [purchases])
 
   const handleDownload = async (assetId: string, assetName: string) => {
@@ -41,7 +46,7 @@ export default function StashPage() {
       const response = await fetch(`/api/download/${assetId}`);
       
       if (response.redirected && response.url.includes('/login')) {
-        toast.error("[ACCESS_DENIED] Session expired. Please re-authenticate.", { id: toastId });
+        toast.error("[ACCESS_DENIED] Session expired.", { id: toastId });
         return;
       }
 
@@ -58,22 +63,22 @@ export default function StashPage() {
       
       const contentDisposition = response.headers.get('content-disposition');
       let filename = `${assetName.replace(/\s+/g, '_')}_asset.zip`; 
-      if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+      if (contentDisposition?.includes('filename=')) {
           filename = contentDisposition.split('filename=')[1].replace(/['"]/g, '');
       }
       
       link.download = filename;
       document.body.appendChild(link);
       link.click();
-      
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
 
       toast.success("Transfer complete.", { id: toastId });
 
-    } catch (error: any) {
-      console.error("Download pipeline error:", error);
-      toast.error(error.message || "Critical error during file transfer.", { id: toastId });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Critical error during file transfer.";
+      console.error("Download pipeline error:", err);
+      toast.error(message, { id: toastId });
     } finally {
       setDownloadingId(null);
     }
@@ -130,25 +135,21 @@ export default function StashPage() {
         
         {totalAssetsCount > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {purchases.map((purchase: any) => (
+            {purchases.map((purchase) => (
               <React.Fragment key={purchase.id}>
-                {purchase.items?.map((item: any) => {
-                  if (!item.asset) {
-                    return (
-                      <div key={item.id} className="border border-dashed border-destructive/40 bg-destructive/5 flex flex-col justify-center items-center aspect-video p-4 md:p-6 text-center">
-                        <AlertTriangle size={18} className="text-destructive/60 mb-1.5 md:mb-2" />
-                        <div className="text-destructive font-bold uppercase tracking-wider text-[9px] md:text-[10px] mb-0.5">Asset Offline</div>
-                        <div className="text-muted-foreground text-[7px] md:text-[8px] uppercase tracking-widest">Node destroyed by author</div>
-                      </div>
-                    )
-                  }
+                {purchase.items?.map((item) => {
+                  if (!item || !item.asset) return null;
+
+                  const currentAssetId = item.asset.id;
+                  const currentAssetName = item.asset.name;
 
                   return (
                     <div key={item.id} className="group border border-border/40 bg-card rounded-none shadow-sm overflow-hidden flex flex-col justify-between relative">
                       <div className="aspect-[4/3] sm:aspect-video border-b border-border/30 overflow-hidden bg-muted relative">
-                        <img 
-                          src={item.asset.galleryImages?.[0]?.filePath || FALLBACK_IMAGE} 
-                          alt={item.asset.name} 
+                        <Image 
+                          src={item.asset.galleryImages?.[0]?.filePath || FALLBACK_IMAGE || ""} 
+                          alt={currentAssetName} 
+                          fill
                           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" 
                         />
                       </div>
@@ -156,7 +157,7 @@ export default function StashPage() {
                       <div className="p-3 md:p-4 space-y-3 md:space-y-4">
                         <div className="flex justify-between items-start gap-3 md:gap-4">
                           <span className="font-bold uppercase text-[11px] md:text-xs text-foreground tracking-tight leading-snug line-clamp-2 sm:line-clamp-1">
-                            {item.asset.name}
+                            {currentAssetName}
                           </span>
                           
                           <div className={`text-[7px] md:text-[8px] border px-1.5 py-0.5 font-bold uppercase tracking-wider shrink-0 font-mono
@@ -169,17 +170,17 @@ export default function StashPage() {
 
                         {purchase.status === 'succeeded' ? (
                           <button 
-                            onClick={() => handleDownload(item.asset.id, item.asset.name)}
-                            disabled={downloadingId === item.asset.id}
+                            onClick={() => handleDownload(currentAssetId, currentAssetName)}
+                            disabled={downloadingId === currentAssetId}
                             className="flex items-center justify-center gap-1.5 md:gap-2 w-full bg-foreground text-background hover:bg-primary hover:text-white disabled:opacity-50 disabled:hover:bg-foreground disabled:hover:text-background p-2 md:p-2.5 font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-colors rounded-none"
                           >
-                            {downloadingId === item.asset.id ? (
+                            {downloadingId === currentAssetId ? (
                               <Loader2 size={12} className="shrink-0 animate-spin" />
                             ) : (
                               <Download size={12} className="shrink-0" />
                             )}
                             <span className="truncate">
-                              {downloadingId === item.asset.id ? 'Extracting...' : 'Download Asset'}
+                              {downloadingId === currentAssetId ? 'Extracting...' : 'Download Asset'}
                             </span>
                           </button>
                         ) : (
@@ -188,7 +189,6 @@ export default function StashPage() {
                             <span className="truncate">{purchase.status === 'pending' ? 'Awaiting Payment' : 'Payment Failed'}</span>
                           </div>
                         )}
-                        
                       </div>
                     </div>
                   )
