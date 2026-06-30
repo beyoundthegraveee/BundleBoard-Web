@@ -30,60 +30,66 @@ export default function VerifyRequestPage() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      toast.error("Connection failure." + errorMessage)
+      toast.error("Connection failure. " + errorMessage)
     }
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
-      <CardHeader className="space-y-1.5 text-center border-b border-border/40 pb-6">
-        <div className="flex justify-center mb-4">
-           <div className="p-3 border border-border/60 bg-background text-foreground">
-             <MailCheck className="h-6 w-6 stroke-[1.5]" />
-           </div>
-        </div>
-        <CardTitle className="text-2xl font-bold uppercase tracking-wider text-foreground">
-          Check your email
-        </CardTitle>
-        <CardDescription className="font-medium uppercase text-[10px] tracking-widest text-muted-foreground">
-          Verification Link Dispatched
-        </CardDescription>
-      </CardHeader>
+    <div className="flex min-h-[80vh] items-center justify-center p-4 sm:p-8 font-sans text-foreground relative overflow-hidden bg-background">
       
-      <CardContent className="grid gap-6 p-8">
-        <p className="text-[11px] leading-relaxed text-muted-foreground text-center">
-          We have transmitted an activation key to:{" "}
-          <span className="font-mono text-primary bg-primary/5 px-1.5 py-0.5 select-all">
-            {email || "payload@address.missing"}
-          </span>.
-        </p>
-
-        <div className="border border-destructive/20 bg-destructive/[0.02] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-destructive/80 text-center">
-            Check your spam folder if delivery is delayed.
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none z-0" />
+      
+      <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl relative z-10">
+        <CardHeader className="space-y-2 text-center border-b border-border/40 pb-6 pt-8">
+          <div className="flex justify-center mb-4">
+             <div className="p-3.5 border border-border/60 bg-background text-primary shadow-sm">
+               <MailCheck className="h-7 w-7 stroke-[1.5]" />
+             </div>
+          </div>
+          <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wider text-foreground">
+            Check your email
+          </CardTitle>
+          <CardDescription className="font-medium uppercase text-[10px] sm:text-xs tracking-widest text-muted-foreground">
+            Verification Link Dispatched
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="grid gap-6 p-6 sm:p-8">
+          <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-center">
+            We have transmitted an activation key to: <br className="hidden sm:block" />
+            <span className="inline-block mt-2 font-mono text-foreground font-medium bg-secondary/50 px-3 py-1.5 select-all border border-border/40">
+              {email || "payload@address.missing"}
+            </span>
           </p>
-        </div>
 
-        <div className="grid gap-3">
-          <Button 
-            className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity"
-            onClick={handleResendEmail}
-            disabled={isResending}
-          >
-            {isResending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resend Verification"}
-          </Button>
+          <div className="border border-border/50 bg-muted/30 p-4 text-center">
+            <p className="text-xs sm:text-sm font-medium tracking-wide text-foreground/80">
+              Didn't receive it? Please check your <span className="font-semibold text-foreground">spam</span> or <span className="font-semibold text-foreground">junk</span> folder.
+            </p>
+          </div>
 
-          <Button 
-            variant="outline" 
-            asChild 
-            className="w-full border border-border/60 rounded-none font-semibold uppercase text-[11px] tracking-widest py-6 hover:bg-accent"
-          >
-            <Link href="/login" className="flex items-center gap-2">
-              <ArrowLeft className="h-3.5 w-3.5" /> Return to sign in
-            </Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="grid gap-3 pt-2">
+            <Button 
+              className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] sm:text-xs tracking-widest rounded-none py-6 transition-opacity"
+              onClick={handleResendEmail}
+              disabled={isResending}
+            >
+              {isResending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isResending ? "Resending..." : "Resend Verification"}
+            </Button>
+
+            <Button 
+              variant="outline" 
+              asChild 
+              className="w-full border border-border/60 rounded-none font-semibold uppercase text-[11px] sm:text-xs tracking-widest py-6 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Link href="/login" className="flex items-center justify-center gap-2">
+                <ArrowLeft className="h-3.5 w-3.5" /> Return to sign in
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
