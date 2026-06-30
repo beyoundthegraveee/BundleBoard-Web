@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import SplashScreen from "@/components/splash/SplashScreen"; 
 
 export function SplashProvider({ children }: { children: React.ReactNode }) {
@@ -9,13 +9,30 @@ export function SplashProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const executed = sessionStorage.getItem("platform_splash_executed");
-    if (!executed) {
-      setShowSplash(true);
-    }
-    setIsReady(true);
+    
+    const initTimer = setTimeout(() => {
+      if (executed) {
+        setIsReady(true);
+      } else {
+        setShowSplash(true);
+      }
+    }, 0);
+
+    return () => clearTimeout(initTimer);
   }, []);
 
-  if (!isReady) return null; 
+  const handleAnimationComplete = () => {
+    setShowSplash(false);
+    setIsReady(true);
+    sessionStorage.setItem("platform_splash_executed", "true");
+  };
 
-  return <>{children}</>;
+  if (!isReady && !showSplash) return null; 
+
+  return (
+    <>
+      {showSplash && <SplashScreen onAnimationComplete={handleAnimationComplete} />}
+      {isReady && children}
+    </>
+  );
 }

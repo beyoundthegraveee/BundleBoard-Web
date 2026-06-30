@@ -8,7 +8,7 @@ import { useAuthActions } from '@/lib/useAuthActions'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { PurchasedVault } from '@/components/profile/PurchaseVault'
 import { BillingLedger } from '@/components/profile/BillingLedger'
-import UserCommentsLog from '@/components/collection-page/UserCommentsLog'
+import UserCommentsLog from '@/components/collectionActions/UserCommentsLog'
 import { DeployAssetModal } from '@/components/profile/asset/DeployAssetModal'
 import { InventoryItemCard } from '@/components/profile/InventoryItemCard'
 import { useQuery } from '@apollo/client/react'
@@ -24,13 +24,6 @@ interface AuthoredCollection {
   price?: number | null; 
   tags?: ({ name: string } | null)[] | null;
   [key: string]: unknown; 
-}
-
-interface Purchase {
-  id?: string;
-  amount?: number | string;
-  items?: unknown[];
-  [key: string]: unknown;
 }
 
 export default function ProfilePage() {
@@ -208,7 +201,7 @@ export default function ProfilePage() {
               } 
               totalAssetsCount={totalAssetsCount} 
             />
-            
+
             <BillingLedger 
               purchases={
                 (userData?.purchases || []) as React.ComponentProps<typeof BillingLedger>['purchases']
