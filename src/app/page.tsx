@@ -24,7 +24,7 @@ export default function Home() {
           </div>
           <div className="hidden sm:flex items-center gap-6 opacity-60 tracking-widest">
             <span>Data Stream: Encrypted</span>
-            <span>Node: 2.0.26</span>
+            <span>Version: 2.0.26</span>
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function Home() {
               
               <div className="mt-8 lg:mt-auto pt-6 border-t border-dashed border-border/60">
                 <p className="text-[10px] md:text-[11px] leading-relaxed text-muted-foreground uppercase tracking-wide font-normal">
-                  <span className="font-bold text-foreground">Warning:</span> Asset nodes require modern compute capabilities. Unauthorized mirroring or data mining is heavily prohibited by distribution policy.
+                  <span className="font-bold text-foreground">Warning:</span> Assets require modern compute capabilities. Unauthorized mirroring or data mining is heavily prohibited by distribution policy.
                 </p>
               </div>
             </div>

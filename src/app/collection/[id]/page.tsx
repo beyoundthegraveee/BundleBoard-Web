@@ -95,7 +95,7 @@ export default function CollectionPage() {
       <div className="border border-dashed border-border/60 p-12 text-center bg-card/20 backdrop-blur-sm max-w-md w-full flex flex-col items-center relative z-10 rounded-none shadow-xl">
         <AlertTriangle size={24} className="text-muted-foreground/50 mb-4" />
         <div className="font-semibold uppercase text-muted-foreground text-xs tracking-widest mb-6">
-          Asset node offline or destroyed
+          Asset offline or destroyed
         </div>
         <button 
           onClick={() => router.back()}

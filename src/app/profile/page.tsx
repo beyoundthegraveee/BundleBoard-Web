@@ -188,7 +188,7 @@ export default function ProfilePage() {
                     ))
                   ) : (
                     <div className="text-center py-6 border border-dashed border-border/40 bg-background text-[9px] md:text-[10px] font-semibold uppercase text-muted-foreground/50 tracking-wider">
-                      No product nodes submitted by this station.
+                      No products submitted by this station.
                     </div>
                   )}
                 </div>

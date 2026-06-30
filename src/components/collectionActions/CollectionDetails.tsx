@@ -167,7 +167,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
             <div className="flex items-center gap-2 text-primary">
               <Activity size={13} className="animate-pulse" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                {isExternal ? 'External Network Node' : 'Active Directory Node'}
+                {isExternal ? 'External Network ' : 'Active Directory '}
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight leading-tight max-w-2xl">
@@ -296,7 +296,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Distribution Hub</div>
-              <div className="text-xs font-medium text-foreground truncate">External Author Node</div>
+              <div className="text-xs font-medium text-foreground truncate">External Author</div>
             </div>
             
             <div className="border border-border/40 bg-card/40 p-4 flex flex-col gap-1.5 rounded-none">

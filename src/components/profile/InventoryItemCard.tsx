@@ -69,10 +69,10 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
 
       setIsDeleteOpen(false)
       onRefreshNeeded()
-      toast.success("Asset node successfully destroyed.")
+      toast.success("Asset successfully destroyed.")
     } catch (err: unknown) {
       console.error("COLLECTION_DELETE_FAILURE:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete asset node."
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete asset."
       toast.error(errorMessage)
     }
   }
@@ -135,7 +135,7 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
 
         <div className="mt-4 pt-3 border-t border-white/[0.04] flex justify-between items-center text-[9px] uppercase tracking-wider text-muted-foreground">
           <span className="opacity-40 group-hover:opacity-100 group-hover:text-foreground transition-all">
-            Inspect Node →
+            Inspect →
           </span>
           <div className="flex gap-2">
             <button 
@@ -146,7 +146,7 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
                 }
               }
               className="p-2 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent transition-all rounded-none"
-              title="Edit Node Parameters"
+              title="Edit Parameters"
             >
               <Edit3 size={12} />
             </button>
@@ -157,7 +157,7 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
                     setIsDeleteOpen(true);
                 }}
                 className="p-2 border border-destructive/20 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-all rounded-none"
-                title="Destroy Node"
+                title="Destroy"
             >
               <Trash2 size={12} />
             </button>

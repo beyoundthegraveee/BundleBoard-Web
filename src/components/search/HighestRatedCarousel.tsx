@@ -39,7 +39,7 @@ export function HighestRatedCarousel() {
     return (
       <div className="w-full flex flex-col items-center justify-center py-24 text-muted-foreground font-sans">
         <Loader2 className="animate-spin h-5 w-5 mb-3 text-primary stroke-[1.5]" />
-        <span className="text-[10px] font-bold uppercase tracking-widest">Compiling trending nodes...</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest">Compiling trending materials...</span>
       </div>
     );
   }

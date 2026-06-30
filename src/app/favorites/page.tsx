@@ -78,11 +78,11 @@ export default function FavoritesPage() {
               Saved Assets
             </h1>
             <p className="text-xs text-muted-foreground mt-2 uppercase tracking-wider">
-              Displaying user-specific liked nodes matrix.
+              Displaying user-specific liked matrix.
             </p>
           </div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:block">
-            {likedCollections.length} Nodes Indexed
+            {likedCollections.length} Collections Indexed
           </div>
         </header>
         

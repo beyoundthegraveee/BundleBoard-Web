@@ -56,7 +56,7 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
                         {p.status || 'PROCESSED'}
                       </span>
                       <span className="text-[8px] text-muted-foreground uppercase tracking-widest font-mono">
-                        {p.items?.length || 0} NODES ACQUIRED
+                        {p.items?.length || 0} ASSETS ACQUIRED
                       </span>
                     </div>
                   </td>
@@ -70,7 +70,7 @@ export function BillingLedger({ purchases, totalSpent }: BillingLedgerProps) {
         </div>
       ) : (
         <div className="text-center py-8 border border-dashed border-border/40 bg-background text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-          No transactional entries recorded on this node.
+          No transactional entries recorded on this account.
         </div>
       )}
       

@@ -46,7 +46,7 @@ export default function NotFound() {
             className="w-full bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[10px] sm:text-xs tracking-widest rounded-none py-5 sm:py-6 transition-opacity"
           >
             <Link href="/" className="flex items-center justify-center gap-2">
-              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Return to primary node
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Return to home
             </Link>
           </Button>
         </CardContent>

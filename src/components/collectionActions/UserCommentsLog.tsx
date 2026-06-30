@@ -45,7 +45,7 @@ export default function UserCommentsLog({ userId }: UserCommentsLogProps) {
         {error && <div className="text-destructive opacity-90">Error retrieving logs.</div>}
         
         {!loading && !error && commentsList.length === 0 && (
-          <div className="text-muted-foreground opacity-70">No communication logs found for this node.</div>
+          <div className="text-muted-foreground opacity-70">No communication logs found for this user.</div>
         )}
 
         {commentsList.map((c) => (

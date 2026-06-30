@@ -83,7 +83,7 @@ export default function HardwarePage() {
           </section>
 
           <article className="max-w-3xl pt-8 border-t border-border/20">
-            <h3 className="text-base md:text-lg font-bold uppercase tracking-tight text-foreground mb-4 font-display">The Mobile Node</h3>
+            <h3 className="text-base md:text-lg font-bold uppercase tracking-tight text-foreground mb-4 font-display">The Mobile</h3>
             <div className="p-5 border border-border/50 bg-background/50 flex items-start gap-4">
               <Laptop className="w-6 h-6 text-primary shrink-0 mt-1" strokeWidth={1.5} />
               <div className="text-xs md:text-sm text-muted-foreground leading-relaxed">

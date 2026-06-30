@@ -57,7 +57,7 @@ export const CollectionItem = memo(({ item, supabaseBase }: CollectionItemProps)
             <span className="font-medium text-foreground">@{item.author?.username || "system"}</span>
           </div>
           <span className="hidden sm:block opacity-0 group-hover:opacity-100 group-hover:text-primary transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 font-semibold text-[12px] shrink-0">
-            Extract Node →
+            Extract →
           </span>
         </div>
       </div>
