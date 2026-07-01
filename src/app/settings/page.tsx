@@ -110,12 +110,12 @@ export default function SettingsPage() {
         toast.success(`[TRANSMISSION_SUCCESS]: ${result.message}`)
         setNewEmail("")
       } else {
-        toast.error(result?.message || "Rejected.")
+        toast.error(`[REJECTED]: ${result?.message || "Request denied."}`)
       }
     } catch (err: unknown) {
       const error = err as GraphQLSystemError;
       const backendMessage = error.graphQLErrors?.[0]?.message || error.message || "Transmission interrupted.";
-      toast.error(backendMessage)
+      toast.error(`[ERROR]: ${backendMessage}`)
     }
   }
 
