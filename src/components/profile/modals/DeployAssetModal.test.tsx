@@ -35,7 +35,6 @@ jest.mock('next/image', () => ({
       priority?: boolean;
     }
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { fill, unoptimized, priority, alt, ...rest } = props;
     // eslint-disable-next-line @next/next/no-img-element
     return <img {...rest} alt={alt || 'mock-image'} />;
@@ -168,9 +167,10 @@ describe('DeployAssetModal Component', () => {
   it('validates file uploads constraints (oversized preview images)', async () => {
     const { container } = render(<DeployAssetModal {...defaultProps} />);
 
-    const oversizedFile = new File(['a'.repeat(11 * 1024 * 1024)], 'huge.png', { type: 'image/png' });
+    const oversizedFile = new File([], 'huge.png', { type: 'image/png' });
+    Object.defineProperty(oversizedFile, 'size', { value: 11 * 1024 * 1024, configurable: true });
     
-    const previewInput = container.querySelector('input[type="file"]');
+    const previewInput = container.querySelector('input[accept="image/*"]');
     if (!previewInput) throw new Error('Gallery image input not found');
 
     fireEvent.change(previewInput, { target: { files: [oversizedFile] } });
@@ -187,12 +187,14 @@ describe('DeployAssetModal Component', () => {
       screen.getByPlaceholderText(/Specify bundle details/i),
       'Detailed specification bundle for cyber shader development. Includes 15 high-fidelity noise matrices and fully procedural parameters for advanced lighting design configurations.'
     );
-    await user.type(screen.getByPlaceholderText('5.00'), '15.00');
+    
+    const priceInput = screen.getByPlaceholderText('5.00');
+    fireEvent.change(priceInput, { target: { value: '15.00' } });
+    
     await user.selectOptions(screen.getByRole('combobox'), 'graphics');
 
     const mockImageFile = new File(['dummy-img'], 'preview.png', { type: 'image/png' });
-    
-    const imageInput = container.querySelector('input[type="file"]');
+    const imageInput = container.querySelector('input[accept="image/*"]');
     if (!imageInput) throw new Error('Gallery image input not found');
     fireEvent.change(imageInput, { target: { files: [mockImageFile] } });
 
@@ -201,9 +203,7 @@ describe('DeployAssetModal Component', () => {
     });
 
     const mockZipFile = new File(['dummy-zip-archive'], 'assets.zip', { type: 'application/zip' });
-    
-    const fileInputs = container.querySelectorAll('input[type="file"]');
-    const archiveInput = fileInputs[1] || container.querySelector('input[id*="vault"], input[id*="archive"], input[id*="file"]');
+    const archiveInput = container.querySelector('input[accept*="zip"]');
     if (!archiveInput) throw new Error('Archive project vault input not found');
     fireEvent.change(archiveInput, { target: { files: [mockZipFile] } });
 
@@ -257,7 +257,7 @@ describe('DeployAssetModal Component', () => {
     });
   }, 15000);
 
-  it('triggers error validation rules if form rules are broken on submission (price limit / url verification)', async () => {
+  it('triggers error validation rules if price is lower than 5 dollars', async () => {
     const user = userEvent.setup();
     const { container } = render(<DeployAssetModal {...defaultProps} />);
 
@@ -270,12 +270,8 @@ describe('DeployAssetModal Component', () => {
 
     const priceInput = screen.getByPlaceholderText('5.00');
     fireEvent.change(priceInput, { target: { value: '2.50' } });
-    
-    await user.click(screen.getByRole('button', { name: /External Link/i }));
-    const urlInput = screen.getByPlaceholderText('https://...');
-    fireEvent.change(urlInput, { target: { value: 'ftp://broken-link.com' } });
 
-    const imageInput = container.querySelector('input[type="file"]');
+    const imageInput = container.querySelector('input[accept="image/*"]');
     if (!imageInput) throw new Error('Gallery image input not found');
     const mockImageFile = new File(['img'], 'preview.png', { type: 'image/png' });
     fireEvent.change(imageInput, { target: { files: [mockImageFile] } });
@@ -285,8 +281,53 @@ describe('DeployAssetModal Component', () => {
     const form = container.querySelector('form');
     if (!form) throw new Error('Form element not found');
     fireEvent.submit(form);
+    
     await waitFor(() => {
-      expect(container.textContent).toContain('Minimum commercial value is $5.00');
+      expect(container.textContent).toContain('Pricing protocol violation: Commercial value must be between $5.00 and $100.00 USD.');
     });
+  });
+
+  it('triggers error validation rules if commercial price exceeds 100 dollars', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<DeployAssetModal {...defaultProps} />);
+
+    await user.type(screen.getByPlaceholderText(/Ultra Chrome Gradient Pack/i), 'Valid Name');
+    await user.type(
+      screen.getByPlaceholderText(/Specify bundle details/i),
+      'This description is definitely long enough to clear any core schema validation limits placed onto this form.'
+    );
+    await user.selectOptions(screen.getByRole('combobox'), 'graphics');
+
+    const priceInput = screen.getByPlaceholderText('5.00');
+    fireEvent.change(priceInput, { target: { value: '101.00' } });
+    
+    const imageInput = container.querySelector('input[accept="image/*"]');
+    if (!imageInput) throw new Error('Gallery image input not found');
+    const mockImageFile = new File(['img'], 'preview.png', { type: 'image/png' });
+    fireEvent.change(imageInput, { target: { files: [mockImageFile] } });
+    
+    await user.click(screen.getByRole('checkbox'));
+
+    const form = container.querySelector('form');
+    if (!form) throw new Error('Form element not found');
+    fireEvent.submit(form);
+    
+    await waitFor(() => {
+      expect(container.textContent).toContain('Pricing protocol violation: Commercial value must be between $5.00 and $100.00 USD.');
+    });
+  });
+
+  it('triggers error validation rules if archive file size exceeds 300 MB limit', async () => {
+    const { container } = render(<DeployAssetModal {...defaultProps} />);
+
+    const oversizedZip = new File([], 'huge-project.zip', { type: 'application/zip' });
+    Object.defineProperty(oversizedZip, 'size', { value: 301 * 1024 * 1024, configurable: true });
+    
+    const archiveInput = container.querySelector('input[accept*="zip"]');
+    if (!archiveInput) throw new Error('Archive project vault input not found');
+
+    fireEvent.change(archiveInput, { target: { files: [oversizedZip] } });
+
+    expect(screen.getByText('The project archive exceeds the maximum allowed size of 300 MB.')).toBeInTheDocument();
   });
 });

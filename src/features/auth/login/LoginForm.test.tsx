@@ -40,13 +40,13 @@ describe('LoginForm Component', () => {
     render(<LoginForm />);
 
     await user.type(screen.getByLabelText(/Username or Email/i), 'testuser');
-    await user.type(screen.getByLabelText(/Password/i), 'password123');
+    await user.type(screen.getByLabelText(/Password/i), 'password12345');
     await user.click(screen.getByRole('button', { name: /Sign In/i }));
 
     await waitFor(() => {
       expect(signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({
         identifier: 'testuser',
-        password: 'password123',
+        password: 'password12345',
       }));
       expect(toast.success).toHaveBeenCalledWith('Authorization successful');
       expect(mockPush).toHaveBeenCalledWith('/');
@@ -60,7 +60,7 @@ describe('LoginForm Component', () => {
     render(<LoginForm />);
 
     await user.type(screen.getByLabelText(/Username or Email/i), 'wronguser');
-    await user.type(screen.getByLabelText(/Password/i), 'wrongpass');
+    await user.type(screen.getByLabelText(/Password/i), 'wrongpassword');
     await user.click(screen.getByRole('button', { name: /Sign In/i }));
 
     await waitFor(() => {
@@ -78,6 +78,6 @@ describe('LoginForm Component', () => {
     await user.click(screen.getByRole('button', { name: /Sign In/i }));
 
     expect(await screen.findByText(/Username must be at least 3 characters/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Min length is 8/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Min length is 12/i)).toBeInTheDocument();
   });
 });

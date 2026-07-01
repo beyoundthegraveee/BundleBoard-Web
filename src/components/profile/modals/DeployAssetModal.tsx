@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon, DollarSign, Gift } from "lucide-react"
@@ -191,8 +189,8 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
     setValidationError(null)
 
     const finalPrice = isFree ? 0 : parseFloat(price);
-    if (!isFree && (isNaN(finalPrice) || finalPrice < 5)) {
-      setValidationError("Pricing protocol violation: Minimum commercial value is $5.00 USD.");
+    if (!isFree && (isNaN(finalPrice) || finalPrice < 5 || finalPrice > 100)) {
+      setValidationError("Pricing protocol violation: Commercial value must be between $5.00 and $100.00 USD.");
       return;
     }
 
@@ -412,7 +410,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             <div className="grid gap-1 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-baseline">
                 <label htmlFor="modal-price" className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Price (USD)</label>
-                <span className="text-[8px] font-bold text-destructive uppercase tracking-wide">Min Limit: $5.00</span>
+                <span className="text-[8px] font-bold text-destructive uppercase tracking-wide">Limit: $5.00 - $100.00</span>
               </div>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">$</span>
@@ -421,6 +419,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                   id="modal-price"
                   step="0.01"
                   min="5"
+                  max="100"
                   required={!isFree}
                   placeholder="5.00"
                   value={price}
