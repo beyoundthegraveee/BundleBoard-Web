@@ -91,10 +91,9 @@ function RegisterFormContent() {
       const combinedError = `${primaryMessage} ${graphQLMessage}`.toLowerCase();
 
       if (
-        combinedError.includes("non-nullable") || 
         combinedError.includes("duplicate") ||
         combinedError.includes("already registered")
-      ) {
+      ) { 
         setError("email", { 
           type: "manual", 
           message: "This email or username is already registered" 
