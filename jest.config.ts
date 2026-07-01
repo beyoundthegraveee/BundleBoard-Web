@@ -12,6 +12,18 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/graphql/generated.ts',
+    '!src/app/layout.tsx',
+    '!src/**/index.{js,ts}',
+    '!src/app/robots.ts',
+    '!src/app/sitemap.ts',
+    '!src/proxy.ts',
+    '!src/app/**/page.tsx',
+  ],
 }
  
 export default createJestConfig(config)
