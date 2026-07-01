@@ -197,6 +197,14 @@ export const authOptions: NextAuthOptions = {
       if (trigger === "update" && session) {
         if (session.isNewUser !== undefined) token.isNewUser = session.isNewUser;
         if (session.roles) token.roles = session.roles;
+
+        try {
+          console.log("[NextAuth] Role update triggered. Forcing backend token rotation...");
+          const refreshed = await refreshAccessToken(token);
+          return refreshed;
+        } catch (refreshError) {
+          console.error("[NextAuth] Failed to force token rotation on update:", refreshError);
+        }
       }
 
       if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 60 * 1000) return token;
