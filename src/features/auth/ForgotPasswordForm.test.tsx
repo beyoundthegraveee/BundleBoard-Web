@@ -6,6 +6,7 @@ import '@testing-library/jest-dom';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { RequestPasswordResetDocument } from '@/graphql/generated';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('next/navigation', () => require('next-router-mock'));
 
 const successMock = {

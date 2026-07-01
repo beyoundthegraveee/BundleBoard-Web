@@ -7,15 +7,16 @@ import { toast } from 'sonner';
 import { DeleteCollectionDocument } from '@/graphql/generated';
 
 jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  );
+  return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
+    return <a href={href}>{children}</a>;
+  };
 });
 
 jest.mock('next/image', () => {
-  return ({ src, alt }: { src: string; alt: string }) => (
-    <img src={src} alt={alt} />
-  );
+  return function MockImage({ src, alt }: { src: string; alt: string }) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={alt} />;
+  };
 });
 
 jest.mock('sonner', () => ({
@@ -30,18 +31,35 @@ jest.mock('@apollo/client/react', () => ({
 }));
 
 jest.mock('./modals/DeleteConfirmModal', () => ({
-  DeleteConfirmModal: ({ isOpen, onConfirm, onClose }: any) =>
-    isOpen ? (
+  DeleteConfirmModal: function MockDeleteConfirmModal({
+    isOpen,
+    onConfirm,
+    onClose,
+  }: {
+    isOpen: boolean;
+    onConfirm: () => void;
+    onClose: () => void;
+  }) {
+    return isOpen ? (
       <div data-testid="mock-delete-modal">
         <button onClick={onConfirm}>Confirm Delete Action</button>
         <button onClick={onClose}>Cancel Delete Action</button>
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 
 jest.mock('./modals/EditAssetModal', () => ({
-  EditAssetModal: ({ isOpen, onSave, onClose }: any) =>
-    isOpen ? (
+  EditAssetModal: function MockEditAssetModal({
+    isOpen,
+    onSave,
+    onClose,
+  }: {
+    isOpen: boolean;
+    onSave: (name: string, price: number, description: string, images: { filePath: string }[]) => void;
+    onClose: () => void;
+  }) {
+    return isOpen ? (
       <div data-testid="mock-edit-modal">
         <button
           onClick={() =>
@@ -54,7 +72,8 @@ jest.mock('./modals/EditAssetModal', () => ({
         </button>
         <button onClick={onClose}>Cancel Edit Action</button>
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 
 

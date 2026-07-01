@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@apollo/client/react';
 import { toast } from 'sonner';
 
-// --- Моки внешних зависимостей ---
 jest.mock('next-auth/react');
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -21,13 +20,22 @@ jest.mock('sonner', () => ({
   },
 }));
 
-// Мок для Next.js Image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ fill, unoptimized, ...props }: any) => <img {...props} />,
+  default: function MockImage(
+    props: React.ImgHTMLAttributes<HTMLImageElement> & {
+      fill?: boolean;
+      unoptimized?: boolean;
+      priority?: boolean;
+    }
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fill, unoptimized, priority, alt, ...rest } = props;
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...rest} alt={alt || 'mock-image'} />;
+  },
 }));
 
-// --- Тестовые данные ---
 const mockCartItems = [
   {
     id: 'item-1',

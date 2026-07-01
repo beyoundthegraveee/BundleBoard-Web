@@ -28,13 +28,32 @@ jest.mock('@/lib/constants', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: function MockImage({ fill, unoptimized, priority, ...props }: any) {
-    return <img {...props} alt={props.alt || ''} />;
+  default: function MockImage(
+    props: React.ImgHTMLAttributes<HTMLImageElement> & {
+      fill?: boolean;
+      unoptimized?: boolean;
+      priority?: boolean;
+    }
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fill, unoptimized, priority, alt, ...rest } = props;
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...rest} alt={alt || 'mock-image'} />;
   },
 }));
 
 jest.mock('@/components/ui/checkbox', () => ({
-  Checkbox: ({ id, checked, onCheckedChange, disabled }: any) => (
+  Checkbox: ({
+    id,
+    checked,
+    onCheckedChange,
+    disabled,
+  }: {
+    id?: string;
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
+    disabled?: boolean;
+  }) => (
     <input
       type="checkbox"
       id={id}
@@ -78,7 +97,7 @@ describe('DeployAssetModal Component', () => {
   beforeAll(() => {
     global.URL.createObjectURL = jest.fn(() => 'blob:http://localhost/mock-preview-id');
     global.URL.revokeObjectURL = jest.fn();
-    global.Image = MockHTMLImageElement as any;
+    global.Image = MockHTMLImageElement as unknown as typeof Image;
   });
 
   beforeEach(() => {
