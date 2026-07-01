@@ -160,7 +160,7 @@ export function LoginForm() {
               disabled={isLoading}
               {...register("password", { 
                 required: "Password is required",
-                minLength: { value: 8, message: "Min length is 8" }
+                minLength: { value: 12, message: "Min length is 12 characters" }
               })}
             />
             {errors.password && (
