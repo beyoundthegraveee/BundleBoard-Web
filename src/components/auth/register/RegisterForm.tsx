@@ -42,6 +42,7 @@ function RegisterFormContent() {
   })
 
   const password = useWatch({ control, name: "password" });
+  const termsAccepted = useWatch({ control, name: "termsAccepted" });
 
   useEffect(() => {
     if (status === "authenticated" && session) {
@@ -55,47 +56,46 @@ function RegisterFormContent() {
   }, [status, session, router])
 
   const onEmailSubmit = async (formData: RegisterFormInputs) => {
-  try {
-    const { data } = await executeRegister({
-      variables: {
-        input: {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          role: "client",
+    try {
+      const { data } = await executeRegister({
+        variables: {
+          input: {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            role: "client",
+          }
         }
-      }
-    })
+      })
 
-    if (data?.register?.error) {
-      const serverError = data.register.error.toLowerCase();
-
-      if (serverError.includes("email") && serverError.includes("already registered")) {
-        setError("email", { 
-          type: "manual", 
-          message: "This email is already registered" 
-        });
-        toast.error("Account already exists with this email.");
-      } 
-      else if (serverError.includes("username") && serverError.includes("already exists")) {
-        setError("username", { 
-          type: "manual", 
-          message: "This username is already taken" 
-        });
-        toast.error("Username is already taken.");
-      } 
-      else {
-        toast.error(data.register.error);
+      if (data?.register?.error) {
+        const serverError = data.register.error.toLowerCase();
+        if (serverError.includes("email") && serverError.includes("already registered")) {
+          setError("email", { 
+            type: "manual", 
+            message: "This email is already registered" 
+          });
+          toast.error("Account already exists with this email.");
+        } 
+        else if (serverError.includes("username") && serverError.includes("already exists")) {
+          setError("username", { 
+            type: "manual", 
+            message: "This username is already taken" 
+          });
+          toast.error("Username is already taken.");
+        } 
+        else {
+          toast.error(data.register.error);
+        }
+      } else {
+        toast.success("Identity registered. Proceeding to setup...")
+        router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
-    } else {
-      toast.success("Identity registered. Proceeding to setup...")
-      router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+      toast.error(errorMessage)
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
-    toast.error(errorMessage)
   }
-}
 
   return (
     <Card className="w-full max-w-md mx-auto border border-border/60 bg-card rounded-none shadow-2xl font-sans">
@@ -194,7 +194,11 @@ function RegisterFormContent() {
             )}
           </div>
 
-          <Button className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm" type="submit" disabled={isLoading}>
+          <Button 
+            className="w-full mt-3 bg-primary text-primary-foreground hover:opacity-90 font-semibold uppercase text-[11px] tracking-widest rounded-none py-6 transition-opacity shadow-sm data-[disabled]:opacity-40" 
+            type="submit" 
+            disabled={isLoading || !termsAccepted}
+          >
             {isRegisterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign Up"}
           </Button>
         </form>
