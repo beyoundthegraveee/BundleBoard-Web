@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { CategoryCollectionGrid } from './CategoryCollectionGrid';
-import { BatchGrid } from './BatchGrid';
 
 jest.mock('./BatchGrid', () => ({
   BatchGrid: ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -10,22 +9,25 @@ jest.mock('./BatchGrid', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} alt={props.alt || ''} />,
+  // eslint-disable-next-line @next/next/no-img-element
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img {...props} alt={props.alt || ''} />
+  ),
 }));
 
 describe('CategoryCollectionGrid', () => {
-  type MockCollection = {
+  interface MockCollection {
     id: string;
     name: string;
+    description: string;
     price: number;
-    description: string | null;
-    author: { username: string } | null;
+    author: { username: string };
     galleryImages: { filePath: string }[] | null;
-  };
+  }
 
   it('renders empty state when collections array is empty', () => {
     render(<CategoryCollectionGrid collections={[]} />);
-    
+
     expect(screen.getByText(/Data Stream Terminal Empty/i)).toBeInTheDocument();
     expect(screen.getByText(/No deployed registry packages/i)).toBeInTheDocument();
   });
@@ -45,19 +47,19 @@ describe('CategoryCollectionGrid', () => {
         name: 'Free Item',
         price: 0,
         description: '',
-        author: null,
+        author: { username: 'system' },
         galleryImages: [],
       },
     ];
 
-    render(<CategoryCollectionGrid collections={mockCollections as any} />);
+    render(<CategoryCollectionGrid collections={mockCollections} />);
 
     expect(screen.getByText('Test Item One')).toBeInTheDocument();
     expect(screen.getByText('Free Item')).toBeInTheDocument();
-    
+
     expect(screen.getByText('$9.99')).toBeInTheDocument();
     expect(screen.getByText('FREE')).toBeInTheDocument();
-    
+
     expect(screen.getByText(/@dev_user/i)).toBeInTheDocument();
     expect(screen.getByText(/@system/i)).toBeInTheDocument();
   });
