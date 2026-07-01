@@ -7,6 +7,8 @@ export const EXTERNAL_URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,
 
 export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+export const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9])/;
+
 export const ALLOWED_EXTENSIONS = ['zip', 'rar', 'pdf', 'jpeg', 'jpg', 'png', 'webp', 'mp4'];
 
 export const MAX_FILE_SIZE_BYTES = maxFileSizeMb * 1024 * 1024;

@@ -16,6 +16,7 @@ import { RegisterDocument } from "@/graphql/generated"
 import { toast } from "sonner"
 import TermsDialog from "@/components/terms/TermsDialog"
 import { GoogleIcon } from "@/lib/socialLinks"
+import { PASSWORD_REGEX } from "@/lib/constants"
 
 interface RegisterFormInputs {
   username: string;
@@ -156,7 +157,7 @@ function RegisterFormContent() {
 
           <div className="grid gap-1.5">
             <Label htmlFor="password" className="font-semibold uppercase text-[11px] tracking-wider text-muted-foreground">Password</Label>
-            <Input id="password" type="password" className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50" placeholder="Minimum 8 characters" disabled={isLoading} {...register("password", { required: "Password is required", minLength: { value: 8, message: "Min length is 8" } })} />
+            <Input id="password" type="password" className="border border-border/60 rounded-none bg-background text-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-ring text-sm font-normal py-5 placeholder:text-muted-foreground/50" placeholder="Min 12 chars, letters & symbols" disabled={isLoading} {...register("password", { required: "Password is required", minLength: { value: 12, message: "Min length is 12" }, pattern: { value: PASSWORD_REGEX, message: "Must contain letters and a special character" } })} />
             {errors.password && <p className="text-[10px] text-destructive font-medium uppercase tracking-wide mt-0.5">{errors.password.message as string}</p>}
           </div>
 
