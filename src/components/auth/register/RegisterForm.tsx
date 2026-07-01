@@ -31,7 +31,7 @@ function RegisterFormContent() {
   const [executeRegister, { loading: isRegisterLoading }] = useMutation(RegisterDocument)
   const isLoading = status === "loading" || isRegisterLoading;
 
-  const { register, handleSubmit, control, formState: { errors }, setError } = useForm<RegisterFormInputs>({
+  const { register, handleSubmit, control, formState: { errors }, setError, clearErrors } = useForm<RegisterFormInputs>({
     defaultValues: {
       username: "",
       email: "",
@@ -56,6 +56,8 @@ function RegisterFormContent() {
   }, [status, session, router])
 
   const onEmailSubmit = async (formData: RegisterFormInputs) => {
+    clearErrors();
+
     try {
       const { data } = await executeRegister({
         variables: {
@@ -90,7 +92,6 @@ function RegisterFormContent() {
 
       if (
         combinedError.includes("non-nullable") || 
-        combinedError.includes("register") || 
         combinedError.includes("duplicate") ||
         combinedError.includes("already registered")
       ) {
