@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft, AlertTriangle } from "lucide-react"
-import CollectionDetails from '@/components/collectionComponents/CollectionDetails'
-import AuthorSidebar from '@/components/collectionComponents/AuthorSidebar'
-import CommentsSection from '@/components/collectionComponents/CommentSection'
+import CollectionDetails from '@/components/collection/details/CollectionDetails'
+import AuthorSidebar from '@/components/collection/details/page/AuthorSidebar'
+import CommentsSection from '@/components/collection/details/page/CommentSection'
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionDocument } from '@/graphql/generated'
 import { AuroraBackground } from '@/components/ui/aurora-background'

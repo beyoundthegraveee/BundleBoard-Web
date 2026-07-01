@@ -1,6 +1,6 @@
 "use client"
 
-import { CollectionGrid } from "@/components/grids/CollectionGrid";
+import { CollectionGrid } from "@/components/collection/grid/CollectionGrid";
 import { HighestRatedCarousel } from "@/components/search/HighestRatedCarousel";
 import { ArrowRight, Activity, Grid3X3, ExternalLink, Heart } from "lucide-react";
 import Link from "next/link";
@@ -137,7 +137,7 @@ export default function Home() {
             <div className="flex flex-col gap-2 md:gap-3">
               <span className="text-background text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Protocols</span>
               <a href="mailto:bundleboard@gmail.com" className="text-[10px] md:text-[11px] font-medium uppercase tracking-wider text-background/50 hover:text-background transition-colors inline-flex items-center gap-1">
-                Support Node <ExternalLink size={10} className="opacity-40" />
+                Support  <ExternalLink size={10} className="opacity-40" />
               </a>
             </div>
           </div>

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react"
 import { useQuery } from '@apollo/client/react'
 import { GetCollectionsPagedDocument } from '@/graphql/generated'
 import { BatchGrid } from './BatchGrid'
-import { CollectionItem } from '../collectionComponents/CollectionItem'
+import { CollectionItem } from '../../collectionComponents/CollectionItem'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 21;

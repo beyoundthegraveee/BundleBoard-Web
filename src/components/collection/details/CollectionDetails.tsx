@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import Image from "next/image"
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, Link as LinkIcon, X, Maximize2 } from "lucide-react"
-import LikeButton from '@/components/navbar/LikeButton'
+import LikeButton from '@/components/navbar/components/LikeButton'
 import { GetCollectionQuery } from '@/graphql/generated'
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
-import BmacBanner from './BmacBanner'
+import BmacBanner from '../../banner/BmacBanner'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";

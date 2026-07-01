@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
-import { RoleSelection } from "@/components/auth/RoleSelection"
+import { RoleSelection } from "@/features/auth/RoleSelection"
 import { Card } from "@/components/ui/card"
 
 function SelectRolePageContent() {

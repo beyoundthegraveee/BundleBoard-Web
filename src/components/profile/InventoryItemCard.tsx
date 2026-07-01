@@ -4,8 +4,8 @@ import React, { useState } from 'react'
 import { Edit3, Trash2 } from "lucide-react"
 import Link from 'next/link'
 import Image from 'next/image'
-import { DeleteConfirmModal } from './assetActions/DeleteConfirmModal'
-import { EditAssetModal } from './assetActions/EditAssetModal'
+import { DeleteConfirmModal } from './modals/DeleteConfirmModal'
+import { EditAssetModal } from './modals/EditAssetModal'
 import { useMutation } from '@apollo/client/react'
 import { toast } from 'sonner'
 import { 
