@@ -49,7 +49,7 @@ describe('SortSidebar Component', () => {
   });
 
   test('applies visual styles for active items', () => {
-    const { rerender } = render(<SortSidebar {...defaultProps} />);
+    render(<SortSidebar {...defaultProps} />);
     const activeSortLabel = screen.getByText('Latest Init');
     expect(activeSortLabel).toHaveClass('font-bold');
 

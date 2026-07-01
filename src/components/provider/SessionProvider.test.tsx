@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AuthSessionProvider } from './SessionProvider';
-import { SessionProvider } from 'next-auth/react';
 
 jest.mock('next-auth/react', () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) => (

@@ -41,45 +41,45 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
-    const authLink = new SetContextLink((prevContext, _operation) => {
-    const context = prevContext as ApolloContext;
-    const prevHeaders = context.headers || {};
+    const authLink = new SetContextLink((operation) => {
+      const context = operation.getContext() as ApolloContext;
+      const prevHeaders = context.headers || {};
 
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname;
-      
-      const isPublicPath = [
-        "/login",
-        "/register",
-        "/mail/verify-email",
-        "/mail/verify",
-        "/forgot-password",
-        "/select-role"
-      ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        
+        const isPublicPath = [
+          "/login",
+          "/register",
+          "/mail/verify-email",
+          "/mail/verify",
+          "/forgot-password",
+          "/select-role"
+        ].some(publicPath => path === publicPath) || path.startsWith("/password/reset-password");
 
-      if (isPublicPath) {
+        if (isPublicPath) {
+          return { headers: prevHeaders };
+        }
+      }
+
+      if (context.skipAuth) {
         return { headers: prevHeaders };
       }
-    }
 
-    if (context.skipAuth) {
-      return { headers: prevHeaders };
-    }
-
-    const token = (session as ExtendedSession | null)?.accessToken;
-    
-    return {
-      headers: {
-        ...prevHeaders,
-        authorization: token ? `Bearer ${token}` : "",
-      },
-    };
-  });
+      const token = (session as ExtendedSession | null)?.accessToken;
+      
+      return {
+        headers: {
+          ...prevHeaders,
+          authorization: token ? `Bearer ${token}` : "",
+        },
+      };
+    });
 
     return new ApolloClient({
       link: authLink.concat(httpLink),
       cache: cache,
-    });
+      });
   }, [session, cache]);
 
   

@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { CategoryCollectionGrid } from './CategoryCollectionGrid';
 
@@ -9,10 +10,10 @@ jest.mock('./BatchGrid', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  // eslint-disable-next-line @next/next/no-img-element
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img {...props} alt={props.alt || ''} />
-  ),
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...props} alt={props.alt || ''} />;
+  },
 }));
 
 describe('CategoryCollectionGrid', () => {

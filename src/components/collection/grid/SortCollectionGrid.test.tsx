@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SortCollectionGrid } from './SortCollectionGrid';
 import { useQuery } from '@apollo/client/react';
@@ -14,9 +15,10 @@ jest.mock('./BatchGrid', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img {...props} alt={props.alt || ''} />
-  ),
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...props} alt={props.alt || ''} />;
+  },
 }));
 
 const mockedUseQuery = useQuery as unknown as jest.Mock;

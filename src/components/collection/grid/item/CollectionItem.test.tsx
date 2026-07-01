@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { CollectionItem } from './CollectionItem';
 import '@testing-library/jest-dom';
@@ -17,7 +18,10 @@ type CollectionItemData = {
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: JSX.IntrinsicElements['img']) => <img {...props} />,
+  default: (props: JSX.IntrinsicElements['img']) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...props} alt={props.alt || ''} />;
+  },
 }));
 
 describe('CollectionItem Component', () => {

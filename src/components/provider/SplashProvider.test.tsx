@@ -1,7 +1,6 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SplashProvider } from './SplashProvider';
-import SplashScreen from '@/components/splash/SplashScreen';
 
 jest.mock('@/components/splash/SplashScreen', () => ({
   __esModule: true,
