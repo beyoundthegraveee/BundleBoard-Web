@@ -13,9 +13,6 @@ jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }));
 
-const mockComments = [
-  { id: '1', content: 'Great collection!', createdAt: '2026-07-01T10:00:00Z', user: { username: 'user_dev' } },
-];
 
 describe('CommentsSection Component', () => {
   const mockRefetch = jest.fn();
