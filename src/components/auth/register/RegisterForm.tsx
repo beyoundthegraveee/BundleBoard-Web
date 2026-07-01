@@ -69,31 +69,39 @@ function RegisterFormContent() {
       })
 
       if (data?.register?.error) {
-        const serverError = data.register.error.toLowerCase();
-        if (serverError.includes("email") && serverError.includes("already registered")) {
-          setError("email", { 
-            type: "manual", 
-            message: "This email is already registered" 
-          });
-          toast.error("Account already exists with this email.");
-        } 
-        else if (serverError.includes("username") && serverError.includes("already exists")) {
-          setError("username", { 
-            type: "manual", 
-            message: "This username is already taken" 
-          });
-          toast.error("Username is already taken.");
-        } 
-        else {
-          toast.error(data.register.error);
-        }
+        handleRegistrationError(data.register.error);
       } else {
         toast.success("Identity registered. Proceeding to setup...")
         router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
-      toast.error(errorMessage)
+    } catch (error: any) {
+      const graphQLErrorMessage = error?.graphQLErrors?.[0]?.message || "";
+      const primaryErrorMessage = error?.message || "";
+      const combinedError = `${graphQLErrorMessage} ${primaryErrorMessage}`;
+
+      handleRegistrationError(combinedError);
+    }
+  }
+
+  const handleRegistrationError = (errorString: string) => {
+    const cleanError = errorString.toLowerCase();
+
+    if (cleanError.includes("email") && (cleanError.includes("already registered") || cleanError.includes("already exists"))) {
+      setError("email", { 
+        type: "manual", 
+        message: "This email is already registered" 
+      });
+      toast.error("An account with this email already exists.");
+    } 
+    else if (cleanError.includes("username") && (cleanError.includes("already exists") || cleanError.includes("already taken"))) {
+      setError("username", { 
+        type: "manual", 
+        message: "This username is already taken" 
+      });
+      toast.error("Username is already taken.");
+    } 
+    else {
+      toast.error(errorString || "An unexpected registration error occurred.");
     }
   }
 
