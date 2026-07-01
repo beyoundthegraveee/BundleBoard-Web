@@ -23,6 +23,8 @@ const config: Config = {
     '!src/app/sitemap.ts',
     '!src/proxy.ts',
     '!src/app/**/page.tsx',
+    '!src/components/backgrounds/**/*.{js,jsx,ts,tsx}',
+    '!src/components/banner/**/*.{js,jsx,ts,tsx}',
   ],
 }
  
