@@ -14,25 +14,18 @@ export default function VerifyEmailPage() {
   const router = useRouter()
   const token = searchParams.get("token")
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    token ? 'loading' : 'error'
-  )
-  const [errorMsg, setErrorMsg] = useState(
-    token ? "" : "Invalid or missing verification token"
-  )
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [errorMsg, setErrorMsg] = useState("")
   const hasVerified = useRef(false)
   const [executeVerify] = useMutation(VerifyEmailDocument)
 
   useEffect(() => {
-    if (hasVerified.current) return;
-    hasVerified.current = true;
-
     if (!token) {
-      toast.error("Invalid or missing verification token")
       return;
     }
 
     if (hasVerified.current) return;
+    
     hasVerified.current = true;
 
     const verify = async () => {
@@ -60,6 +53,17 @@ export default function VerifyEmailPage() {
 
     verify()
   }, [token, executeVerify])
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!token && status === 'loading') {
+        setStatus('error')
+        setErrorMsg("Invalid or missing verification token")
+      }
+    }, 1500)
+    
+    return () => clearTimeout(timeout)
+  }, [token, status])
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4 font-sans text-foreground relative overflow-hidden bg-background">
