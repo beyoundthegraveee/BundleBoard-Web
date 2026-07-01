@@ -9,7 +9,7 @@ interface CollectionItemProps {
     name: string;
     description: string;
     price: number;
-    author: { username: string };
+    author: { username: string } | null;
     galleryImages: { filePath: string }[];
   };
   supabaseBase: string;

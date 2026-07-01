@@ -9,7 +9,7 @@ import { useAuthActions } from "@/lib/useAuthActions"
 import { useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
 import { SearchOverlay } from "../search/SearchOverlay"
-import { CartDrawer } from "./CartDrawer"
+import { CartDrawer } from "./components/CartDrawer"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@apollo/client/react"
 import { GetMeDocument } from "@/graphql/generated"
@@ -65,7 +65,6 @@ export function Navbar() {
     pathname?.startsWith("/register") || 
     pathname?.includes("verify") ||
     pathname?.includes("confirm"),
-  
   fetchPolicy: 'cache-first',
   errorPolicy: 'all'         
 });
