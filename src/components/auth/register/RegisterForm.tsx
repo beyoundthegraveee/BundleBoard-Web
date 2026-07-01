@@ -86,9 +86,14 @@ function RegisterFormContent() {
         toast.success("Identity registered. Proceeding to setup...")
         router.push(`/select-role?email=${encodeURIComponent(formData.email)}`)
       }
-    } catch (error: any) {
-      const primaryMessage = error?.message || "";
-      const graphQLMessage = error?.graphQLErrors?.[0]?.message || "";
+    } catch (error) {
+      const err = error as { 
+        message?: string; 
+        graphQLErrors?: Array<{ message?: string }>; 
+      };
+
+      const primaryMessage = err?.message || "";
+      const graphQLMessage = err?.graphQLErrors?.[0]?.message || "";
       const combinedError = `${primaryMessage} ${graphQLMessage}`.toLowerCase();
 
       if (
