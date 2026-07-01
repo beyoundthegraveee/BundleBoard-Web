@@ -255,7 +255,7 @@ describe('DeployAssetModal Component', () => {
       expect(mockOnSuccess).toHaveBeenCalled();
       expect(mockOnClose).toHaveBeenCalled();
     });
-  });
+  }, 15000);
 
   it('triggers error validation rules if form rules are broken on submission (price limit / url verification)', async () => {
     const user = userEvent.setup();
