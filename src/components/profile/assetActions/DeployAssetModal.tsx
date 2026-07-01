@@ -196,6 +196,11 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       return;
     }
 
+    if (newAsset.name.trim().length > 50) {
+      setValidationError(`Asset title must not exceed 50 characters (${newAsset.name.length}/50).`);
+      return;
+    }
+
     if (newAsset.description.length < 100 || newAsset.description.length > 1000) {
       setValidationError(`Description length must be between 100 and 1000 characters (${newAsset.description.length}/1000).`)
       return
@@ -215,6 +220,10 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
       if (!externalLink || !externalLink.trim()) {
         setValidationError("Deployment manifest incomplete. Provide a valid external download link.")
         return
+      }
+      if (externalLink.trim().length > 512) {
+        setValidationError(`External link length must not exceed 512 characters (${externalLink.trim().length}/512).`);
+        return;
       }
       if (!EXTERNAL_URL_REGEX.test(externalLink.trim())) {
         setValidationError("Invalid URL format. Please provide a valid external link (e.g., https://example.com/...).")
@@ -422,7 +431,7 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
             </div>
           ) : (
             <div className="p-2.5 bg-muted/5 border border-dashed border-border/40 text-center text-[9px] font-bold text-primary uppercase tracking-widest animate-in fade-in duration-200">
-              🛡️ Zero-Value Asset Bypass Active. Direct distribution setup.
+              Extra Zero-Value Asset Bypass Active. Direct distribution setup.
             </div>
           )}
 
@@ -444,12 +453,20 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
           </div>
 
           <div className="grid gap-1">
-            <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Title</label>
+            <div className="flex justify-between items-center">
+              <label className="block text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Asset Title</label>
+              <span className={cn(
+                "text-[9px] sm:text-[10px] font-bold tracking-wide uppercase",
+                newAsset.name.length >= 50 ? 'text-destructive' : 'text-primary'
+              )}>
+                {newAsset.name.length} / 50
+              </span>
+            </div>
             <input 
               type="text" 
               required 
               minLength={3} 
-              maxLength={100} 
+              maxLength={50} 
               className="w-full border border-border/60 bg-background text-foreground rounded-none p-2.5 sm:p-3 text-xs sm:text-sm font-normal outline-none transition-all focus:border-primary placeholder:text-muted-foreground/40" 
               placeholder="e.g., Ultra Chrome Gradient Pack" 
               value={newAsset.name} 
@@ -618,13 +635,22 @@ export function DeployAssetModal({ isOpen, onClose, onSuccess }: DeployAssetModa
                   <input 
                     type="url" 
                     required
+                    maxLength={512}
                     placeholder="https://..." 
                     value={externalLink}
                     onChange={e => setExternalLink(e.target.value)}
                     className="w-full bg-background border border-border/60 py-2.5 sm:py-3 pl-9 pr-3 text-xs sm:text-sm text-foreground outline-none font-sans rounded-none focus:border-primary transition-colors placeholder:text-muted-foreground/40"
                   />
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Users will be redirected to this link to download the asset.</p>
+                <div className="flex justify-between items-center px-1">
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Users will be redirected to this link to download the asset.</p>
+                  <span className={cn(
+                    "text-[9px] font-bold tracking-wide uppercase",
+                    externalLink.length >= 512 ? 'text-destructive' : 'text-muted-foreground'
+                  )}>
+                    {externalLink.length} / 512
+                  </span>
+                </div>
               </div>
             )}
           </div>
