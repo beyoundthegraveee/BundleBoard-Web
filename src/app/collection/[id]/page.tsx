@@ -75,7 +75,7 @@ export default function CollectionPage() {
   const handleAddToCart = (item: Omit<CartItem, 'ownerId'>) => {
     console.log("🛒 [CollectionPage] Обработка добавления в корзину:");
     console.log("👤 ID текущего юзера (session.user.id):", session?.user?.id);
-    console.log("🎨 ID автора коллекции (collection.author.id):", collection?.author?.id);
+    console.log("🎨 ID автора коллекции (collection.author.userId):", collection?.author?.userId);
     console.log("⚖️ Результат их сравнения (isOwner):", isOwner);
     
     if (isOwner) {
