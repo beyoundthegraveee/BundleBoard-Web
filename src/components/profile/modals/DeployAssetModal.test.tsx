@@ -1,13 +1,13 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useSupabase } from '@/hooks/useSupabase';
+import { useSupabase } from '@/components/provider/SupabaseProvider'
 import { useMutation } from '@apollo/client/react';
 import { convertToWebP } from '@/lib/imageProcessor';
 import '@testing-library/jest-dom';
 import { DeployAssetModal } from './DeployAssetModal';
 
-jest.mock('@/hooks/useSupabase', () => ({
+jest.mock('@/components/provider/SupabaseProvider', () => ({
   useSupabase: jest.fn(),
 }));
 

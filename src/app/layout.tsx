@@ -6,6 +6,7 @@ import { CookieBanner } from "@/components/banner/CookieBanner";
 import { Navbar } from "@/components/navbar/Navbar";
 import { SplashProvider } from "@/components/provider/SplashProvider";
 import { ApolloWrapper } from "@/lib/apolloWrapper";
+import { SupabaseProvider } from "@/components/provider/SupabaseProvider";
 import { Toaster } from "sonner";
 import type { Metadata } from "next";
 
@@ -98,22 +99,24 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
         <AuthSessionProvider>
-          <ApolloWrapper>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
-              <SplashProvider>
-                <Navbar />
-                <main className="flex-1 w-full relative">
-                  {children}
-                </main>
-                <CookieBanner />
-              </SplashProvider>
-            </ThemeProvider>
-          </ApolloWrapper>
+          <SupabaseProvider>
+            <ApolloWrapper>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem={false}
+                disableTransitionOnChange
+              >
+                <SplashProvider>
+                  <Navbar />
+                  <main className="flex-1 w-full relative">
+                    {children}
+                  </main>
+                  <CookieBanner />
+                </SplashProvider>
+              </ThemeProvider>
+            </ApolloWrapper>
+          </SupabaseProvider>
         </AuthSessionProvider>
         <Toaster richColors position="top-right" />
       </body>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Loader2, X, Upload, Trash2, Image as ImageIcon, GripHorizontal, Link as LinkIcon } from "lucide-react"
 import Image from 'next/image'
-import { useSupabase } from '@/hooks/useSupabase'
+import { useSupabase } from '@/components/provider/SupabaseProvider'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { ImageShortInput } from '@/graphql/generated'
 import { EXTERNAL_URL_REGEX, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants'
