@@ -148,7 +148,7 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       price,
       category: mediaResource?.mimeType ? String(mediaResource.mimeType).split('/')[0] : "Asset",
       previewImage: getFullImageUrl(galleryImages?.[0]?.filePath),
-      ownerId: collection.author?.id || "",
+      ownerId: collection.author?.userId ? String(collection.author.userId) : "",
     });
     setLocalIsInCart(true);
   };
