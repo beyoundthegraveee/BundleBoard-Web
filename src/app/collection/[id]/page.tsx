@@ -44,8 +44,8 @@ export default function CollectionPage() {
   const collection = data?.getCollectionById;
 
   const isOwner = React.useMemo(() => {
-    if (!session?.user?.id || !collection?.author?.id) return false;
-    return String(session.user.id) === String(collection.author.id);
+    if (!session?.user?.id || !collection?.author?.userId) return false;
+    return String(session.user.id) === String(collection.author.userId);
   }, [session, collection]);
 
   useEffect(() => {
@@ -73,10 +73,6 @@ export default function CollectionPage() {
   }, [collectionId])
 
   const handleAddToCart = (item: Omit<CartItem, 'ownerId'>) => {
-    console.log("🛒 [CollectionPage] Обработка добавления в корзину:");
-    console.log("👤 ID текущего юзера (session.user.id):", session?.user?.id);
-    console.log("🎨 ID автора коллекции (collection.author.userId):", collection?.author?.userId);
-    console.log("⚖️ Результат их сравнения (isOwner):", isOwner);
     
     if (isOwner) {
       toast.error("You cannot add your own collection to the cart.");
@@ -91,7 +87,7 @@ export default function CollectionPage() {
         if (!items.some((cartItem) => cartItem.id === item.id)) {
           const itemWithOwner: CartItem = {
             ...item,
-            ownerId: String(collection?.author?.id || "")
+            ownerId: String(collection?.author?.userId || "")
           }
 
           const updatedCart = [...items, itemWithOwner]
