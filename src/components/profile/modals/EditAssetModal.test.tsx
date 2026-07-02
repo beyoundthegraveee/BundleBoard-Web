@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EditAssetModal } from './EditAssetModal';
 
-jest.mock('@/hooks/useSupabase', () => ({
+jest.mock('@/components/provider/SupabaseProvider', () => ({
   useSupabase: jest.fn(() => ({
     storage: {
       from: jest.fn().mockReturnValue({

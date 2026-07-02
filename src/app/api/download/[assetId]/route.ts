@@ -4,7 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { VerifyAssetPurchaseDocument, VerifyAssetPurchaseQuery, VerifyAssetPurchaseQueryVariables } from '@/graphql/generated'
 import { authOptions } from "@/lib/NextAuthOptions" 
 import { print, GraphQLError } from 'graphql'
-import { Session } from 'inspector/promises'
+import { Session } from 'next-auth'
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

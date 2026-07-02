@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Loader2, User, Upload, Edit2, Check, X, Plus, Trash2, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
-import { useSupabase } from '@/hooks/useSupabase'
+import { useSupabase } from '@/components/provider/SupabaseProvider'
 import { useMutation } from "@apollo/client/react"
 import Image from "next/image"
 import { UpdateAvatarDocument, UpdateProfileDetailsDocument, GetUserProfileQuery } from "@/graphql/generated"

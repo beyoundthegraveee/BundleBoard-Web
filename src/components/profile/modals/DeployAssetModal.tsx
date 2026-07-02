@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, X, Image as ImageIcon, FileArchive, Trash2, Link as LinkIcon, DollarSign, Gift } from "lucide-react"
-import { useSupabase } from '@/hooks/useSupabase' 
+import { useSupabase } from '@/components/provider/SupabaseProvider'
 import { convertToWebP } from '@/lib/imageProcessor'
 import { MAX_FILE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES, EXTERNAL_URL_REGEX, ALLOWED_EXTENSIONS } from '@/lib/constants'
 import { useMutation } from "@apollo/client/react"
