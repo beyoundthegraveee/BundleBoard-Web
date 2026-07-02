@@ -73,6 +73,11 @@ export default function CollectionPage() {
   }, [collectionId])
 
   const handleAddToCart = (item: Omit<CartItem, 'ownerId'>) => {
+    console.log("🛒 [CollectionPage] Обработка добавления в корзину:");
+    console.log("👤 ID текущего юзера (session.user.id):", session?.user?.id);
+    console.log("🎨 ID автора коллекции (collection.author.id):", collection?.author?.id);
+    console.log("⚖️ Результат их сравнения (isOwner):", isOwner);
+    
     if (isOwner) {
       toast.error("You cannot add your own collection to the cart.");
       return;
