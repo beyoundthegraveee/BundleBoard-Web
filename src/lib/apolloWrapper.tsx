@@ -4,7 +4,7 @@ import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import { useSession } from "next-auth/react";
 import { Session } from "next-auth";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { ApolloProvider } from "@apollo/client/react";
 
 interface ExtendedSession extends Session {
@@ -13,6 +13,11 @@ interface ExtendedSession extends Session {
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const cache = useMemo(() => new InMemoryCache({
     typePolicies: {
@@ -81,6 +86,10 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       client.clearStore().catch(console.error);
     }
   }, [session, client]);
+
+  if (!mounted) {
+    return null; 
+  }
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
