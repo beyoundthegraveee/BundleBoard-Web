@@ -4,7 +4,7 @@ import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import { useSession } from "next-auth/react";
 import { Session } from "next-auth";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { ApolloProvider } from "@apollo/client/react";
 
 interface ExtendedSession extends Session {
@@ -12,8 +12,10 @@ interface ExtendedSession extends Session {
 }
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
+
+  const prevStatus = useRef(status);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -83,9 +85,10 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   }, [session, cache]);
 
   useEffect(() => {
-    if (!session) {
-      client.clearStore().catch(console.error);
+    if (prevStatus.current === "authenticated" && status === "unauthenticated") {
+      client.resetStore().catch(console.error);
     }
+    prevStatus.current = status;
   }, [session, client]);
 
   if (!mounted) {
