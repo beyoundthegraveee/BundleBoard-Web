@@ -14,6 +14,12 @@ const createMockCollection = (overrides: Partial<CollectionType> = {}): Collecti
   likesCount: 5,
   isLiked: false,
   externalLink: null,
+  author: {
+    id: 'auth-13',
+    userId: 'user-17', 
+    username: 'cyber_creator',
+    __typename: 'AuthorResponse'
+  },
   galleryImages: [{ filePath: 'img1.jpg', __typename: 'GalleryImage' }],
   mediaResource: { 
     mimeType: 'image/png', fileName: 'test.png', fileSize: 1024, provider: 'supabase', __typename: 'MediaResource' 
@@ -58,7 +64,7 @@ describe('CollectionDetails Component', () => {
     expect(within(priceContainer!).getByText(/\$19.99/i)).toBeInTheDocument();
   });
 
-  test('calls onAddToCart with correct data', () => {
+  test('calls onAddToCart with correct data including author userId', () => {
     render(<CollectionDetails collection={createMockCollection()} onAddToCart={mockAddToCart} />);
     
     const addButton = screen.getByRole('button', { name: /Add to Cart/i });
@@ -66,7 +72,8 @@ describe('CollectionDetails Component', () => {
 
     expect(mockAddToCart).toHaveBeenCalledWith(expect.objectContaining({
       id: 'col-123',
-      name: 'Cyberpunk Asset'
+      name: 'Cyberpunk Asset',
+      ownerId: 'user-17'
     }));
   });
 

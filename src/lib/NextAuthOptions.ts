@@ -81,7 +81,9 @@ export const authOptions: NextAuthOptions = {
         );
 
         const authData = data?.login;
-        if (!authData || authData.error) throw new Error(authData?.error || "Invalid credentials");
+        if (!authData || authData.error || !authData.user) {
+          throw new Error(authData?.error || "Invalid credentials");
+        }
         return {
           id: authData.user.id,
           name: authData.user.username || null,
