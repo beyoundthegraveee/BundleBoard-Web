@@ -76,7 +76,7 @@ const ThumbnailImage = ({ src, alt }: { src: string, alt: string }) => {
 
 interface CollectionDetailsProps {
   collection: GetCollectionQuery['getCollectionById'];
-  onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string }) => void;
+  onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string; ownerId: string }) => void;
   isInCart?: boolean;
   isOwner?: boolean;
 }
@@ -147,7 +147,8 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
       name,
       price,
       category: mediaResource?.mimeType ? String(mediaResource.mimeType).split('/')[0] : "Asset",
-      previewImage: getFullImageUrl(galleryImages?.[0]?.filePath)
+      previewImage: getFullImageUrl(galleryImages?.[0]?.filePath),
+      ownerId: collection.author?.id || "",
     });
     setLocalIsInCart(true);
   };
