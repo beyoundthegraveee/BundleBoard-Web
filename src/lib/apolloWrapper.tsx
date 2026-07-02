@@ -4,16 +4,11 @@ import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import { useSession } from "next-auth/react";
 import { Session } from "next-auth";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { ApolloProvider } from "@apollo/client/react";
 
 interface ExtendedSession extends Session {
   accessToken?: string;
-}
-
-interface ApolloContext {
-  headers?: Record<string, string>;
-  skipAuth?: boolean;
 }
 
 export function ApolloWrapper({ children }: { children: React.ReactNode }) {
@@ -41,9 +36,8 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
-    const authLink = new SetContextLink((operation) => {
-      const context = operation.getContext() as ApolloContext;
-      const prevHeaders = context.headers || {};
+    const authLink = new SetContextLink((previousContext, _) => {
+      const prevHeaders = previousContext.headers || {};
 
       if (typeof window !== "undefined") {
         const path = window.location.pathname;
@@ -62,7 +56,7 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
         }
       }
 
-      if (context.skipAuth) {
+      if (previousContext.skipAuth) {
         return { headers: prevHeaders };
       }
 
@@ -79,15 +73,14 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
     return new ApolloClient({
       link: authLink.concat(httpLink),
       cache: cache,
-      });
+    });
   }, [session, cache]);
 
-  
-  useMemo(() => {
+  useEffect(() => {
     if (!session) {
-      cache.reset();
+      client.clearStore().catch(console.error);
     }
-  }, [session, cache]);
+  }, [session, client]);
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
