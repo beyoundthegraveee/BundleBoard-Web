@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Trash2, ArrowRight, ShoppingBag, Loader2, Download } from "lucide-react"
+import { X, Trash2, ArrowRight, ShoppingBag, Loader2, Download, AlertTriangle } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -16,6 +16,7 @@ interface CartItem {
   price: number
   category: string
   previewImage: string
+  ownerId: string
 }
 
 interface CartDrawerProps {
@@ -43,6 +44,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const router = useRouter()
   const [cartItems, setCartItems] = React.useState<CartItem[]>([])
   const [executeCreateCheckout, { loading: isRedirecting }] = useMutation(CreateCheckoutSessionDocument)
+  const currentUserId = session?.user?.id ? String(session.user.id) : null
 
   React.useEffect(() => {
     const loadCart = () => {
@@ -65,7 +67,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }, [isOpen])
 
   const total = cartItems.reduce((sum, item) => sum + item.price, 0)
-  const isFreeCart = total === 0 && cartItems.length > 0;
+  const isFreeCart = total === 0 && cartItems.length > 0
+
+  const hasOwnItems = React.useMemo(() => {
+    if (!currentUserId) return false
+    return cartItems.some(item => String(item.ownerId) === currentUserId)
+  }, [cartItems, currentUserId])
 
   const removeItem = (id: string) => {
     const updatedCart = cartItems.filter(item => item.id !== id)
@@ -75,7 +82,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }
 
   const handleCheckout = async () => {
-    if (cartItems.length === 0 || isRedirecting) return
+    if (cartItems.length === 0 || isRedirecting || hasOwnItems) return
     
     if (!session) {
       toast.error("Please sign in to proceed.")
@@ -167,45 +174,62 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-3 sm:space-y-4 custom-scrollbar pb-4">
             {cartItems.length > 0 ? (
-              cartItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="flex gap-3 sm:gap-4 p-2.5 sm:p-3 border border-border/40 bg-background rounded-none group relative overflow-hidden"
-                >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none relative">
-                    <Image 
-                      src={item.previewImage} 
-                      alt={item.name || "Preview"} 
-                      fill
-                      unoptimized
-                      className="object-cover" 
-                    />
-                  </div>
+              cartItems.map((item) => {
+                const isOwnItem = currentUserId && String(item.ownerId) === currentUserId;
 
-                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                    <div className="space-y-0.5">
-                      <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wide">
-                        {item.category}
-                      </span>
-                      <h4 className="font-bold text-[11px] sm:text-xs uppercase text-foreground truncate tracking-tight pr-6">
-                        {item.name}
-                      </h4>
-                    </div>
-                    <div className="text-[11px] sm:text-xs font-bold text-foreground">
-                      {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => removeItem(item.id)}
-                    disabled={isRedirecting}
-                    className="absolute top-2 right-2 sm:top-3 sm:right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1 disabled:opacity-30"
-                    aria-label="Remove item"
+                return (
+                  <div 
+                    key={item.id} 
+                    className={cn(
+                      "flex flex-col p-2.5 sm:p-3 border bg-background rounded-none group relative overflow-hidden transition-colors",
+                      isOwnItem ? "border-destructive/60 bg-destructive/5" : "border-border/40"
+                    )}
                   >
-                    <Trash2 size={13} strokeWidth={1.8} />
-                  </button>
-                </div>
-              ))
+                    <div className="flex gap-3 sm:gap-4">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-muted border border-border/40 shrink-0 overflow-hidden rounded-none relative">
+                        <Image 
+                          src={item.previewImage} 
+                          alt={item.name || "Preview"} 
+                          fill
+                          unoptimized
+                          className="object-cover" 
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                        <div className="space-y-0.5">
+                          <span className="block text-[8px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {item.category}
+                          </span>
+                          <h4 className="font-bold text-[11px] sm:text-xs uppercase text-foreground truncate tracking-tight pr-6">
+                            {item.name}
+                          </h4>
+                        </div>
+                        <div className="text-[11px] sm:text-xs font-bold text-foreground">
+                          {item.price === 0 ? "FREE" : `$${item.price.toFixed(2)}`}
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => removeItem(item.id)}
+                        disabled={isRedirecting}
+                        className="absolute top-2 right-2 sm:top-3 sm:right-3 text-muted-foreground/60 hover:text-destructive transition-colors p-1 disabled:opacity-30"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 size={13} strokeWidth={1.8} />
+                      </button>
+                    </div>
+
+                    {/* Визуальный ворнинг для юзера */}
+                    {isOwnItem && (
+                      <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-destructive uppercase tracking-wider">
+                        <AlertTriangle size={11} />
+                        Your own item (Please remove)
+                      </div>
+                    )}
+                  </div>
+                )
+              })
             ) : (
               <div className="text-center py-12 sm:py-16 border border-dashed border-border/40 text-muted-foreground/50 uppercase font-semibold text-[10px] tracking-widest mt-2">
                 Your shopping cart is empty
@@ -215,6 +239,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         </div>
 
         <div className="border-t border-border/40 pt-4 sm:pt-5 space-y-3 sm:space-y-4 bg-card shrink-0 mt-auto">
+          {hasOwnItems && (
+            <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive text-[10px] font-medium uppercase tracking-wide leading-normal">
+              You cannot proceed because your cart contains collections created by you. Please remove them to continue.
+            </div>
+          )}
+
           <div className="flex justify-between items-baseline">
             <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtotal Value</span>
             <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
@@ -231,10 +261,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
           <button 
             onClick={handleCheckout}
-            disabled={cartItems.length === 0 || isRedirecting}
+            disabled={cartItems.length === 0 || isRedirecting || hasOwnItems}
             className={cn(
               "w-full py-3.5 sm:py-4 bg-primary text-primary-foreground font-bold uppercase text-[11px] sm:text-xs tracking-widest flex items-center justify-center gap-2 rounded-none shadow-sm transition-all hover:opacity-90 active:scale-[0.99]",
-              (cartItems.length === 0 || isRedirecting) && "opacity-30 cursor-not-allowed pointer-events-none"
+              (cartItems.length === 0 || isRedirecting || hasOwnItems) && "opacity-30 cursor-not-allowed pointer-events-none bg-muted text-muted-foreground"
             )}
           >
             {isRedirecting ? (
