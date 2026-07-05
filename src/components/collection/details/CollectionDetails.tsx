@@ -89,6 +89,43 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+const renderDescription = (text: string | null | undefined) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  
+  return lines.map((line, index) => {
+    const trimmed = line.trim();
+    if (!trimmed) return null;
+
+    const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ');
+    const textWithoutBullet = isBullet ? trimmed.substring(2).trim() : trimmed;
+
+    const colonIndex = textWithoutBullet.indexOf(':');
+    const isTitleText = colonIndex > 0 && colonIndex < 60 && textWithoutBullet.length > colonIndex + 2;
+
+    if (isBullet || isTitleText) {
+      const title = isTitleText ? textWithoutBullet.substring(0, colonIndex + 1) : '';
+      const restText = isTitleText ? textWithoutBullet.substring(colonIndex + 1) : textWithoutBullet;
+      
+      return (
+        <div key={index} className="flex gap-3 text-[14px] md:text-[15px] leading-relaxed font-normal text-foreground pl-1 md:pl-2">
+          <span className="text-primary/70 select-none flex-shrink-0 mt-0.5">•</span>
+          <p>
+            {title && <strong className="font-semibold text-foreground">{title}</strong>}
+            {restText}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <p key={index} className="text-[14px] md:text-[15px] leading-relaxed font-normal text-foreground">
+        {trimmed}
+      </p>
+    );
+  });
+};
+
 export default function CollectionDetails({ collection, onAddToCart, isInCart = false, isOwner = false }: CollectionDetailsProps) {
   const [localIsInCart, setLocalIsInCart] = useState(isInCart);
   const [localLikesCount, setLocalLikesCount] = useState(collection?.likesCount ?? 0);
@@ -279,12 +316,12 @@ export default function CollectionDetails({ collection, onAddToCart, isInCart = 
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Hash size={13} />
-            Manifest Description
+            Description
           </div>
           <div className="bg-muted/10 p-6 border-l-2 border-foreground rounded-none">
-            <p className="text-[14px] md:text-[15px] leading-relaxed font-normal text-foreground whitespace-pre-line">
-              {description}
-            </p>
+            <div className="flex flex-col gap-4">
+              {renderDescription(description)}
+            </div>
           </div>
         </div>
 
