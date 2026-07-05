@@ -11,6 +11,10 @@ mutation SocialRegister($input: SocialRegisterRequest!) {
     accessToken
     refreshToken
     error
+    user {
+      id
+      roles
+    }
   }
 }
 

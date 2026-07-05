@@ -148,7 +148,7 @@ export const authOptions: NextAuthOptions = {
               if (regSocialData?.accessToken) {
                 console.log(`[NextAuth] Core profile successfully provisioned via automated mutation workflow for: ${user.email}`);
                 const u = user as User;
-                u.id = user.id;
+                u.id = regSocialData.user?.id || user.id;
                 u.accessToken = regSocialData.accessToken;
                 u.refreshToken = regSocialData.refreshToken ?? "";
                 u.isNewUser = true;
