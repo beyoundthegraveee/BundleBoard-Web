@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BundleBoard — Frontend Web Application
 
-## Getting Started
+This is the frontend client for the **BundleBoard** web application, built using the Next.js App Router, TypeScript, and Tailwind CSS. It communicates with the Spring Boot backend via GraphQL and integrates with Supabase for storage and authentication services.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🛠️ Features & Tech Stack
+
+* **Framework:** Next.js (with React Compiler enabled)
+* **Language:** TypeScript
+* **API Client:** Apollo Client / GraphQL (with automated types via `@graphql-codegen`)
+* **UI & Styles:** Tailwind CSS / shadcn/ui
+* **Database & Auth Integration:** Supabase Client & NextAuth
+
+---
+
+## 📋 Environment Variables
+
+Before running the application, make sure to configure your environment variables. Create a `.env.local` file in the root directory (you can use `.env.example` as a reference) and populate the following keys:
+
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=                  # URL of the Spring Boot GraphQL backend
+
+# Authentication (NextAuth)
+NEXTAUTH_SECRET=                      # Secret key for signing NextAuth tokens
+
+# Google OAuth Credentials
+GOOGLE_CLIENT_ID=                     # Google Developer Console Client ID
+GOOGLE_CLIENT_SECRET=                 # Google Developer Console Client Secret
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=             # Your Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=        # Supabase anonymous public API key
+NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE=   # Base URL for asset previews
+SUPABASE_SERVICE_ROLE_KEY=            # Service role key (keep secret, server-only)
+SUPABASE_JWT_SECRET=                  # JWT Secret from Supabase dashboard
+
+# Security & Expiry
+JWT_ACCESS_EXPIRY_MS=                 # Access token expiration time in milliseconds
+
+# Upload & File Limits
+NEXT_PUBLIC_FALLBACK_IMAGE=           # URL or path for placeholder images
+NEXT_PUBLIC_MAX_FILE_SIZE_MB=         # Global max upload size limit
+NEXT_PUBLIC_MAX_IMAGE_SIZE_MB=        # Specific max image size limit
+```
+1. Install Dependencies
+Since the heavy node_modules folder is excluded from the disk archive, you need to restore the project dependencies first using the strict package-lock.json file:
+```
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the Pre-compiled Production Build (Recommended for Review)
+The project comes with a pre-compiled, optimized production build located in the /.next directory. To launch this optimized version instantly without compiling the code again, run:
+```
+npm run start
+```
+Open http://localhost:3000 in your browser to view the application
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3.Run the Development Server
+If you want to view the source code with hot-reloading and making live edits:
+```
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. GraphQL Code Generation (Optional)
+If changes are made to the local .graphql documents or backend schemas, re-generate the TypeScript operations and typed document nodes using:
+```
+npm run generate
+```
+Note: This relies on the schema path configured in codegen.ts relative to the backend repository location.
