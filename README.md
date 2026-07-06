@@ -55,7 +55,6 @@ The project comes with a pre-compiled, optimized production build located in the
 ```
 npm run start
 ```
-Open http://localhost:3000 in your browser to view the application
 
 3.Run the Development Server
 If you want to view the source code with hot-reloading and making live edits:
