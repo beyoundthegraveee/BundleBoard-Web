@@ -56,12 +56,11 @@ The project comes with a pre-compiled, optimized production build located in the
 npm run start
 ```
 
-3.Run the Development Server
+3. Run the Development Server
 If you want to view the source code with hot-reloading and making live edits:
 ```
 npm run dev
 ```
-
 4. GraphQL Code Generation (Optional)
 If changes are made to the local .graphql documents or backend schemas, re-generate the TypeScript operations and typed document nodes using:
 ```
