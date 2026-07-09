@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,6 +11,7 @@ if (typeof window !== "undefined") {
 
 export function BatchGrid({ children, className }: { children: React.ReactNode, className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const childrenCount = React.Children.count(children);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -46,9 +48,8 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
 
     return () => {
       mm.revert();
-      ScrollTrigger.refresh(); 
     };
-  }, [children]);
+  }, [childrenCount]);
 
   return (
     <div ref={containerRef} className={className}>
