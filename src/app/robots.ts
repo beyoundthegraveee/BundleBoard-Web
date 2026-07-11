@@ -8,8 +8,7 @@ export default function robots(): MetadataRoute.Robots {
         "/$",
         "/about",
         "/bundles", 
-        "/terms",
-        "/collection/**"
+        "/terms"
       ],
       disallow: [
         "/login",

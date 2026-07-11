@@ -14,7 +14,6 @@ export default withAuth(
           "/",
           "/about",
           "/bundles",
-          "/collection/*",
           "/terms",
           "/register",
           "/login",
