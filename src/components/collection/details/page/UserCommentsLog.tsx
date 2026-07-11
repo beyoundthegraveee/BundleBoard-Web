@@ -57,16 +57,21 @@ export default function UserCommentsLog({ userId }: UserCommentsLogProps) {
                 </span>
                 
                 <span className="text-muted-foreground">on</span>
-                
-                <Link 
-                  href={`/collection/${c.collection.id}`} 
-                  className="font-bold text-primary hover:underline flex items-center gap-1 transition-all min-w-0"
-                >
-                  <LinkIcon size={10} className="shrink-0" />
-                  <span className="truncate max-w-[120px] sm:max-w-xs">{c.collection.name}</span>
-                </Link>
+                {c.collection.slug && c.collection.author?.username ? (
+                  <Link 
+                    href={`/${c.collection.author.username}/${c.collection.slug}`} 
+                    className="font-bold text-primary hover:underline flex items-center gap-1 transition-all min-w-0"
+                  >
+                    <LinkIcon size={10} className="shrink-0" />
+                    <span className="truncate max-w-[120px] sm:max-w-xs">{c.collection.name}</span>
+                  </Link>
+                ) : (
+                  <span className="font-bold text-muted-foreground flex items-center gap-1 min-w-0">
+                    <LinkIcon size={10} className="shrink-0" />
+                    <span className="truncate max-w-[120px] sm:max-w-xs">{c.collection.name}</span>
+                  </span>
+                )}
               </div>
-              
               <p className="text-foreground/90 leading-relaxed break-words bg-background/50 p-2.5 border border-border/30 rounded-none">
                 {c.content}
               </p>
