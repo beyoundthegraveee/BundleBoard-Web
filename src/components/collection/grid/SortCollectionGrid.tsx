@@ -75,11 +75,17 @@ export function SortCollectionGrid({ sortBy, mimeTypes }: SortCollectionGridProp
             ? fileName 
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
+          const hasValidSlug = Boolean(item.slug && item.author?.username);
+          const href = hasValidSlug ? `/${item.author!.username}/${item.slug}` : "#";
           return (
             <Link 
-              href={`/collection/${item.id}`} 
+              href={href}
+              onClick={(e) => {
+                if (!hasValidSlug) e.preventDefault();
+              }}
+              aria-disabled={!hasValidSlug}
               key={item.id} 
-              className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground"
+              className={`batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground ${!hasValidSlug ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
               <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                 <Image 

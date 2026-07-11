@@ -116,6 +116,7 @@ query GetCollectionsByTag($input: CollectionFilterInput!) {
       name
       description
       price
+      slug
       author {
         username
       }
@@ -137,6 +138,7 @@ query GetTopLikedCollections($limit: Int!) {
     likesCount
     isLiked
     externalLink
+    slug
     author {
       username
     }
@@ -166,6 +168,7 @@ query GetSortedCollections($page: Int!, $size: Int!, $sortBy: String!, $mimeType
     price
     likesCount
     externalLink
+    slug
     author {
       username
       totalSales
