@@ -4,6 +4,10 @@ query SearchCollections($query: String!, $page: Int!, $size: Int!) {
     name
     price
     externalLink
+    slug
+    author {
+      username
+    }
     galleryImages { 
       filePath 
     }
@@ -153,7 +157,10 @@ query GetLatestCollections($limit: Int!) {
     id
     name
     price
-    externalLink
+    slug
+    author {
+      username
+    }
     galleryImages {
       filePath
     }
