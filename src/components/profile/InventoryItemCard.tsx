@@ -22,6 +22,8 @@ export interface AuthoredCollection {
   name: string;
   price: number;
   description: string;
+  slug?: string | null;
+  author?: { username?: string | null } | null;
   galleryImages?: GalleryImage[];
   [key: string]: unknown;
 }
@@ -97,12 +99,18 @@ export function InventoryItemCard({ collection, onRefreshNeeded }: InventoryItem
   }
 
   const cardThumbnail = collection.galleryImages?.[0]?.filePath || "";
+  const hasValidSlug = Boolean(collection.slug && collection.author?.username);
+  const href = hasValidSlug ? `/${collection.author!.username}/${collection.slug}` : "#";
 
   return (
     <>
       <Link 
-        href={`/collection/${collection.id}`}
-        className="group border border-border/40 bg-background p-5 flex flex-col justify-between rounded-none hover:border-white/[0.15] transition-all duration-300 relative min-h-[160px] shadow-sm bg-[#0d0c0e]/40"
+        href={href}
+        onClick={(e) => {
+          if (!hasValidSlug) e.preventDefault();
+        }}
+        aria-disabled={!hasValidSlug}
+        className={`group border border-border/40 bg-background p-5 flex flex-col justify-between rounded-none hover:border-white/[0.15] transition-all duration-300 relative min-h-[160px] shadow-sm bg-[#0d0c0e]/40 ${!hasValidSlug ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
         <div className="flex gap-4 items-start w-full">
           <div className="w-16 h-16 border border-border/40 bg-muted flex-shrink-0 overflow-hidden select-none relative">

@@ -56,6 +56,10 @@ query GetUserProfile {
       price
       description
       downloadCount
+      slug
+      author {
+        username
+      }
       tags {
         id
         name
