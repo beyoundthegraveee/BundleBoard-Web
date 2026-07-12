@@ -4,26 +4,14 @@ import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from "lucide-react"
 import { useQuery } from '@apollo/client/react'
-import { GetCollectionsPagedDocument } from '@/graphql/generated'
+import { GetCollectionsPagedDocument, GetCollectionsPagedQuery } from '@/graphql/generated'
 import { BatchGrid } from './BatchGrid'
 import { CollectionItem } from './item/CollectionItem'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PAGE_SIZE = 21;
 
-interface Collection {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  author: {
-    username: string;
-    totalSales: number;
-  };
-  galleryImages: {
-    filePath: string;
-  }[];
-}
+type Collection = NonNullable<GetCollectionsPagedQuery['getAllCollections']>[number];
 
 export function CollectionGrid() {
   const { status } = useSession()
@@ -42,7 +30,7 @@ export function CollectionGrid() {
     if (data?.getAllCollections) {
       const shuffled = [...data.getAllCollections].sort(() => Math.random() - 0.5);
       const timer = setTimeout(() => {
-        setShuffledCollections(shuffled as Collection[]);
+        setShuffledCollections(shuffled);
       }, 0);
 
       return () => clearTimeout(timer);

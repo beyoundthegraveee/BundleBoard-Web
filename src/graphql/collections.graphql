@@ -46,6 +46,7 @@ query GetCollectionsPaged($page: Int!, $size: Int!) {
     description
     price
     externalLink
+    slug
     author {
       username
       totalSales

@@ -11,7 +11,7 @@ interface CollectionItemProps {
     price: number;
     slug?: string | null;
     author: { username: string } | null;
-    galleryImages: { filePath: string }[];
+    galleryImages: { filePath: string }[] | null;
   };
   supabaseBase: string;
 }
