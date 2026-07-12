@@ -91,6 +91,7 @@ export function HighestRatedCarousel() {
           : "flex overflow-x-auto snap-x snap-mandatory md:overflow-visible md:flex-wrap items-center justify-start md:justify-center w-full pb-4 md:pb-0 custom-scrollbar"
       }>
         {carouselItems.map((item, index) => {
+          console.log('DEBUG item:', item.slug, item.author);
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
             ? fileName 

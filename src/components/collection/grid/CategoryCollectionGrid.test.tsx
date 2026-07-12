@@ -22,6 +22,7 @@ describe('CategoryCollectionGrid', () => {
     name: string;
     description: string;
     price: number;
+    slug: string | null;
     author: { username: string };
     galleryImages: { filePath: string }[] | null;
   }
@@ -40,6 +41,7 @@ describe('CategoryCollectionGrid', () => {
         name: 'Test Item One',
         price: 9.99,
         description: 'First item description',
+        slug: 'test-item-one',
         author: { username: 'dev_user' },
         galleryImages: [{ filePath: 'image1.png' }],
       },
@@ -48,12 +50,13 @@ describe('CategoryCollectionGrid', () => {
         name: 'Free Item',
         price: 0,
         description: '',
+        slug: 'free-item',
         author: { username: 'system' },
         galleryImages: [],
       },
     ];
 
-    render(<CategoryCollectionGrid collections={mockCollections} />);
+    render(<CategoryCollectionGrid collections={mockCollections as any} />);
 
     expect(screen.getByText('Test Item One')).toBeInTheDocument();
     expect(screen.getByText('Free Item')).toBeInTheDocument();

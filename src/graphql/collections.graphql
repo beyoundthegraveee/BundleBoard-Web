@@ -102,6 +102,7 @@ query GetLikedCollections {
     description
     price
     externalLink
+    slug
     author {
       username
     }
