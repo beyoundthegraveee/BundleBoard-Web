@@ -14,16 +14,26 @@ jest.mock('next/link', () => ({
 
 const mockComments = [
   {
-    id: 'c1',
+    id: '1',
+    createdAt: '2026-07-01T14:00:00Z',
     content: 'Awesome design!',
-    createdAt: '2026-07-01T12:00:00Z',
-    collection: { id: 'col-1', name: 'Cyberpunk Assets' },
+    collection: { 
+      id: 'col-1', 
+      name: 'Cyberpunk Assets', 
+      slug: 'cyberpunk-assets',
+      author: { username: 'dev_user' }
+    }
   },
   {
-    id: 'c2',
+    id: '2',
+    createdAt: '2026-07-01T16:30:00Z',
     content: 'Waiting for update.',
-    createdAt: '2026-07-01T14:30:00Z',
-    collection: { id: 'col-2', name: 'Retro UI Kit' },
+    collection: { 
+      id: 'col-2', 
+      name: 'Retro UI Kit', 
+      slug: 'retro-ui-kit',
+      author: { username: 'retro_dev' }
+    }
   },
 ];
 
@@ -70,9 +80,31 @@ describe('UserCommentsLog Component', () => {
     expect(screen.getByText('Waiting for update.')).toBeInTheDocument();
 
     const link1 = screen.getByRole('link', { name: /Cyberpunk Assets/i });
-    expect(link1).toHaveAttribute('href', '/collection/col-1');
+    expect(link1).toHaveAttribute('href', '/dev_user/cyberpunk-assets');
 
     const link2 = screen.getByRole('link', { name: /Retro UI Kit/i });
-    expect(link2).toHaveAttribute('href', '/collection/col-2');
+    expect(link2).toHaveAttribute('href', '/retro_dev/retro-ui-kit');
+  });
+
+  test('renders plain text instead of link when slug or author is missing', () => {
+    const mockNoSlug = [
+      {
+        id: '3',
+        createdAt: '2026-07-01T18:00:00Z',
+        content: 'No slug here.',
+        collection: { id: 'col-3', name: 'Legacy Item', slug: null, author: null }
+      },
+    ];
+
+    (useQuery as unknown as jest.Mock).mockReturnValue({
+      loading: false,
+      data: { getCommentsByUserId: mockNoSlug },
+      error: null
+    });
+
+    render(<UserCommentsLog userId="user-123" />);
+
+    expect(screen.getByText('Legacy Item')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Legacy Item/i })).not.toBeInTheDocument();
   });
 });

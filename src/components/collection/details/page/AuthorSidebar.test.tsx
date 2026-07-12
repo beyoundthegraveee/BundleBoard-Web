@@ -4,11 +4,11 @@ import AuthorSidebar from './AuthorSidebar';
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, fill, sizes, className, ...props }: any) => (
+  default: ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & Record<string, unknown>) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img 
-      src={src} 
-      alt={alt} 
+      src={src as string} 
+      alt={alt as string} 
       className={className} 
       data-testid="mock-avatar-image" 
       {...props} 
@@ -36,7 +36,6 @@ type AuthorData = React.ComponentProps<typeof AuthorSidebar>['author'];
 type MockAuthorData = AuthorData & { downloadCount?: number | null };
 
 const baseAuthor: MockAuthorData = {
-  // @ts-ignore
   id: 'auth-123',
   userId: 'user-456',
   email: 'cyber@example.com',
@@ -107,7 +106,6 @@ describe('AuthorSidebar Component', () => {
     const authorUnknownPlatform: AuthorData = {
       ...baseAuthor,
       socialLinks: [
-        // @ts-ignore
         { platform: 'unknown-net', url: 'https://unknown.com' },
       ],
     };

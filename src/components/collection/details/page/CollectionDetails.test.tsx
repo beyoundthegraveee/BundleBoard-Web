@@ -41,7 +41,7 @@ jest.mock('@/components/navbar/components/LikeButton', () => ({
   default: () => <button>Like</button>,
 }));
 
-jest.mock('../../banner/BmacBanner', () => ({
+jest.mock('@/components/banner/BmacBanner', () => ({
   __esModule: true,
   default: () => <div data-testid="bmac-banner" />,
 }));
