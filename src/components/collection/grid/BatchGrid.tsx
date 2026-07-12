@@ -29,21 +29,30 @@ export function BatchGrid({ children, className }: { children: React.ReactNode, 
 
       if (!items || items.length === 0) return;
 
-      gsap.set(items, { y: 100, opacity: 0 });
+      gsap.set(items, { y: 100, opacity: 0, force3D: true, willChange: "transform, opacity" });
 
-      ScrollTrigger.batch(items, {
+      const batch = ScrollTrigger.batch(items, {
         interval: 0.1,
         batchMax: columns,
+        fastScrollEnd: true,
         onEnter: (batch) => gsap.to(batch, {
           opacity: 1, 
           y: 0, 
           stagger: { each: 0.15, grid: [1, columns] },
-          overwrite: true
+          overwrite: "auto",
+          force3D: true,
+          clearProps: "willChange",
         }),
-        onLeave: (batch) => gsap.to(batch, { opacity: 0, y: -100, duration: 0.5, overwrite: true }),
-        onEnterBack: (batch) => gsap.to(batch, { opacity: 1, y: 0, stagger: 0.15, overwrite: true }),
-        onLeaveBack: (batch) => gsap.to(batch, { opacity: 0, y: 100, duration: 0.5, overwrite: true })
+        onLeave: (batch) => gsap.to(batch, { opacity: 0, y: -100, duration: 0.5, overwrite: "auto", force3D: true }),
+        onEnterBack: (batch) => gsap.to(batch, { opacity: 1, y: 0, stagger: 0.15, overwrite: "auto", force3D: true }),
+        onLeaveBack: (batch) => gsap.to(batch, { opacity: 0, y: 100, duration: 0.5, overwrite: "auto", force3D: true })
       });
+
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+
+      return () => {
+        batch.forEach(b => b.kill());
+      };
     });
 
     return () => {

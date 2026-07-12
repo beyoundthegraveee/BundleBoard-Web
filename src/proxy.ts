@@ -1,6 +1,15 @@
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
+const PRIVATE_PATHS = [
+  "/profile",
+  "/settings",
+  "/favorites",
+  "/stash",
+];
+
+const isPrivatePath = (pathname: string) =>
+  PRIVATE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 export default withAuth(
   function proxy() {
@@ -10,22 +19,12 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
-        const publicPaths = [
-          "/",
-          "/about",
-          "/bundles",
-          "/collection/*",
-          "/terms",
-          "/register",
-          "/login",
-          "/mail/verify-email",
-          "/mail/verify",
-          "/select-role"
-        ];
-        const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/bundles/");
 
-        if (isPublic) return true;
-        return !!token?.accessToken;
+        if (isPrivatePath(pathname)) {
+          return !!token?.accessToken;
+        }
+
+        return true;
       },
     },
     pages: {
@@ -36,6 +35,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!register|login|collection/*|mail/verify-email|mail/verify|forgot-password|password/reset-password/*|select-role|api/auth|_next/static|_next/image|favicon.svg|logo.png).*)'
+    '/((?!api/auth|_next/static|_next/image|favicon.svg|logo.png).*)'
   ],
 };

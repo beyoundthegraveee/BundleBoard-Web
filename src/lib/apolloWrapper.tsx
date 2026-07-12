@@ -44,6 +44,7 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
       uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/graphql",
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const authLink = new SetContextLink((previousContext, _) => {
       const prevHeaders = previousContext.headers || {};
 
@@ -85,11 +86,11 @@ export function ApolloWrapper({ children }: { children: React.ReactNode }) {
   }, [session, cache]);
 
   useEffect(() => {
-    if (prevStatus.current === "authenticated" && status === "unauthenticated") {
-      client.resetStore().catch(console.error);
-    }
+  if (prevStatus.current === "authenticated" && status === "unauthenticated") {
+    client.resetStore().catch(console.error);
+  }
     prevStatus.current = status;
-  }, [session, client]);
+  }, [session, client, status]);
 
   if (!mounted) {
     return null; 

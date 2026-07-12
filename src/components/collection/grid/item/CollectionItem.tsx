@@ -9,8 +9,9 @@ interface CollectionItemProps {
     name: string;
     description: string;
     price: number;
+    slug?: string | null;
     author: { username: string } | null;
-    galleryImages: { filePath: string }[];
+    galleryImages: { filePath: string }[] | null;
   };
   supabaseBase: string;
 }
@@ -21,10 +22,17 @@ export const CollectionItem = memo(({ item, supabaseBase }: CollectionItemProps)
     ? fileName 
     : fileName ? `${supabaseBase}/${encodeURIComponent(fileName)}` : "";
 
+  const hasValidSlug = Boolean(item.slug && item.author?.username);
+  const href = hasValidSlug ? `/${item.author!.username}/${item.slug}` : "#";
+
   return (
     <Link 
-      href={`/collection/${item.id}`} 
-      className="batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground will-change-transform"
+      href={href}
+      onClick={(e) => {
+        if (!hasValidSlug) e.preventDefault();
+      }}
+      aria-disabled={!hasValidSlug}
+      className={`batch-item group flex flex-col bg-transparent cursor-pointer overflow-hidden text-foreground will-change-transform ${!hasValidSlug ? 'opacity-60 cursor-not-allowed' : ''}`}
     >
       <div className="aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
         <Image 

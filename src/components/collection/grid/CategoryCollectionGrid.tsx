@@ -34,11 +34,18 @@ export function CategoryCollectionGrid({ collections }: CategoryCollectionGridPr
             ? fileName 
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
 
+          const hasValidSlug = Boolean(item.slug && item.author?.username);
+          const href = hasValidSlug ? `/${item.author!.username}/${item.slug}` : "#";
+
           return (
             <Link 
-              href={`/collection/${item.id}`} 
+              href={href}
+              onClick={(e) => {
+                if (!hasValidSlug) e.preventDefault();
+              }}
+              aria-disabled={!hasValidSlug}
               key={item.id} 
-              className="batch-item group flex flex-col bg-card border border-border p-2 sm:p-4 hover:border-foreground/30 transition-colors duration-300 will-change-transform"
+              className={`batch-item group flex flex-col bg-card border border-border p-2 sm:p-4 hover:border-foreground/30 transition-colors duration-300 will-change-transform ${!hasValidSlug ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
               <div className="aspect-[4/3] relative overflow-hidden bg-muted border border-border/50">
                 <Image 

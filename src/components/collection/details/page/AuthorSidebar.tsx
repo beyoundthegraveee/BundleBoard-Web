@@ -3,10 +3,10 @@
 import React from 'react'
 import Image from "next/image"
 import { User, Star, ShoppingCart, Share2, ExternalLink, Download } from "lucide-react"
-import { GetCollectionQuery } from '@/graphql/generated'
+import { GetCollectionBySlugQuery } from '@/graphql/generated'
 import { ALLOWED_PLATFORMS } from '@/lib/socialLinks'
 
-type AuthorData = GetCollectionQuery['getCollectionById']['author'];
+type AuthorData = GetCollectionBySlugQuery['getCollectionBySlug']['author'];
 
 interface AuthorSidebarProps {
   author: AuthorData; 
@@ -138,7 +138,7 @@ export default function AuthorSidebar({ author }: AuthorSidebarProps) {
       </div>
 
       <div className="bg-muted/30 p-2.5 text-[9px] font-medium uppercase text-center border-t border-border/30 text-muted-foreground/60 tracking-wider">
-        Active Node Registry System Verified
+        Active Registry System Verified
       </div>
     </div>
   )

@@ -4,6 +4,10 @@ query SearchCollections($query: String!, $page: Int!, $size: Int!) {
     name
     price
     externalLink
+    slug
+    author {
+      username
+    }
     galleryImages { 
       filePath 
     }
@@ -42,6 +46,7 @@ query GetCollectionsPaged($page: Int!, $size: Int!) {
     description
     price
     externalLink
+    slug
     author {
       username
       totalSales
@@ -52,37 +57,41 @@ query GetCollectionsPaged($page: Int!, $size: Int!) {
   }
 }
 
-query GetCollection($id: ID!) {
-  getCollectionById(id: $id) {
+query GetCollectionBySlug($username: String!, $slug: String!) {
+  getCollectionBySlug(username: $username, slug: $slug) {
     id
     name
     description
     price
+    videoTutorialUrl
+    externalLink
+    slug
     likesCount
     isLiked
-    externalLink
     author {
-      id
-      userId
-      username
-      bio
-      rating
-      totalSales
-      downloadCount
-      socialLinks { 
-        platform 
-        url 
-      }
-      avatarUrl
+        id,
+        userId,
+        bio,
+        rating,
+        totalSales,
+        socialLinks {
+            platform
+            url
+        },
+        username,
+        email,
+        avatarUrl
     }
-    galleryImages { 
-      filePath 
-    } 
-    mediaResource { 
-      fileName 
-      fileSize 
-      mimeType 
-      provider 
+    galleryImages {
+      fileName
+      filePath
+    }
+    mediaResource {
+      id
+      fileName
+      fileSize
+      mimeType
+      provider
     }
   }
 }
@@ -94,6 +103,7 @@ query GetLikedCollections {
     description
     price
     externalLink
+    slug
     author {
       username
     }
@@ -112,6 +122,7 @@ query GetCollectionsByTag($input: CollectionFilterInput!) {
       name
       description
       price
+      slug
       author {
         username
       }
@@ -133,6 +144,7 @@ query GetTopLikedCollections($limit: Int!) {
     likesCount
     isLiked
     externalLink
+    slug
     author {
       username
     }
@@ -147,7 +159,10 @@ query GetLatestCollections($limit: Int!) {
     id
     name
     price
-    externalLink
+    slug
+    author {
+      username
+    }
     galleryImages {
       filePath
     }
@@ -162,6 +177,7 @@ query GetSortedCollections($page: Int!, $size: Int!, $sortBy: String!, $mimeType
     price
     likesCount
     externalLink
+    slug
     author {
       username
       totalSales

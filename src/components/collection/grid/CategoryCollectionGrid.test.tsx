@@ -16,15 +16,9 @@ jest.mock('next/image', () => ({
   },
 }));
 
+type CollectionsProp = React.ComponentProps<typeof CategoryCollectionGrid>['collections'];
+
 describe('CategoryCollectionGrid', () => {
-  interface MockCollection {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    author: { username: string };
-    galleryImages: { filePath: string }[] | null;
-  }
 
   it('renders empty state when collections array is empty', () => {
     render(<CategoryCollectionGrid collections={[]} />);
@@ -34,12 +28,13 @@ describe('CategoryCollectionGrid', () => {
   });
 
   it('renders a list of collections correctly', () => {
-    const mockCollections: MockCollection[] = [
+    const mockCollections: CollectionsProp = [
       {
         id: '1',
         name: 'Test Item One',
         price: 9.99,
         description: 'First item description',
+        slug: 'test-item-one',
         author: { username: 'dev_user' },
         galleryImages: [{ filePath: 'image1.png' }],
       },
@@ -48,6 +43,7 @@ describe('CategoryCollectionGrid', () => {
         name: 'Free Item',
         price: 0,
         description: '',
+        slug: 'free-item',
         author: { username: 'system' },
         galleryImages: [],
       },

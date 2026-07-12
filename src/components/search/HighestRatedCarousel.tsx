@@ -18,6 +18,7 @@ interface CollectionResponse {
   price: number;
   likesCount: number;
   isLiked: boolean;
+  slug?: string | null;
   author: {
     username: string;
   };
@@ -90,17 +91,29 @@ export function HighestRatedCarousel() {
           : "flex overflow-x-auto snap-x snap-mandatory md:overflow-visible md:flex-wrap items-center justify-start md:justify-center w-full pb-4 md:pb-0 custom-scrollbar"
       }>
         {carouselItems.map((item, index) => {
+          console.log('DEBUG item:', item.slug, item.author);
           const fileName = item.galleryImages?.[0]?.filePath || "";
           const imageUrl = fileName.startsWith('http') 
             ? fileName 
             : fileName ? `${SUPABASE_PREVIEWS_BASE}/${encodeURIComponent(fileName)}` : "";
+
+          const hasValidSlug = Boolean(item.slug && item.author?.username);
+          const href = hasValidSlug ? `/${item.author.username}/${item.slug}` : "#";
 
           return (
             <div key={`${item.id}-${index}`} className="px-3 sm:px-4 md:px-5 mb-6 md:mb-0 shrink-0 snap-center">
               <CardContainer containerClassName="py-0" className="w-[240px] sm:w-[280px] md:w-[360px]">
                 <CardBody className="relative group/card w-full h-auto rounded-none flex flex-col">
                   
-                  <Link href={`/collection/${item.id}`} className="block w-full h-full" draggable={false}>
+                  <Link 
+                    href={href} 
+                    onClick={(e) => {
+                      if (!hasValidSlug) e.preventDefault();
+                    }}
+                    aria-disabled={!hasValidSlug}
+                    className={`block w-full h-full ${!hasValidSlug ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    draggable={false}
+                  >
                     <CardItem translateZ="50" className="w-full aspect-[4/3] relative overflow-hidden border border-white/[0.04] bg-[#111013]">
                       <Image 
                         src={imageUrl || FALLBACK_IMAGE || ""}

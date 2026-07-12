@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react'
 import Image from "next/image"
 import { HardDrive, Shield, Activity, Hash, Images, ShoppingCart, ExternalLink, Link as LinkIcon, X, Maximize2 } from "lucide-react"
 import LikeButton from '@/components/navbar/components/LikeButton'
-import { GetCollectionQuery } from '@/graphql/generated'
+import { GetCollectionBySlugQuery } from '@/graphql/generated'
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
-import BmacBanner from '../../banner/BmacBanner'
+import BmacBanner from '@/components/banner/BmacBanner'
 
 const SUPABASE_PREVIEWS_BASE = process.env.NEXT_PUBLIC_SUPABASE_PREVIEWS_BASE || "";
 const PLACEHOLDER_IMG = "https://placehold.net/600x600.png";
@@ -75,7 +75,7 @@ const ThumbnailImage = ({ src, alt }: { src: string, alt: string }) => {
 };
 
 interface CollectionDetailsProps {
-  collection: GetCollectionQuery['getCollectionById'];
+  collection: GetCollectionBySlugQuery['getCollectionBySlug'];
   onAddToCart: (item: { id: string; name: string; price: number; category: string; previewImage: string; ownerId: string }) => void;
   isInCart?: boolean;
   isOwner?: boolean;

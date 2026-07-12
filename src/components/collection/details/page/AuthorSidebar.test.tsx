@@ -4,23 +4,41 @@ import AuthorSidebar from './AuthorSidebar';
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+  default: ({ src, alt, className, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & Record<string, unknown>) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src as string} alt={alt as string} {...props} />
+    <img 
+      src={src as string} 
+      alt={alt as string} 
+      className={className} 
+      data-testid="mock-avatar-image" 
+      {...props} 
+    />
   ),
 }));
 
 jest.mock('@/lib/socialLinks', () => ({
   ALLOWED_PLATFORMS: [
-    { id: 'twitter', label: 'Twitter', icon: () => null },
-    { id: 'github', label: 'GitHub', icon: () => null },
+    { id: 'twitter', label: 'Twitter', icon: () => <svg data-testid="twitter-icon" /> },
+    { id: 'github', label: 'GitHub', icon: () => <svg data-testid="github-icon" /> },
   ],
 }));
 
-type AuthorData = React.ComponentProps<typeof AuthorSidebar>['author'];
+jest.mock('lucide-react', () => ({
+  User: () => <svg data-testid="lucide-user" />,
+  Star: () => <svg data-testid="lucide-star" />,
+  ShoppingCart: () => <svg data-testid="lucide-cart" />,
+  Share2: () => <svg data-testid="lucide-share" />,
+  ExternalLink: () => <svg data-testid="lucide-external" />,
+  Download: () => <svg data-testid="lucide-download" />,
+}));
 
-const baseAuthor: AuthorData = {
+type AuthorData = React.ComponentProps<typeof AuthorSidebar>['author'];
+type MockAuthorData = AuthorData & { downloadCount?: number | null };
+
+const baseAuthor: MockAuthorData = {
   id: 'auth-123',
+  userId: 'user-456',
+  email: 'cyber@example.com',
   username: 'cyber_architect',
   bio: 'Professional developer',
   rating: 4.86,
@@ -33,37 +51,45 @@ const baseAuthor: AuthorData = {
 };
 
 describe('AuthorSidebar Component', () => {
-
+  
   test('renders author profile with complete data and formatted metrics', () => {
     render(<AuthorSidebar author={baseAuthor} />);
 
     expect(screen.getByText('Author Profile')).toBeInTheDocument();
     expect(screen.getByText('@cyber_architect')).toBeInTheDocument();
+    
     expect(screen.getByText('4.9')).toBeInTheDocument();
     expect(screen.getByText('142')).toBeInTheDocument();
     expect(screen.getByText('1050')).toBeInTheDocument();
 
     expect(screen.getByText('Twitter')).toBeInTheDocument();
-    const twitterLink = screen.getByRole('link', { name: /twitter/i });
+    const twitterLink = screen.getByRole('link');
     expect(twitterLink).toHaveAttribute('href', 'https://twitter.com/cyber_arch');
+
+    const avatar = screen.getByTestId('mock-avatar-image');
+    expect(avatar).toBeInTheDocument();
+    expect(avatar).toHaveAttribute('src', 'https://example.com/avatar.jpg');
   });
 
   test('applies fallback values when metrics are null', () => {
-    const brokenAuthor: AuthorData = {
+    const brokenAuthor = {
       ...baseAuthor,
       rating: null,
       totalSales: null,
       downloadCount: null,
       avatarUrl: null,
-      socialLinks: null as unknown as AuthorData['socialLinks'], 
-    };
+      socialLinks: null,
+    } as unknown as AuthorData;
 
     render(<AuthorSidebar author={brokenAuthor} />);
 
     expect(screen.getByText('0.0')).toBeInTheDocument();
+    
     const zeroCounters = screen.getAllByText('0');
     expect(zeroCounters.length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    
+    expect(screen.queryByTestId('mock-avatar-image')).not.toBeInTheDocument();
+    expect(screen.getByTestId('lucide-user')).toBeInTheDocument();
   });
 
   test('renders empty placeholder when socialLinks array is empty', () => {
@@ -85,6 +111,7 @@ describe('AuthorSidebar Component', () => {
     };
 
     render(<AuthorSidebar author={authorUnknownPlatform} />);
+    
     expect(screen.getByText('unknown-net')).toBeInTheDocument();
   });
 
@@ -92,15 +119,13 @@ describe('AuthorSidebar Component', () => {
     const authorBrokenUrl: AuthorData = {
       ...baseAuthor,
       socialLinks: [
-        { 
-          platform: 'twitter', 
-          url: null as unknown as string
-        },
+        { platform: 'twitter', url: null as unknown as string },
       ],
     };
 
     render(<AuthorSidebar author={authorBrokenUrl} />);
-    const link = screen.getByRole('link', { name: /twitter/i });
+    
+    const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '#');
   });
 });

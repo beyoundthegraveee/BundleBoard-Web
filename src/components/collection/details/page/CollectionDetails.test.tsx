@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CollectionDetails from './CollectionDetails';
-import { GetCollectionQuery } from '@/graphql/generated';
+import { GetCollectionBySlugQuery } from '@/graphql/generated';
 
-type CollectionType = NonNullable<GetCollectionQuery['getCollectionById']>;
+type CollectionType = NonNullable<GetCollectionBySlugQuery['getCollectionBySlug']>;
 
 const createMockCollection = (overrides: Partial<CollectionType> = {}): CollectionType => ({
   id: 'col-123',
@@ -41,7 +41,7 @@ jest.mock('@/components/navbar/components/LikeButton', () => ({
   default: () => <button>Like</button>,
 }));
 
-jest.mock('../../banner/BmacBanner', () => ({
+jest.mock('@/components/banner/BmacBanner', () => ({
   __esModule: true,
   default: () => <div data-testid="bmac-banner" />,
 }));
