@@ -8,6 +8,7 @@ import { SplashProvider } from "@/components/provider/SplashProvider";
 import { ApolloWrapper } from "@/lib/apolloWrapper";
 import { SupabaseProvider } from "@/components/provider/SupabaseProvider";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next"
 import type { Metadata } from "next";
 
 const spaceGrotesk = Space_Grotesk({
@@ -119,6 +120,7 @@ export default function RootLayout({
           </SupabaseProvider>
         </AuthSessionProvider>
         <Toaster richColors position="top-right" />
+        <Analytics />
       </body>
     </html>
   );
